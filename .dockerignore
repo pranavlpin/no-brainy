@@ -1,0 +1,9 @@
+node_modules
+.next
+.git
+.claude
+docs
+*.md
+.env
+.env.local
+.env.*.local

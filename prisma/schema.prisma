@@ -1,0 +1,303 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearch", "postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [pgvector(map: "vector", schema: "public")]
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  avatarUrl     String?
+  provider      String    @default("email")
+  passwordHash  String?
+  timezone      String    @default("UTC")
+  preferences   Json      @default("{}")
+  createdAt     DateTime  @default(now())
+  lastActiveAt  DateTime  @default(now())
+  notes         Note[]
+  books         Book[]
+  tasks         Task[]
+  decks         Deck[]
+  flashcards    Flashcard[]
+  dayPlans      DayPlan[]
+  dailyReviews  DailyReview[]
+  goals         Goal[]
+  habits        Habit[]
+  insights      Insight[]
+  sessions      UserSession[]
+  reviewSessions ReviewSession[]
+  @@map("users")
+}
+
+model UserSession {
+  id           String   @id @default(cuid())
+  userId       String
+  refreshToken String   @unique
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@map("user_sessions")
+}
+
+model Note {
+  id          String    @id @default(cuid())
+  userId      String
+  title       String    @default("")
+  contentMd   String    @default("") @db.Text
+  tags        String[]  @default([])
+  isPinned    Boolean   @default(false)
+  isDeleted   Boolean   @default(false)
+  deletedAt   DateTime?
+  wordCount   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  noteLinks   NoteLink[] @relation("SourceNote")
+  linkedFrom  NoteLink[] @relation("TargetNote")
+  @@index([userId, isDeleted])
+  @@index([userId, isPinned])
+  @@index([tags], type: Gin)
+  @@map("notes")
+}
+
+model NoteLink {
+  id         String   @id @default(cuid())
+  sourceId   String
+  targetType String
+  targetId   String
+  createdAt  DateTime @default(now())
+  sourceNote Note  @relation("SourceNote", fields: [sourceId], references: [id], onDelete: Cascade)
+  targetNote Note? @relation("TargetNote", fields: [targetId], references: [id], onDelete: Cascade)
+  @@unique([sourceId, targetType, targetId])
+  @@map("note_links")
+}
+
+model Book {
+  id            String    @id @default(cuid())
+  userId        String
+  title         String
+  author        String?
+  coverUrl      String?
+  genre         String[]  @default([])
+  status        String    @default("want_to_read")
+  rating        Int?
+  summaryMd     String    @default("") @db.Text
+  keyIdeas      Json      @default("[]")
+  quotes        Json      @default("[]")
+  learningsMd   String    @default("") @db.Text
+  applicationMd String    @default("") @db.Text
+  pagesTotal    Int?
+  pagesRead     Int       @default(0)
+  completedAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, status])
+  @@map("books")
+}
+
+model Task {
+  id            String    @id @default(cuid())
+  userId        String
+  parentTaskId  String?
+  goalId        String?
+  title         String
+  descriptionMd String    @default("") @db.Text
+  priority      String    @default("medium")
+  status        String    @default("pending")
+  tags          String[]  @default([])
+  dueDate       DateTime? @db.Date
+  completedAt   DateTime?
+  isRecurring   Boolean   @default(false)
+  rrule         String?
+  quadrant      String?
+  orderIndex    Float     @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parentTask Task?   @relation("Subtasks", fields: [parentTaskId], references: [id], onDelete: Cascade)
+  subtasks   Task[]  @relation("Subtasks")
+  goal       Goal?   @relation(fields: [goalId], references: [id], onDelete: SetNull)
+  taskLinks  TaskLink[]
+  @@index([userId, status])
+  @@index([userId, dueDate])
+  @@index([userId, quadrant])
+  @@index([parentTaskId])
+  @@map("tasks")
+}
+
+model TaskLink {
+  taskId     String
+  linkedType String
+  linkedId   String
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  @@id([taskId, linkedType, linkedId])
+  @@map("task_links")
+}
+
+model DayPlan {
+  id           String   @id @default(cuid())
+  userId       String
+  planDate     DateTime @db.Date
+  focusTaskIds String[] @default([])
+  timeBlocks   Json     @default("[]")
+  aiBriefMd    String?  @db.Text
+  createdAt    DateTime @default(now())
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([userId, planDate])
+  @@map("day_plans")
+}
+
+model Deck {
+  id            String   @id @default(cuid())
+  userId        String
+  name          String
+  descriptionMd String   @default("") @db.Text
+  tags          String[] @default([])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  flashcards Flashcard[]
+  reviews    ReviewSession[]
+  @@index([userId])
+  @@map("decks")
+}
+
+model Flashcard {
+  id            String    @id @default(cuid())
+  deckId        String
+  userId        String
+  cardType      String
+  frontMd       String    @db.Text
+  backMd        String    @db.Text
+  tags          String[]  @default([])
+  sourceType    String?
+  sourceId      String?
+  sourceExcerpt String?   @db.Text
+  state         String    @default("new")
+  easeFactor    Float     @default(2.5)
+  interval      Int       @default(0)
+  nextReviewAt  DateTime  @default(now()) @db.Date
+  reviewCount   Int       @default(0)
+  lastRating    String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deck Deck @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([deckId])
+  @@index([userId, nextReviewAt])
+  @@index([userId, state])
+  @@map("flashcards")
+}
+
+model ReviewSession {
+  id            String    @id @default(cuid())
+  userId        String
+  deckId        String?
+  startedAt     DateTime  @default(now())
+  completedAt   DateTime?
+  cardsReviewed Int       @default(0)
+  cardsEasy     Int       @default(0)
+  cardsMedium   Int       @default(0)
+  cardsHard     Int       @default(0)
+  cardsForgot   Int       @default(0)
+  user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deck Deck? @relation(fields: [deckId], references: [id], onDelete: SetNull)
+  @@index([userId])
+  @@map("review_sessions")
+}
+
+model DailyReview {
+  id             String   @id @default(cuid())
+  userId         String
+  reviewDate     DateTime @db.Date
+  tasksCompleted Int      @default(0)
+  tasksMissed    Int      @default(0)
+  notesCreated   Int      @default(0)
+  cardsReviewed  Int      @default(0)
+  reflectionMd   String   @default("") @db.Text
+  aiSummaryMd    String?  @db.Text
+  mood           String?
+  createdAt      DateTime @default(now())
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([userId, reviewDate])
+  @@map("daily_reviews")
+}
+
+model Goal {
+  id          String    @id @default(cuid())
+  userId      String
+  title       String
+  description String    @default("") @db.Text
+  category    String?
+  targetDate  DateTime? @db.Date
+  status      String    @default("active")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tasks  Task[]
+  habits Habit[]
+  @@index([userId, status])
+  @@map("goals")
+}
+
+model Habit {
+  id        String   @id @default(cuid())
+  userId    String
+  goalId    String?
+  title     String
+  frequency String
+  createdAt DateTime @default(now())
+  user User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  goal Goal?     @relation(fields: [goalId], references: [id], onDelete: SetNull)
+  logs HabitLog[]
+  @@index([userId])
+  @@map("habits")
+}
+
+model HabitLog {
+  id        String   @id @default(cuid())
+  habitId   String
+  logDate   DateTime @db.Date
+  completed Boolean  @default(false)
+  habit Habit @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  @@unique([habitId, logDate])
+  @@map("habit_logs")
+}
+
+model Insight {
+  id            String   @id @default(cuid())
+  userId        String
+  insightType   String
+  contentMd     String   @db.Text
+  severity      String?
+  relatedEntity String?
+  relatedIds    String[] @default([])
+  isDismissed   Boolean  @default(false)
+  generatedAt   DateTime @default(now())
+  validUntil    DateTime?
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, isDismissed])
+  @@map("insights")
+}
+
+model PromptTemplate {
+  id           String  @id @default(cuid())
+  module       String
+  action       String
+  version      Int     @default(1)
+  model        String
+  systemPrompt String  @db.Text
+  userPrompt   String  @db.Text
+  maxTokens    Int     @default(1024)
+  temperature  Float   @default(0.7)
+  isActive     Boolean @default(true)
+  @@unique([module, action, version])
+  @@map("prompt_templates")
+}

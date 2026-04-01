@@ -1,0 +1,101 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:  # Manual trigger
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false  # Don't cancel production deploys
+
+env:
+  GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  GCP_REGION: asia-south1
+  SERVICE_NAME: myfocushub-production
+  IMAGE_NAME: asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/myfocushub/app
+
+jobs:
+  # Run CI checks first
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  deploy:
+    name: Build & Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [ci]
+    permissions:
+      contents: read
+      id-token: write
+    environment: production  # Requires approval
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev --quiet
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            -t ${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            -t ${{ env.IMAGE_NAME }}:production-latest \
+            -t ${{ env.IMAGE_NAME }}:latest \
+            .
+
+      - name: Push Docker image
+        run: |
+          docker push ${{ env.IMAGE_NAME }}:${{ github.sha }}
+          docker push ${{ env.IMAGE_NAME }}:production-latest
+          docker push ${{ env.IMAGE_NAME }}:latest
+
+      - name: Run database migrations
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          job: myfocushub-migrate-production
+          region: ${{ env.GCP_REGION }}
+          image: ${{ env.IMAGE_NAME }}:${{ github.sha }}
+          env_vars: |
+            NODE_ENV=production
+          secrets: |
+            DATABASE_URL=myfocushub-database-url-prod:latest
+          flags: --execute-now --wait
+
+      - name: Deploy to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ env.SERVICE_NAME }}
+          region: ${{ env.GCP_REGION }}
+          image: ${{ env.IMAGE_NAME }}:${{ github.sha }}
+          env_vars: |
+            NODE_ENV=production
+          secrets: |
+            DATABASE_URL=myfocushub-database-url-prod:latest
+            NEXTAUTH_SECRET=myfocushub-nextauth-secret-prod:latest
+            NEXTAUTH_URL=myfocushub-nextauth-url-prod:latest
+            GOOGLE_CLIENT_ID=myfocushub-google-client-id:latest
+            GOOGLE_CLIENT_SECRET=myfocushub-google-client-secret:latest
+          flags: |
+            --port=3000
+            --memory=1Gi
+            --cpu=2
+            --min-instances=1
+            --max-instances=10
+            --allow-unauthenticated
+            --cpu-boost
+
+      - name: Show deployment URL
+        run: |
+          echo "Production deployed to:"
+          gcloud run services describe ${{ env.SERVICE_NAME }} \
+            --region=${{ env.GCP_REGION }} \
+            --format="value(status.url)"
