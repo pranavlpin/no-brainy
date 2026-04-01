@@ -566,6 +566,7 @@ HabitLog {
 - Cost-aware: route to GPT-4o-mini for bulk/cheap operations, GPT-4o for insight/coach tasks
 - Async-first: all AI tasks run in background via queue, results pushed to UI
 - Prompt versioning: store prompt templates with version IDs
+- BYOK model: users provide their own OpenAI API key — no platform-side AI costs
 - Graceful degradation: if AI unavailable, all core features still work
 
 ### 4.2 Prompt Template Architecture
@@ -658,6 +659,35 @@ PromptTemplate {
 - Behavior-based: "This task has been pending 3 days"
 - Habit nudge
 - Flashcard reminder
+
+### 6.5 BYOK (Bring Your Own Key) — AI API Key Management
+
+Users bring their own OpenAI API key to enable AI features. This approach:
+- Eliminates platform-side AI costs
+- Gives users full control over their AI usage and billing
+- Allows users to choose their own OpenAI tier/limits
+
+**Features:**
+- Add/update/remove OpenAI API key in Settings
+- API key is encrypted at rest using AES-256-GCM (derived from NEXTAUTH_SECRET)
+- Key is never displayed in full — only last 4 characters shown as confirmation
+- Status indicator: green = key configured, gray = not set
+- All AI features are gated: disabled with "Configure API key" prompt when no key is set
+
+**AI Features Unlocked with API Key:**
+- Note summarization and key insight extraction
+- Flashcard generation from notes and books
+- Task auto-prioritization and daily plan suggestions
+- AI coach / Q&A interface
+- Semantic search (Phase 2, requires pgvector)
+- Insight Engine pattern detection
+
+**Security:**
+- API key encrypted with AES-256-GCM before storage
+- Encryption key derived from NEXTAUTH_SECRET via SHA-256
+- Key stored in user preferences JSON (PostgreSQL JSONB)
+- Never logged, never returned in API responses
+- DELETE endpoint to revoke at any time
 
 ---
 

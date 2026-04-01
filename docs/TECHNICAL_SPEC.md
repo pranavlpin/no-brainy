@@ -43,6 +43,7 @@ The system uses Next.js App Router for SSR and API routes, PostgreSQL via Prisma
 | Monorepo structure | Single Next.js app with `src/` modules | Turborepo, Nx | Simplest for solo/small team. Module boundaries enforced by folder structure. Can extract later. |
 | Testing | Vitest + React Testing Library + Playwright | Jest, Cypress | Vitest already in dependencies. Fast, Vite-native. Playwright for E2E. |
 | Package manager | pnpm | npm, yarn | Already in use (lockfile present). Fast, disk-efficient. |
+| AI API Key Management | BYOK (Bring Your Own Key) | Platform-managed keys, fixed quota | Zero AI infrastructure cost. Users control their own billing. Key encrypted at rest with AES-256-GCM. |
 
 ---
 
@@ -2209,7 +2210,41 @@ nobrainy/
 
 ---
 
-## Appendix B: Phase 2 & 3 Architecture Notes
+## Appendix B: BYOK API Key System
+
+### API Endpoints
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/api/settings/api-key` | Yes | Check if user has an API key configured (returns hasKey boolean) |
+| PUT | `/api/settings/api-key` | Yes | Save encrypted API key (validates sk- prefix) |
+| DELETE | `/api/settings/api-key` | Yes | Remove stored API key |
+
+### Encryption
+
+- Algorithm: AES-256-GCM
+- Key derivation: SHA-256 hash of NEXTAUTH_SECRET
+- Storage: `user.preferences.openaiApiKey` (JSONB field)
+- Format: `{iv}:{authTag}:{ciphertext}` (hex-encoded)
+
+### Frontend Gate
+
+- `useAI()` hook returns `{ isEnabled, isLoading }`
+- AI action buttons check `isEnabled` before showing
+- When disabled: show "Add your OpenAI API key in Settings to unlock AI features"
+
+### Files
+
+- `src/lib/crypto.ts` — AES-256-GCM encrypt/decrypt
+- `src/lib/ai/get-api-key.ts` — Retrieve and decrypt user's API key
+- `src/app/api/settings/api-key/route.ts` — CRUD for API key
+- `src/hooks/use-settings.ts` — React Query hooks
+- `src/hooks/use-ai.ts` — AI feature gate hook
+- `src/app/(dashboard)/settings/page.tsx` — Settings UI
+
+---
+
+## Appendix C: Phase 2 & 3 Architecture Notes
 
 These are not implemented in Phase 1 but the architecture accommodates them:
 
