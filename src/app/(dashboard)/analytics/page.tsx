@@ -26,7 +26,7 @@ function ChartCard({
   return (
     <div
       className={cn(
-        'rounded-lg border border-border bg-white p-5 shadow-sm dark:bg-gray-900',
+        'rounded-lg border border-border bg-card text-card-foreground p-5 shadow-sm',
         className
       )}
     >
@@ -117,7 +117,7 @@ function LoadingSkeleton() {
         {Array.from({ length: 4 }).map((_, i) => (
           <div
             key={i}
-            className="h-32 rounded-lg border border-border bg-gray-50 dark:bg-gray-900"
+            className="h-32 rounded-lg border border-border bg-muted"
           />
         ))}
       </div>
@@ -125,7 +125,7 @@ function LoadingSkeleton() {
         {Array.from({ length: 4 }).map((_, i) => (
           <div
             key={i}
-            className="h-56 rounded-lg border border-border bg-gray-50 dark:bg-gray-900"
+            className="h-56 rounded-lg border border-border bg-muted"
           />
         ))}
       </div>
@@ -248,7 +248,7 @@ export default function AnalyticsPage() {
               {data.reviewStreak > 0 && (
                 <Flame className="h-8 w-8 text-orange-500" />
               )}
-              <span className="text-5xl font-bold tabular-nums">
+              <span className="text-5xl font-bold tabular-nums text-card-foreground">
                 {data.reviewStreak}
               </span>
             </div>

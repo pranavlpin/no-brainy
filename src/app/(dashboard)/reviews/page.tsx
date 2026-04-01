@@ -23,7 +23,7 @@ export default function ReviewsPage() {
   const { data: reviewsData, isLoading: reviewsLoading } = useDailyReviews()
   const { data: weeklyData, isLoading: weeklyLoading } = useWeeklySummary()
 
-  const reviews = reviewsData?.items ?? []
+  const reviews = reviewsData ?? []
 
   return (
     <div className="mx-auto max-w-4xl space-y-6 p-4 md:p-6">

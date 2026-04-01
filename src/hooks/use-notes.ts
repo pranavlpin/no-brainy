@@ -20,7 +20,7 @@ export function useNotes(filters?: NoteFilters) {
       const qs = params.toString()
       const url = `/api/notes${qs ? `?${qs}` : ''}`
       const res = await apiClient<ApiResponse<PaginatedResponse<NoteResponse>>>(url)
-      return res.data
+      return res.data.items
     },
   })
 }

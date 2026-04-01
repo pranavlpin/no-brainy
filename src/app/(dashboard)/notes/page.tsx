@@ -36,7 +36,7 @@ export default function NotesPage() {
 
   const { data, isLoading } = useNotes(activeFilters)
 
-  const notes = data?.items ?? []
+  const notes = data ?? []
 
   // Collect unique tags across all notes for filter pills
   const availableTags = useMemo(() => {

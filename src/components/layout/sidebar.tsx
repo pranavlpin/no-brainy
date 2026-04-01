@@ -57,7 +57,7 @@ export function Sidebar() {
         {/* Header */}
         <div className="flex h-14 items-center justify-between border-b border-slate-800 px-4">
           {!sidebarCollapsed && (
-            <span className="text-lg font-bold text-white">MyFocusHub</span>
+            <span className="text-lg font-bold text-white">NoBrainy</span>
           )}
           {/* Mobile close button */}
           <button

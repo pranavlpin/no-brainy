@@ -1,4 +1,4 @@
-# MyFocusHub - Personal Productivity & Learning Operating System
+# NoBrainy - Personal Productivity & Learning Operating System
 ## Product Requirements Document | v1.0
 
 **Status:** Draft
@@ -6,13 +6,13 @@
 **Date:** 2025
 **Audience:** Engineering / Product
 
-This document defines the complete product requirements for MyFocusHub. It is intended as the source of truth for architectural decisions, technical planning, and implementation priorities.
+This document defines the complete product requirements for NoBrainy. It is intended as the source of truth for architectural decisions, technical planning, and implementation priorities.
 
 ---
 
 ## 1. Product Vision & Strategy
 
-MyFocusHub is a personal operating system for thinking, learning, and execution — a unified platform that helps individuals capture knowledge, organize information, plan their work, retain what they learn, and continuously improve their behavior through AI-powered insights.
+NoBrainy is a personal operating system for thinking, learning, and execution — a unified platform that helps individuals capture knowledge, organize information, plan their work, retain what they learn, and continuously improve their behavior through AI-powered insights.
 
 ### 1.1 Core Philosophy
 
@@ -51,7 +51,7 @@ Architecture Decision: The system follows a modular monorepo structure in Phase 
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                    MyFocusHub Platform                  │
+│                    NoBrainy Platform                  │
 ├───────────────────────┬─────────────────────────────────┤
 │     Frontend Layer    │         API Layer               │
 │  Next.js (Web)        │  Node.js / FastAPI              │

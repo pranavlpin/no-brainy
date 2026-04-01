@@ -54,7 +54,7 @@ export default function DeckDetailPage() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [cardToDelete, setCardToDelete] = useState<string | null>(null)
 
-  const cards = cardsData?.items ?? []
+  const cards = cardsData ?? []
   const dueCount = deck?.dueCount ?? 0
   const newCount = deck?.newCount ?? 0
   const masteredCount = cards.filter((c) => c.state === 'mastered').length

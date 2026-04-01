@@ -22,7 +22,7 @@ export function useDailyReviews(page = 1, pageSize = 20) {
       const res = await apiClient<
         ApiResponse<PaginatedResponse<DailyReviewResponse>>
       >(`/api/reviews/daily?${params.toString()}`)
-      return res.data
+      return res.data.items
     },
   })
 }

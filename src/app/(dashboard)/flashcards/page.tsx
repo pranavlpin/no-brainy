@@ -36,7 +36,7 @@ export default function FlashcardsPage() {
     router.push(`/flashcards/${deck.id}`)
   }
 
-  const decks = data?.items ?? []
+  const decks = data ?? []
 
   return (
     <div className="space-y-6">

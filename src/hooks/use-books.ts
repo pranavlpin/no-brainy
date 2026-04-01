@@ -8,7 +8,7 @@ import type {
   UpdateBookRequest,
   BookFilters,
 } from '@/lib/types/books'
-import type { ApiResponse } from '@/lib/types/api'
+import type { ApiResponse, PaginatedResponse } from '@/lib/types/api'
 
 const BOOKS_KEY = ['books']
 
@@ -34,9 +34,9 @@ export function useBooks(filters?: BookFilters) {
   return useQuery({
     queryKey: [...BOOKS_KEY, filters],
     queryFn: () =>
-      apiClient<ApiResponse<BookResponse[]>>(
+      apiClient<ApiResponse<PaginatedResponse<BookResponse>>>(
         `/api/books${buildQueryString(filters)}`
-      ).then((res) => res.data),
+      ).then((res) => res.data.items),
   })
 }
 

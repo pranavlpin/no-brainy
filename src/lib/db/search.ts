@@ -24,7 +24,7 @@ export function toTsQuery(query: string): string {
  */
 export function noteSearchCondition(query: string): Prisma.Sql {
   const tsQuery = toTsQuery(query)
-  return Prisma.sql`to_tsvector('english', coalesce(title, '') || ' ' || coalesce(content_md, '')) @@ to_tsquery('english', ${tsQuery})`
+  return Prisma.sql`to_tsvector('english', coalesce(title, '') || ' ' || coalesce("contentMd", '')) @@ to_tsquery('english', ${tsQuery})`
 }
 
 /**
@@ -32,7 +32,7 @@ export function noteSearchCondition(query: string): Prisma.Sql {
  */
 export function taskSearchCondition(query: string): Prisma.Sql {
   const tsQuery = toTsQuery(query)
-  return Prisma.sql`to_tsvector('english', coalesce(title, '') || ' ' || coalesce(description_md, '')) @@ to_tsquery('english', ${tsQuery})`
+  return Prisma.sql`to_tsvector('english', coalesce(title, '') || ' ' || coalesce("descriptionMd", '')) @@ to_tsquery('english', ${tsQuery})`
 }
 
 /**
@@ -40,7 +40,7 @@ export function taskSearchCondition(query: string): Prisma.Sql {
  */
 export function bookSearchCondition(query: string): Prisma.Sql {
   const tsQuery = toTsQuery(query)
-  return Prisma.sql`to_tsvector('english', coalesce(title, '') || ' ' || coalesce(author, '') || ' ' || coalesce(summary_md, '')) @@ to_tsquery('english', ${tsQuery})`
+  return Prisma.sql`to_tsvector('english', coalesce(title, '') || ' ' || coalesce(author, '') || ' ' || coalesce("summaryMd", '')) @@ to_tsquery('english', ${tsQuery})`
 }
 
 /**
@@ -48,5 +48,5 @@ export function bookSearchCondition(query: string): Prisma.Sql {
  */
 export function flashcardSearchCondition(query: string): Prisma.Sql {
   const tsQuery = toTsQuery(query)
-  return Prisma.sql`to_tsvector('english', coalesce(front_md, '') || ' ' || coalesce(back_md, '')) @@ to_tsquery('english', ${tsQuery})`
+  return Prisma.sql`to_tsvector('english', coalesce("frontMd", '') || ' ' || coalesce("backMd", '')) @@ to_tsquery('english', ${tsQuery})`
 }

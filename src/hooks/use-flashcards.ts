@@ -26,7 +26,7 @@ export function useDecks() {
     queryKey: [...DECKS_KEY, 'list'],
     queryFn: async () => {
       const res = await apiClient<ApiResponse<PaginatedResponse<DeckResponse>>>('/api/decks')
-      return res.data
+      return res.data.items
     },
   })
 }
@@ -106,7 +106,7 @@ export function useDeckCards(deckId: string, filters?: CardFilters) {
       const qs = params.toString()
       const url = `/api/decks/${deckId}/cards${qs ? `?${qs}` : ''}`
       const res = await apiClient<ApiResponse<PaginatedResponse<FlashcardResponse>>>(url)
-      return res.data
+      return res.data.items
     },
     enabled: !!deckId,
   })

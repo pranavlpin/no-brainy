@@ -13,7 +13,7 @@ import type {
   HabitLogResponse,
   CreateHabitLogRequest,
 } from '@/lib/types/goals'
-import type { ApiResponse } from '@/lib/types/api'
+import type { ApiResponse, PaginatedResponse } from '@/lib/types/api'
 
 const GOALS_KEY = ['goals']
 const HABITS_KEY = ['habits']
@@ -38,9 +38,9 @@ export function useGoals(filters?: GoalFilters) {
   return useQuery({
     queryKey: [...GOALS_KEY, filters],
     queryFn: () =>
-      apiClient<ApiResponse<GoalResponse[]>>(
+      apiClient<ApiResponse<PaginatedResponse<GoalResponse>>>(
         `/api/goals${buildGoalQueryString(filters)}`
-      ).then((res) => res.data),
+      ).then((res) => res.data.items),
   })
 }
 
@@ -103,8 +103,8 @@ export function useHabits() {
   return useQuery({
     queryKey: HABITS_KEY,
     queryFn: () =>
-      apiClient<ApiResponse<HabitResponse[]>>('/api/habits').then(
-        (res) => res.data
+      apiClient<ApiResponse<PaginatedResponse<HabitResponse>>>('/api/habits').then(
+        (res) => res.data.items
       ),
   })
 }

@@ -1,16 +1,14 @@
-version: '3.8'
-
 services:
   db:
     image: postgres:16-alpine
-    container_name: myfocushub-db
+    container_name: nobrainy-db
     restart: unless-stopped
     ports:
       - "5432:5432"
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: myfocushub
+      POSTGRES_DB: nobrainy
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -21,7 +19,7 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: myfocushub-redis
+    container_name: nobrainy-redis
     restart: unless-stopped
     ports:
       - "6379:6379"

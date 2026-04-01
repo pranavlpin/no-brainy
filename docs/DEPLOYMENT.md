@@ -1,6 +1,6 @@
-# MyFocusHub Deployment Guide
+# NoBrainy Deployment Guide
 
-This guide covers deploying MyFocusHub to Google Cloud Platform (GCP) using Cloud Run, with automated CI/CD via GitHub Actions.
+This guide covers deploying NoBrainy to Google Cloud Platform (GCP) using Cloud Run, with automated CI/CD via GitHub Actions.
 
 ## Prerequisites
 
@@ -15,10 +15,10 @@ This guide covers deploying MyFocusHub to Google Cloud Platform (GCP) using Clou
 ### 1. Create a GCP Project
 
 ```bash
-gcloud projects create myfocushub --name="MyFocusHub"
-gcloud config set project myfocushub
+gcloud projects create nobrainy --name="NoBrainy"
+gcloud config set project nobrainy
 gcloud billing accounts list
-gcloud billing projects link myfocushub --billing-account=YOUR_BILLING_ACCOUNT_ID
+gcloud billing projects link nobrainy --billing-account=YOUR_BILLING_ACCOUNT_ID
 ```
 
 ### 2. Enable Required APIs
@@ -37,17 +37,17 @@ gcloud services enable \
 ### 3. Create Artifact Registry Repository
 
 ```bash
-gcloud artifacts repositories create myfocushub \
+gcloud artifacts repositories create nobrainy \
   --repository-format=docker \
   --location=asia-south1 \
-  --description="MyFocusHub Docker images"
+  --description="NoBrainy Docker images"
 ```
 
 ### 4. Create Cloud SQL PostgreSQL Instance
 
 ```bash
 # Create instance (db-f1-micro for cost savings)
-gcloud sql instances create myfocushub-db \
+gcloud sql instances create nobrainy-db \
   --database-version=POSTGRES_16 \
   --tier=db-f1-micro \
   --region=asia-south1 \
@@ -56,22 +56,22 @@ gcloud sql instances create myfocushub-db \
 
 # Set root password
 gcloud sql users set-password postgres \
-  --instance=myfocushub-db \
+  --instance=nobrainy-db \
   --password=YOUR_SECURE_PASSWORD
 
 # Create databases
-gcloud sql databases create myfocushub_staging --instance=myfocushub-db
-gcloud sql databases create myfocushub_production --instance=myfocushub-db
+gcloud sql databases create nobrainy_staging --instance=nobrainy-db
+gcloud sql databases create nobrainy_production --instance=nobrainy-db
 ```
 
 ### 5. Create a Service Account
 
 ```bash
-gcloud iam service-accounts create myfocushub-deployer \
-  --display-name="MyFocusHub Deployer"
+gcloud iam service-accounts create nobrainy-deployer \
+  --display-name="NoBrainy Deployer"
 
 PROJECT_ID=$(gcloud config get-value project)
-SA_EMAIL="myfocushub-deployer@${PROJECT_ID}.iam.gserviceaccount.com"
+SA_EMAIL="nobrainy-deployer@${PROJECT_ID}.iam.gserviceaccount.com"
 
 # Grant required roles
 gcloud projects add-iam-policy-binding $PROJECT_ID \
@@ -117,7 +117,7 @@ gcloud iam workload-identity-pools providers create-oidc "github-provider" \
 # Allow GitHub repo to impersonate the service account
 # Replace YOUR_GITHUB_ORG/YOUR_REPO with your actual repo
 gcloud iam service-accounts add-iam-policy-binding \
-  "myfocushub-deployer@${PROJECT_ID}.iam.gserviceaccount.com" \
+  "nobrainy-deployer@${PROJECT_ID}.iam.gserviceaccount.com" \
   --project="${PROJECT_ID}" \
   --role="roles/iam.workloadIdentityUser" \
   --member="principalSet://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/github-pool/attribute.repository/YOUR_GITHUB_ORG/YOUR_REPO"
@@ -131,29 +131,29 @@ echo "projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/github-p
 
 ```bash
 # Create secrets (replace values with your actual secrets)
-echo -n "postgresql://postgres:PASSWORD@/myfocushub_staging?host=/cloudsql/PROJECT:asia-south1:myfocushub-db" | \
-  gcloud secrets create myfocushub-database-url --data-file=-
+echo -n "postgresql://postgres:PASSWORD@/nobrainy_staging?host=/cloudsql/PROJECT:asia-south1:nobrainy-db" | \
+  gcloud secrets create nobrainy-database-url --data-file=-
 
-echo -n "postgresql://postgres:PASSWORD@/myfocushub_production?host=/cloudsql/PROJECT:asia-south1:myfocushub-db" | \
-  gcloud secrets create myfocushub-database-url-prod --data-file=-
-
-echo -n "$(openssl rand -base64 32)" | \
-  gcloud secrets create myfocushub-nextauth-secret --data-file=-
+echo -n "postgresql://postgres:PASSWORD@/nobrainy_production?host=/cloudsql/PROJECT:asia-south1:nobrainy-db" | \
+  gcloud secrets create nobrainy-database-url-prod --data-file=-
 
 echo -n "$(openssl rand -base64 32)" | \
-  gcloud secrets create myfocushub-nextauth-secret-prod --data-file=-
+  gcloud secrets create nobrainy-nextauth-secret --data-file=-
 
-echo -n "https://staging.myfocushub.example.com" | \
-  gcloud secrets create myfocushub-nextauth-url --data-file=-
+echo -n "$(openssl rand -base64 32)" | \
+  gcloud secrets create nobrainy-nextauth-secret-prod --data-file=-
 
-echo -n "https://myfocushub.example.com" | \
-  gcloud secrets create myfocushub-nextauth-url-prod --data-file=-
+echo -n "https://staging.nobrainy.example.com" | \
+  gcloud secrets create nobrainy-nextauth-url --data-file=-
+
+echo -n "https://nobrainy.example.com" | \
+  gcloud secrets create nobrainy-nextauth-url-prod --data-file=-
 
 echo -n "your-google-client-id" | \
-  gcloud secrets create myfocushub-google-client-id --data-file=-
+  gcloud secrets create nobrainy-google-client-id --data-file=-
 
 echo -n "your-google-client-secret" | \
-  gcloud secrets create myfocushub-google-client-secret --data-file=-
+  gcloud secrets create nobrainy-google-client-secret --data-file=-
 ```
 
 Grant the Cloud Run service account access to secrets:
@@ -163,10 +163,10 @@ PROJECT_ID=$(gcloud config get-value project)
 PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format="value(projectNumber)")
 COMPUTE_SA="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
 
-for SECRET in myfocushub-database-url myfocushub-database-url-prod \
-  myfocushub-nextauth-secret myfocushub-nextauth-secret-prod \
-  myfocushub-nextauth-url myfocushub-nextauth-url-prod \
-  myfocushub-google-client-id myfocushub-google-client-secret; do
+for SECRET in nobrainy-database-url nobrainy-database-url-prod \
+  nobrainy-nextauth-secret nobrainy-nextauth-secret-prod \
+  nobrainy-nextauth-url nobrainy-nextauth-url-prod \
+  nobrainy-google-client-id nobrainy-google-client-secret; do
   gcloud secrets add-iam-policy-binding $SECRET \
     --member="serviceAccount:${COMPUTE_SA}" \
     --role="roles/secretmanager.secretAccessor"
@@ -179,9 +179,9 @@ Configure these secrets in your GitHub repository under **Settings > Secrets and
 
 | Secret | Description | Example |
 |--------|-------------|---------|
-| `GCP_PROJECT_ID` | Your GCP project ID | `myfocushub` |
+| `GCP_PROJECT_ID` | Your GCP project ID | `nobrainy` |
 | `GCP_WORKLOAD_IDENTITY_PROVIDER` | WIF provider resource name | `projects/123456/locations/global/workloadIdentityPools/github-pool/providers/github-provider` |
-| `GCP_SERVICE_ACCOUNT` | Deployer service account email | `myfocushub-deployer@myfocushub.iam.gserviceaccount.com` |
+| `GCP_SERVICE_ACCOUNT` | Deployer service account email | `nobrainy-deployer@nobrainy.iam.gserviceaccount.com` |
 
 ### Setting Up the Production Environment
 
@@ -232,7 +232,7 @@ export GCP_PROJECT_ID=your-project
 ```bash
 PROJECT_ID=$(gcloud config get-value project)
 REGION=asia-south1
-IMAGE="$REGION-docker.pkg.dev/$PROJECT_ID/myfocushub/app"
+IMAGE="$REGION-docker.pkg.dev/$PROJECT_ID/nobrainy/app"
 
 # Configure Docker
 gcloud auth configure-docker $REGION-docker.pkg.dev
@@ -242,7 +242,7 @@ docker build -t $IMAGE:latest .
 docker push $IMAGE:latest
 
 # Deploy
-gcloud run deploy myfocushub-production \
+gcloud run deploy nobrainy-production \
   --image=$IMAGE:latest \
   --region=$REGION \
   --port=3000 \
@@ -271,13 +271,13 @@ Database migrations run automatically as a Cloud Run Job before each deployment.
 
 ```bash
 # Execute the migration job manually
-gcloud run jobs execute myfocushub-migrate-production \
+gcloud run jobs execute nobrainy-migrate-production \
   --region=asia-south1 \
   --wait
 
 # Check job execution status
 gcloud run jobs executions list \
-  --job=myfocushub-migrate-production \
+  --job=nobrainy-migrate-production \
   --region=asia-south1
 ```
 
@@ -304,16 +304,16 @@ gcloud run jobs executions list \
 
 ```bash
 # Stream live logs
-gcloud run services logs read myfocushub-production \
+gcloud run services logs read nobrainy-production \
   --region=asia-south1 \
   --limit=100
 
 # Tail logs in real-time
-gcloud run services logs tail myfocushub-production \
+gcloud run services logs tail nobrainy-production \
   --region=asia-south1
 
 # Filter by severity
-gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=myfocushub-production AND severity>=ERROR" \
+gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=nobrainy-production AND severity>=ERROR" \
   --limit=50 \
   --format="table(timestamp, severity, textPayload)"
 ```
@@ -333,12 +333,12 @@ gcloud logging read "resource.type=cloud_run_revision AND resource.labels.servic
 ```bash
 # List recent revisions
 gcloud run revisions list \
-  --service=myfocushub-production \
+  --service=nobrainy-production \
   --region=asia-south1 \
   --limit=10
 
 # Route all traffic to a specific revision
-gcloud run services update-traffic myfocushub-production \
+gcloud run services update-traffic nobrainy-production \
   --to-revisions=REVISION_NAME=100 \
   --region=asia-south1
 ```
@@ -348,12 +348,12 @@ gcloud run services update-traffic myfocushub-production \
 ```bash
 # List available images
 gcloud artifacts docker images list \
-  asia-south1-docker.pkg.dev/YOUR_PROJECT_ID/myfocushub/app \
+  asia-south1-docker.pkg.dev/YOUR_PROJECT_ID/nobrainy/app \
   --include-tags
 
 # Deploy a specific image by commit SHA
-gcloud run deploy myfocushub-production \
-  --image=asia-south1-docker.pkg.dev/YOUR_PROJECT_ID/myfocushub/app:COMMIT_SHA \
+gcloud run deploy nobrainy-production \
+  --image=asia-south1-docker.pkg.dev/YOUR_PROJECT_ID/nobrainy/app:COMMIT_SHA \
   --region=asia-south1
 ```
 

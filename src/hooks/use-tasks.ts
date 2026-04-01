@@ -58,7 +58,7 @@ export function useTasks(filters: TaskFilters = {}) {
       apiClient<ApiResponse<PaginatedResponse<TaskListItem>>>(
         `/api/tasks${buildQueryString(filters)}`
       ),
-    select: (res) => res.data,
+    select: (res) => res.data.items,
   })
 }
 

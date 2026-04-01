@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# MyFocusHub Deployment Script for Google Cloud Run
+# NoBrainy Deployment Script for Google Cloud Run
 # Usage: ./scripts/deploy.sh [staging|production]
 
 ENVIRONMENT="${1:-staging}"
 PROJECT_ID="${GCP_PROJECT_ID:?GCP_PROJECT_ID is required}"
 REGION="${GCP_REGION:-asia-south1}"
-SERVICE_NAME="myfocushub-${ENVIRONMENT}"
-IMAGE_NAME="${REGION}-docker.pkg.dev/${PROJECT_ID}/myfocushub/app"
+SERVICE_NAME="nobrainy-${ENVIRONMENT}"
+IMAGE_NAME="${REGION}-docker.pkg.dev/${PROJECT_ID}/nobrainy/app"
 
-echo "==> Deploying MyFocusHub to ${ENVIRONMENT}"
+echo "==> Deploying NoBrainy to ${ENVIRONMENT}"
 echo "    Project: ${PROJECT_ID}"
 echo "    Region: ${REGION}"
 echo "    Service: ${SERVICE_NAME}"
@@ -37,11 +37,11 @@ gcloud run deploy "${SERVICE_NAME}" \
   --min-instances=0 \
   --max-instances=10 \
   --set-env-vars="NODE_ENV=production" \
-  --set-secrets="DATABASE_URL=myfocushub-database-url:latest,NEXTAUTH_SECRET=myfocushub-nextauth-secret:latest,NEXTAUTH_URL=myfocushub-nextauth-url:latest,GOOGLE_CLIENT_ID=myfocushub-google-client-id:latest,GOOGLE_CLIENT_SECRET=myfocushub-google-client-secret:latest"
+  --set-secrets="DATABASE_URL=nobrainy-database-url:latest,NEXTAUTH_SECRET=nobrainy-nextauth-secret:latest,NEXTAUTH_URL=nobrainy-nextauth-url:latest,GOOGLE_CLIENT_ID=nobrainy-google-client-id:latest,GOOGLE_CLIENT_SECRET=nobrainy-google-client-secret:latest"
 
 # Run database migrations
 echo "==> Running database migrations..."
-gcloud run jobs execute myfocushub-migrate-${ENVIRONMENT} \
+gcloud run jobs execute nobrainy-migrate-${ENVIRONMENT} \
   --project="${PROJECT_ID}" \
   --region="${REGION}" \
   --wait

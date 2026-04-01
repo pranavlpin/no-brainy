@@ -1,8 +1,8 @@
-# MyFocusHub
+# NoBrainy
 
 > Personal Productivity & Learning Operating System
 
-MyFocusHub is a unified platform for thinking, learning, and execution. It combines notes, tasks, book summaries, flashcards, daily planning, goal tracking, and reviews into a single connected system built around the loop: **Capture, Organize, Plan, Execute, Learn, Reflect, Improve.**
+NoBrainy is a unified platform for thinking, learning, and execution. It combines notes, tasks, book summaries, flashcards, daily planning, goal tracking, and reviews into a single connected system built around the loop: **Capture, Organize, Plan, Execute, Learn, Reflect, Improve.**
 
 Designed for developers, product thinkers, and knowledge workers who want one coherent system instead of multiple disconnected tools. Everything is Markdown-first, cross-linked, and designed for minimal friction.
 
@@ -66,9 +66,28 @@ Connect notes to tasks, books to flashcard decks, tasks to goals, and more. Link
 ### Installation
 
 ```bash
-git clone <repository-url>
-cd myfocushub
+git clone git@github.com:pranavlpin/nobrainy.git
+cd nobrainy
 pnpm install
+```
+
+### Quick Start (Docker)
+
+The fastest way to get running locally with PostgreSQL via Docker:
+
+```bash
+docker-compose up -d          # Start PostgreSQL + Redis
+cp .env.example .env          # Configure env vars
+pnpm db:generate              # Generate Prisma client
+pnpm db:migrate               # Run database migrations
+pnpm dev                      # Start dev server at localhost:3000
+```
+
+### Quick Start (Manual PostgreSQL)
+
+If you already have PostgreSQL running locally:
+
+```bash
 cp .env.example .env
 # Edit .env with your database URL and auth secrets (see Environment Variables below)
 pnpm db:generate
@@ -84,7 +103,7 @@ Create a `.env` file based on `.env.example`. The following variables are requir
 
 | Variable | Description | Required |
 |----------|-------------|----------|
-| `DATABASE_URL` | PostgreSQL connection string (e.g., `postgresql://postgres:password@localhost:5432/myfocushub`) | Yes |
+| `DATABASE_URL` | PostgreSQL connection string (e.g., `postgresql://postgres:password@localhost:5432/nobrainy`) | Yes |
 | `NEXTAUTH_URL` | Base URL of the application (e.g., `http://localhost:3000`) | Yes |
 | `NEXTAUTH_SECRET` | Random secret string for NextAuth.js session encryption. Generate with `openssl rand -base64 32` | Yes |
 | `GOOGLE_CLIENT_ID` | Google OAuth client ID from Google Cloud Console | Optional |
@@ -313,11 +332,11 @@ The seed script is located at `prisma/seed.ts`.
 
 ## Architecture
 
-MyFocusHub follows a modular monolith architecture within a single Next.js application. Module boundaries are enforced by folder structure to enable extraction in later phases.
+NoBrainy follows a modular monolith architecture within a single Next.js application. Module boundaries are enforced by folder structure to enable extraction in later phases.
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                    MyFocusHub Platform                   │
+│                    NoBrainy Platform                   │
 ├───────────────────────┬─────────────────────────────────┤
 │     Frontend Layer    │         API Layer               │
 │  Next.js 14 (Web)     │  Next.js API Route Handlers     │

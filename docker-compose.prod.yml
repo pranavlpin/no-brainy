@@ -1,16 +1,14 @@
-version: '3.8'
-
 services:
   app:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: myfocushub-app
+    container_name: nobrainy-app
     restart: unless-stopped
     ports:
       - "3000:3000"
     environment:
-      DATABASE_URL: postgresql://postgres:password@db:5432/myfocushub
+      DATABASE_URL: postgresql://postgres:password@db:5432/nobrainy
       NEXTAUTH_URL: http://localhost:3000
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
     depends_on:
@@ -19,14 +17,14 @@ services:
 
   db:
     image: postgres:16-alpine
-    container_name: myfocushub-db
+    container_name: nobrainy-db
     restart: unless-stopped
     ports:
       - "5432:5432"
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: myfocushub
+      POSTGRES_DB: nobrainy
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:

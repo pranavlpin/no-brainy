@@ -37,7 +37,7 @@ export default function TasksPage() {
   const { data, isLoading } = useTasks(filters)
   const createTask = useCreateTask()
 
-  const tasks = data?.items ?? []
+  const tasks = data ?? []
 
   const handleCreate = (formData: CreateTaskRequest) => {
     createTask.mutate(formData, {

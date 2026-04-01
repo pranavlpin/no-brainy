@@ -1,15 +1,15 @@
-# Technical Specification: MyFocusHub
+# Technical Specification: NoBrainy
 
 **Version:** 1.0
 **Date:** 2026-04-01
 **Status:** Ready for Implementation
-**PRD Reference:** `docs/MyFocusHub_PRD.md` v1.0
+**PRD Reference:** `docs/NoBrainy_PRD.md` v1.0
 
 ---
 
 ## 1. Overview
 
-MyFocusHub is a personal productivity and learning operating system built as a Next.js 14 monorepo. Phase 1 delivers a fully functional core app (Notes, Tasks, Books, Flashcards, Daily Planner) with no AI dependencies. The architecture is designed so that AI features (Phase 2) and scale features (Phase 3) can be added without structural rewrites.
+NoBrainy is a personal productivity and learning operating system built as a Next.js 14 monorepo. Phase 1 delivers a fully functional core app (Notes, Tasks, Books, Flashcards, Daily Planner) with no AI dependencies. The architecture is designed so that AI features (Phase 2) and scale features (Phase 3) can be added without structural rewrites.
 
 The system uses Next.js App Router for SSR and API routes, PostgreSQL via Prisma ORM for persistence, and a modular frontend with Zustand for client state and React Query (TanStack Query) for server state. The backend API layer lives inside Next.js API route handlers -- no separate Express/Hono server in Phase 1. This simplifies deployment and reduces infrastructure while retaining the option to extract a standalone API server in Phase 3.
 
@@ -2065,7 +2065,7 @@ Task 1 → 2 → 3 → 4 → 5 → 6 → 8 → 25 → 26 → 27
 ## Appendix A: Project Directory Structure
 
 ```
-myfocushub/
+nobrainy/
 ├── prisma/
 │   ├── schema.prisma
 │   └── migrations/

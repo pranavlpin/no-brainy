@@ -12,8 +12,8 @@ concurrency:
 env:
   GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   GCP_REGION: asia-south1
-  SERVICE_NAME: myfocushub-production
-  IMAGE_NAME: asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/myfocushub/app
+  SERVICE_NAME: nobrainy-production
+  IMAGE_NAME: asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/nobrainy/app
 
 jobs:
   # Run CI checks first
@@ -61,13 +61,13 @@ jobs:
       - name: Run database migrations
         uses: google-github-actions/deploy-cloudrun@v2
         with:
-          job: myfocushub-migrate-production
+          job: nobrainy-migrate-production
           region: ${{ env.GCP_REGION }}
           image: ${{ env.IMAGE_NAME }}:${{ github.sha }}
           env_vars: |
             NODE_ENV=production
           secrets: |
-            DATABASE_URL=myfocushub-database-url-prod:latest
+            DATABASE_URL=nobrainy-database-url-prod:latest
           flags: --execute-now --wait
 
       - name: Deploy to Cloud Run
@@ -79,11 +79,11 @@ jobs:
           env_vars: |
             NODE_ENV=production
           secrets: |
-            DATABASE_URL=myfocushub-database-url-prod:latest
-            NEXTAUTH_SECRET=myfocushub-nextauth-secret-prod:latest
-            NEXTAUTH_URL=myfocushub-nextauth-url-prod:latest
-            GOOGLE_CLIENT_ID=myfocushub-google-client-id:latest
-            GOOGLE_CLIENT_SECRET=myfocushub-google-client-secret:latest
+            DATABASE_URL=nobrainy-database-url-prod:latest
+            NEXTAUTH_SECRET=nobrainy-nextauth-secret-prod:latest
+            NEXTAUTH_URL=nobrainy-nextauth-url-prod:latest
+            GOOGLE_CLIENT_ID=nobrainy-google-client-id:latest
+            GOOGLE_CLIENT_SECRET=nobrainy-google-client-secret:latest
           flags: |
             --port=3000
             --memory=1Gi
