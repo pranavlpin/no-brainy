@@ -11,6 +11,8 @@ import { TagInput } from '@/components/notes/tag-input'
 import { useNote, useUpdateNote, useDeleteNote } from '@/hooks/use-notes'
 import { useNoteLinks, useAddNoteLink, useRemoveNoteLink } from '@/hooks/use-links'
 import { LinkManager } from '@/components/linking/link-manager'
+import { NoteAIPanel } from '@/components/notes/note-ai-panel'
+import { FlashcardGenerator } from '@/components/ai/flashcard-generator'
 import type { LinkedItemData } from '@/components/linking/linked-item'
 
 type SaveStatus = 'idle' | 'saving' | 'saved'
@@ -189,6 +191,16 @@ export default function NoteDetailPage() {
 
       {/* Editor */}
       <MarkdownEditor value={content} onChange={handleContentChange} minHeight="500px" />
+
+      {/* AI Actions */}
+      <NoteAIPanel
+        noteId={noteId}
+        existingTags={tags}
+        onAddTag={(tag) => handleTagsChange([...tags, tag])}
+      />
+
+      {/* AI Flashcard Generation */}
+      <FlashcardGenerator sourceType="note" sourceId={noteId} />
 
       {/* Links */}
       <LinkManager

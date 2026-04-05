@@ -1,14 +1,19 @@
 "use client"
 
-import { useEffect, useCallback } from "react"
-import { Calendar, ListTodo, TrendingUp } from "lucide-react"
+import { useState, useEffect, useCallback } from "react"
+import { Calendar, ListTodo, TrendingUp, Sparkles, Loader2 } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { FocusTasks } from "@/components/planner/focus-tasks"
 import { TaskSchedule } from "@/components/planner/task-schedule"
 import { CarryForwardBanner } from "@/components/planner/carry-forward-banner"
+import { AISuggestPanel } from "@/components/planner/ai-suggest-panel"
 import { useTodayPlan, useUpdatePlan, useCarryForward } from "@/hooks/use-planner"
 import { useUpdateTask } from "@/hooks/use-tasks"
+import { usePlannerAISuggest } from "@/hooks/use-planner-ai"
+import { useAI } from "@/hooks/use-ai"
 import type { TaskResponse } from "@/lib/types/tasks"
+import type { DailyPlanSuggestion } from "@/lib/ai/types"
 
 function ProgressBar({
   completed,
@@ -38,11 +43,30 @@ export default function PlannerPage() {
   const updatePlan = useUpdatePlan()
   const updateTask = useUpdateTask()
   const carryForward = useCarryForward()
+  const aiSuggest = usePlannerAISuggest()
+  const { isEnabled: aiEnabled } = useAI()
+  const [suggestion, setSuggestion] = useState<DailyPlanSuggestion | null>(null)
 
   useEffect(() => {
     carryForward.mutate()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  const handleAISuggest = useCallback(() => {
+    aiSuggest.mutate(undefined, {
+      onSuccess: (res) => {
+        setSuggestion(res.data)
+      },
+    })
+  }, [aiSuggest])
+
+  const handleAcceptSuggestion = useCallback(
+    (taskIds: string[], briefMd: string) => {
+      updatePlan.mutate({ focusTaskIds: taskIds, aiBriefMd: briefMd })
+      setSuggestion(null)
+    },
+    [updatePlan]
+  )
 
   const handleUpdateFocus = useCallback(
     (focusTaskIds: string[]) => {
@@ -136,6 +160,39 @@ export default function PlannerPage() {
         currentFocusIds={plan.focusTaskIds}
         onAddToFocus={handleUpdateFocus}
       />
+
+      {/* AI Suggest */}
+      {aiEnabled && !suggestion && (
+        <div className="flex justify-end">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleAISuggest}
+            disabled={aiSuggest.isPending}
+          >
+            {aiSuggest.isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Suggesting...
+              </>
+            ) : (
+              <>
+                <Sparkles className="mr-2 h-4 w-4" />
+                AI Suggest
+              </>
+            )}
+          </Button>
+        </div>
+      )}
+
+      {suggestion && plan && (
+        <AISuggestPanel
+          suggestion={suggestion}
+          allTasks={[...plan.focusTasks, ...plan.tasksDueToday, ...carryForwardSuggestions]}
+          onAccept={handleAcceptSuggestion}
+          onDismiss={() => setSuggestion(null)}
+        />
+      )}
 
       {/* Focus Tasks */}
       <FocusTasks

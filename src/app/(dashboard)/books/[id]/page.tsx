@@ -20,6 +20,7 @@ import { KeyIdeasEditor } from '@/components/books/key-ideas-editor'
 import { QuotesEditor, type BookQuote } from '@/components/books/quotes-editor'
 import { MarkdownEditor } from '@/components/editor/markdown-editor'
 import { useBook, useUpdateBook, useDeleteBook } from '@/hooks/use-books'
+import { FlashcardGenerator } from '@/components/ai/flashcard-generator'
 import { cn } from '@/lib/utils'
 import type { BookStatus, UpdateBookRequest } from '@/lib/types/books'
 
@@ -315,6 +316,9 @@ export default function BookDetailPage() {
           )}
         </div>
       </div>
+
+      {/* AI Flashcard Generation */}
+      <FlashcardGenerator sourceType="book" sourceId={id} />
 
       {/* Delete */}
       <div className="border-t border-border pt-6">

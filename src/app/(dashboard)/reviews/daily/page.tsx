@@ -2,12 +2,15 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Save, Loader2 } from 'lucide-react'
+import { ArrowLeft, Save, Loader2, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { StatsGrid } from '@/components/reviews/stats-grid'
 import { MoodSelector } from '@/components/reviews/mood-selector'
 import { MarkdownEditor } from '@/components/editor/markdown-editor'
+import { MarkdownPreview } from '@/components/editor/markdown-preview'
 import { useDailyReview, useCreateReview, useUpdateReview } from '@/hooks/use-reviews'
+import { useReviewAISummary } from '@/hooks/use-review-ai'
+import { useAI } from '@/hooks/use-ai'
 
 export default function DailyReviewPage() {
   const router = useRouter()
@@ -16,10 +19,13 @@ export default function DailyReviewPage() {
   const { data: existingReview, isLoading, isError } = useDailyReview(today)
   const createReview = useCreateReview()
   const updateReview = useUpdateReview(today)
+  const aiSummary = useReviewAISummary(today)
+  const { isEnabled: aiEnabled } = useAI()
 
   const [reflection, setReflection] = useState('')
   const [mood, setMood] = useState<string | null>(null)
   const [hasCreated, setHasCreated] = useState(false)
+  const [aiSummaryMd, setAiSummaryMd] = useState<string | null>(null)
   const [stats, setStats] = useState({
     tasksCompleted: 0,
     tasksMissed: 0,
@@ -32,6 +38,7 @@ export default function DailyReviewPage() {
     if (existingReview) {
       setReflection(existingReview.reflectionMd)
       setMood(existingReview.mood)
+      setAiSummaryMd(existingReview.aiSummaryMd)
       setStats({
         tasksCompleted: existingReview.tasksCompleted,
         tasksMissed: existingReview.tasksMissed,
@@ -61,6 +68,18 @@ export default function DailyReviewPage() {
       )
     }
   }, [isLoading, isError, hasCreated, today, createReview])
+
+  const handleGenerateSummary = () => {
+    aiSummary.mutate(undefined, {
+      onSuccess: (res) => {
+        setAiSummaryMd(res.data.summaryMd)
+      },
+    })
+  }
+
+  const handleSaveSummary = () => {
+    updateReview.mutate({ aiSummaryMd })
+  }
 
   const handleSave = () => {
     updateReview.mutate(
@@ -150,6 +169,58 @@ export default function DailyReviewPage() {
             </h2>
             <MoodSelector value={mood} onChange={setMood} />
           </section>
+
+          {/* AI Summary */}
+          {aiEnabled && (
+            <section className="space-y-3">
+              <h2 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
+                AI Summary
+              </h2>
+              {aiSummaryMd ? (
+                <div className="rounded-lg border">
+                  <MarkdownPreview content={aiSummaryMd} />
+                  {aiSummaryMd !== existingReview?.aiSummaryMd && (
+                    <div className="flex items-center gap-2 border-t px-4 py-3">
+                      <Button
+                        size="sm"
+                        onClick={handleSaveSummary}
+                        disabled={updateReview.isPending}
+                      >
+                        <Save className="mr-2 h-3 w-3" />
+                        Save Summary
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleGenerateSummary}
+                        disabled={aiSummary.isPending}
+                      >
+                        Regenerate
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <Button
+                  variant="outline"
+                  onClick={handleGenerateSummary}
+                  disabled={aiSummary.isPending}
+                >
+                  {aiSummary.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      Generate AI Summary
+                    </>
+                  )}
+                </Button>
+              )}
+            </section>
+          )}
 
           {/* Save */}
           <div className="flex justify-end pb-8">

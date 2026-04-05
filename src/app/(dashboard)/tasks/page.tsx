@@ -9,6 +9,7 @@ import { Select } from "@/components/ui/select"
 import { TaskList } from "@/components/tasks/task-list"
 import { EisenhowerMatrix } from "@/components/tasks/eisenhower-matrix"
 import { TaskForm } from "@/components/tasks/task-form"
+import { TaskAIPanel } from "@/components/tasks/task-ai-panel"
 import { useTasks, useCreateTask } from "@/hooks/use-tasks"
 import type {
   TaskStatus,
@@ -53,10 +54,13 @@ export default function TasksPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Tasks</h1>
-        <Button onClick={() => setShowNewForm(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          New Task
-        </Button>
+        <div className="flex items-center gap-2">
+          <TaskAIPanel />
+          <Button onClick={() => setShowNewForm(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            New Task
+          </Button>
+        </div>
       </div>
 
       {/* New task form (inline modal) */}

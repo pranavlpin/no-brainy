@@ -8,6 +8,7 @@ export const createReviewSchema = z.object({
 
 export const updateReviewSchema = z.object({
   reflectionMd: z.string().optional(),
+  aiSummaryMd: z.string().nullable().optional(),
   mood: z.enum(['great', 'good', 'okay', 'bad']).nullable().optional(),
 })
 

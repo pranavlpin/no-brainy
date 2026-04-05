@@ -1,0 +1,8 @@
+export { noteSummarizePrompt } from './note-summarize'
+export { noteInsightsPrompt } from './note-insights'
+export { noteTagsPrompt } from './note-tags'
+export { flashcardGeneratePrompt } from './flashcard-generate'
+export { taskPrioritizePrompt } from './task-prioritize'
+export { dailyPlanSuggestPrompt } from './daily-plan-suggest'
+export { reviewSummaryPrompt } from './review-summary'
+export { coachPrompt } from './coach'

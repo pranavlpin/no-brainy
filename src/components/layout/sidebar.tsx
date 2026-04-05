@@ -10,6 +10,7 @@ import {
   Target,
   Search,
   TrendingUp,
+  Sparkles,
   PanelLeftClose,
   PanelLeftOpen,
   X,
@@ -28,6 +29,7 @@ const navItems: NavItem[] = [
   { label: 'Goals', href: '/goals', icon: Target },
   { label: 'Search', href: '/search', icon: Search },
   { label: 'Analytics', href: '/analytics', icon: TrendingUp },
+  { label: 'AI Coach', href: '/ai', icon: Sparkles },
 ]
 
 export function Sidebar() {
