@@ -11,6 +11,7 @@ import {
   Search,
   TrendingUp,
   Sparkles,
+  Lightbulb,
   PanelLeftClose,
   PanelLeftOpen,
   X,
@@ -29,6 +30,7 @@ const navItems: NavItem[] = [
   { label: 'Goals', href: '/goals', icon: Target },
   { label: 'Search', href: '/search', icon: Search },
   { label: 'Analytics', href: '/analytics', icon: TrendingUp },
+  { label: 'Insights', href: '/insights', icon: Lightbulb },
   { label: 'AI Coach', href: '/ai', icon: Sparkles },
 ]
 

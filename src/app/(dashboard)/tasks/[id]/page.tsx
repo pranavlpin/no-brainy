@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { ArrowLeft, Trash2 } from "lucide-react"
+import { ArrowLeft, Trash2, Focus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -12,6 +12,7 @@ import { SubtaskList } from "@/components/tasks/subtask-list"
 import { PriorityBadge } from "@/components/tasks/priority-badge"
 import { useTask, useUpdateTask, useDeleteTask } from "@/hooks/use-tasks"
 import { useTaskLinks, useAddTaskLink, useRemoveTaskLink } from "@/hooks/use-links"
+import { useUIStore } from "@/stores/ui-store"
 import { LinkManager } from "@/components/linking/link-manager"
 import type { LinkedItemData } from "@/components/linking/linked-item"
 import { cn } from "@/lib/utils"
@@ -37,6 +38,7 @@ export default function TaskDetailPage() {
   const { data: task, isLoading } = useTask(id)
   const updateTask = useUpdateTask()
   const deleteTask = useDeleteTask()
+  const enterFocusMode = useUIStore((s) => s.enterFocusMode)
   const { data: taskLinks } = useTaskLinks(id)
   const addTaskLink = useAddTaskLink(id)
   const removeTaskLink = useRemoveTaskLink(id)
@@ -171,6 +173,14 @@ export default function TaskDetailPage() {
         <div className="flex-1">
           <PriorityBadge priority={priority} />
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => enterFocusMode(id)}
+        >
+          <Focus className="mr-1 h-4 w-4" />
+          Focus
+        </Button>
         <Button
           variant="destructive"
           size="sm"

@@ -11,8 +11,13 @@ import { TagInput } from '@/components/notes/tag-input'
 import { useNote, useUpdateNote, useDeleteNote } from '@/hooks/use-notes'
 import { useNoteLinks, useAddNoteLink, useRemoveNoteLink } from '@/hooks/use-links'
 import { LinkManager } from '@/components/linking/link-manager'
+import { BacklinksPanel } from '@/components/notes/backlinks-panel'
 import { NoteAIPanel } from '@/components/notes/note-ai-panel'
 import { FlashcardGenerator } from '@/components/ai/flashcard-generator'
+import { ActionItemsPreview } from '@/components/ai/action-items-preview'
+import { AIActionButton } from '@/components/ai/ai-action-button'
+import { apiClient } from '@/lib/api-client'
+import type { AIActionResponse } from '@/lib/ai/types'
 import type { LinkedItemData } from '@/components/linking/linked-item'
 
 type SaveStatus = 'idle' | 'saving' | 'saved'
@@ -42,6 +47,8 @@ export default function NoteDetailPage() {
   const [isPinned, setIsPinned] = useState(false)
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [isExtractingActions, setIsExtractingActions] = useState(false)
+  const [extractedActions, setExtractedActions] = useState<Array<{ title: string; priority: 'critical' | 'high' | 'medium' | 'low'; reason: string }> | null>(null)
   const [initialized, setInitialized] = useState(false)
 
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -199,6 +206,37 @@ export default function NoteDetailPage() {
         onAddTag={(tag) => handleTagsChange([...tags, tag])}
       />
 
+      {/* AI Extract Actions */}
+      <div className="space-y-4">
+        <AIActionButton
+          label="Extract Actions"
+          onClick={async () => {
+            setIsExtractingActions(true)
+            setExtractedActions(null)
+            try {
+              const res = await apiClient<AIActionResponse<{ tasks: Array<{ title: string; priority: 'critical' | 'high' | 'medium' | 'low'; reason: string }> }>>(`/api/notes/${noteId}/ai/actions`, {
+                method: 'POST',
+              })
+              setExtractedActions(res.data.tasks)
+            } catch {
+              // Error toast handled by API client
+            } finally {
+              setIsExtractingActions(false)
+            }
+          }}
+          isLoading={isExtractingActions}
+        />
+
+        {extractedActions && (
+          <ActionItemsPreview
+            tasks={extractedActions}
+            sourceType="note"
+            sourceId={noteId}
+            onClose={() => setExtractedActions(null)}
+          />
+        )}
+      </div>
+
       {/* AI Flashcard Generation */}
       <FlashcardGenerator sourceType="note" sourceId={noteId} />
 
@@ -210,6 +248,9 @@ export default function NoteDetailPage() {
         onAdd={(targetType, targetId) => addNoteLink.mutate({ targetType, targetId })}
         onRemove={(targetType, targetId) => removeNoteLink.mutate({ targetType, targetId })}
       />
+
+      {/* Backlinks */}
+      <BacklinksPanel noteId={noteId} />
 
       {/* Delete confirmation dialog */}
       <Dialog

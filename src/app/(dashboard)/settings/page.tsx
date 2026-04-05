@@ -1,11 +1,18 @@
 'use client'
 
 import { useState } from 'react'
-import { Key, Eye, EyeOff, Trash2, Shield } from 'lucide-react'
+import { Key, Eye, EyeOff, Trash2, Shield, Bell } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Dialog } from '@/components/ui/dialog'
-import { useApiKeyStatus, useSaveApiKey, useRemoveApiKey } from '@/hooks/use-settings'
+import {
+  useApiKeyStatus,
+  useSaveApiKey,
+  useRemoveApiKey,
+  useNotificationPreferences,
+  useUpdateNotificationPreferences,
+  type NotificationPreferences,
+} from '@/hooks/use-settings'
 
 function ApiKeySection() {
   const { data: status, isLoading } = useApiKeyStatus()
@@ -163,6 +170,74 @@ function ApiKeySection() {
   )
 }
 
+const NOTIF_TOGGLE_ITEMS: { key: keyof NotificationPreferences; label: string; description: string }[] = [
+  { key: 'dueTasks', label: 'Due task reminders', description: 'Get notified about tasks due today' },
+  { key: 'overdueTasks', label: 'Overdue task alerts', description: 'Get alerted about tasks past their due date' },
+  { key: 'habitReminders', label: 'Habit reminders', description: 'Remind you about habits not yet logged today' },
+  { key: 'flashcardReminders', label: 'Flashcard review reminders', description: 'Notify when flashcards are due for review' },
+  { key: 'dailyReviewReminders', label: 'Daily review reminders', description: 'Remind you to complete your daily review' },
+]
+
+function NotificationPreferencesSection() {
+  const { data: prefs, isLoading } = useNotificationPreferences()
+  const updatePrefs = useUpdateNotificationPreferences()
+
+  const handleToggle = (key: keyof NotificationPreferences) => {
+    if (!prefs) return
+    updatePrefs.mutate({ [key]: !prefs[key] })
+  }
+
+  return (
+    <div className="rounded-lg border border-gray-200 bg-white p-6">
+      <div className="flex items-start gap-4">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-100">
+          <Bell className="h-5 w-5 text-indigo-600" />
+        </div>
+        <div className="flex-1">
+          <h3 className="text-lg font-semibold text-gray-900">
+            Notification Preferences
+          </h3>
+          <p className="mt-1 text-sm text-gray-500">
+            Choose which types of notifications you want to receive.
+          </p>
+
+          {isLoading ? (
+            <div className="mt-4 text-sm text-gray-400">Loading...</div>
+          ) : (
+            <div className="mt-4 space-y-4">
+              {NOTIF_TOGGLE_ITEMS.map((item) => (
+                <div key={item.key} className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">
+                      {item.label}
+                    </p>
+                    <p className="text-xs text-gray-500">{item.description}</p>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={prefs?.[item.key] ?? true}
+                    onClick={() => handleToggle(item.key)}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+                      prefs?.[item.key] !== false ? 'bg-indigo-600' : 'bg-gray-200'
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                        prefs?.[item.key] !== false ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function SettingsPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-8 py-8">
@@ -179,6 +254,14 @@ export default function SettingsPage() {
           AI Configuration
         </h2>
         <ApiKeySection />
+      </section>
+
+      {/* Notification Preferences */}
+      <section>
+        <h2 className="mb-4 text-lg font-semibold text-gray-900">
+          Notifications
+        </h2>
+        <NotificationPreferencesSection />
       </section>
     </div>
   )

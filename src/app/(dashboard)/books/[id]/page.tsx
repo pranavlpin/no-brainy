@@ -21,7 +21,12 @@ import { QuotesEditor, type BookQuote } from '@/components/books/quotes-editor'
 import { MarkdownEditor } from '@/components/editor/markdown-editor'
 import { useBook, useUpdateBook, useDeleteBook } from '@/hooks/use-books'
 import { FlashcardGenerator } from '@/components/ai/flashcard-generator'
+import { DistillPreview } from '@/components/ai/distill-preview'
+import { ActionItemsPreview } from '@/components/ai/action-items-preview'
+import { AIActionButton } from '@/components/ai/ai-action-button'
+import { apiClient } from '@/lib/api-client'
 import { cn } from '@/lib/utils'
+import type { AIActionResponse } from '@/lib/ai/types'
 import type { BookStatus, UpdateBookRequest } from '@/lib/types/books'
 
 const statusOptions: { value: BookStatus; label: string; className: string }[] = [
@@ -68,6 +73,10 @@ export default function BookDetailPage() {
   const [activeTab, setActiveTab] = useState<ContentTab>('summary')
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [genreInput, setGenreInput] = useState('')
+  const [isDistilling, setIsDistilling] = useState(false)
+  const [distillResult, setDistillResult] = useState<{ title: string; contentMd: string; suggestedTags: string[] } | null>(null)
+  const [isExtractingActions, setIsExtractingActions] = useState(false)
+  const [extractedActions, setExtractedActions] = useState<Array<{ title: string; priority: 'critical' | 'high' | 'medium' | 'low'; reason: string }> | null>(null)
 
   const save = useCallback(
     (data: UpdateBookRequest) => {
@@ -315,6 +324,67 @@ export default function BookDetailPage() {
             />
           )}
         </div>
+      </div>
+
+      {/* AI Knowledge Distillation */}
+      <div className="space-y-4">
+        <div className="flex flex-wrap gap-3">
+          <AIActionButton
+            label="Distill to Note"
+            onClick={async () => {
+              setIsDistilling(true)
+              setDistillResult(null)
+              try {
+                const res = await apiClient<AIActionResponse<{ title: string; contentMd: string; suggestedTags: string[] }>>(`/api/books/${id}/ai/distill`, {
+                  method: 'POST',
+                })
+                setDistillResult(res.data)
+              } catch {
+                // Error handled by AIActionButton pattern
+              } finally {
+                setIsDistilling(false)
+              }
+            }}
+            isLoading={isDistilling}
+          />
+          <AIActionButton
+            label="Extract Actions"
+            onClick={async () => {
+              setIsExtractingActions(true)
+              setExtractedActions(null)
+              try {
+                const res = await apiClient<AIActionResponse<{ tasks: Array<{ title: string; priority: 'critical' | 'high' | 'medium' | 'low'; reason: string }> }>>(`/api/books/${id}/ai/actions`, {
+                  method: 'POST',
+                })
+                setExtractedActions(res.data.tasks)
+              } catch {
+                // Error handled by AIActionButton pattern
+              } finally {
+                setIsExtractingActions(false)
+              }
+            }}
+            isLoading={isExtractingActions}
+          />
+        </div>
+
+        {distillResult && (
+          <DistillPreview
+            title={distillResult.title}
+            contentMd={distillResult.contentMd}
+            suggestedTags={distillResult.suggestedTags}
+            bookId={id}
+            onClose={() => setDistillResult(null)}
+          />
+        )}
+
+        {extractedActions && (
+          <ActionItemsPreview
+            tasks={extractedActions}
+            sourceType="book"
+            sourceId={id}
+            onClose={() => setExtractedActions(null)}
+          />
+        )}
       </div>
 
       {/* AI Flashcard Generation */}

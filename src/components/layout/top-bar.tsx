@@ -4,6 +4,7 @@ import { Menu } from 'lucide-react'
 import { useUIStore } from '@/stores/ui-store'
 import { Breadcrumbs } from './breadcrumbs'
 import { UserMenu } from './user-menu'
+import { NotificationBell } from '@/components/notifications/notification-bell'
 
 export function TopBar() {
   const { setMobileSidebarOpen } = useUIStore()
@@ -19,7 +20,10 @@ export function TopBar() {
         </button>
         <Breadcrumbs />
       </div>
-      <UserMenu />
+      <div className="flex items-center gap-2">
+        <NotificationBell />
+        <UserMenu />
+      </div>
     </header>
   )
 }

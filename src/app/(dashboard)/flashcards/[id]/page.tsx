@@ -200,17 +200,29 @@ export default function DeckDetailPage() {
         </div>
       </div>
 
-      {/* Review button */}
-      {dueCount > 0 && (
-        <Button
-          size="lg"
-          className="w-full sm:w-auto"
-          onClick={() => router.push(`/flashcards/${deckId}/review`)}
-        >
-          <Play className="mr-2 h-5 w-5" />
-          Start Review ({dueCount} cards due)
-        </Button>
-      )}
+      {/* Action buttons */}
+      <div className="flex flex-wrap gap-3">
+        {dueCount > 0 && (
+          <Button
+            size="lg"
+            className="w-full sm:w-auto"
+            onClick={() => router.push(`/flashcards/${deckId}/review`)}
+          >
+            <Play className="mr-2 h-5 w-5" />
+            Start Review ({dueCount} cards due)
+          </Button>
+        )}
+        {totalCards > 0 && (
+          <Button
+            size="lg"
+            variant="outline"
+            className="w-full sm:w-auto"
+            onClick={() => router.push(`/flashcards/${deckId}/quiz`)}
+          >
+            Quiz
+          </Button>
+        )}
+      </div>
 
       {/* Tabs */}
       <div className="border-b border-border">

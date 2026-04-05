@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, FileText, LayoutGrid, List } from 'lucide-react'
+import { Plus, FileText, LayoutGrid, List, Network } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { NoteCard } from '@/components/notes/note-card'
@@ -79,6 +79,10 @@ export default function NotesPage() {
               <List className="h-4 w-4" />
             </button>
           </div>
+          <Button variant="outline" onClick={() => router.push('/notes/graph')}>
+            <Network className="mr-1.5 h-4 w-4" />
+            View Graph
+          </Button>
           <Button onClick={() => router.push('/notes/new')}>
             <Plus className="mr-1.5 h-4 w-4" />
             New Note

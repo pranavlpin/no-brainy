@@ -6,9 +6,14 @@ import { useUIStore } from '@/stores/ui-store'
 import { cn } from '@/lib/utils'
 import { QuickCaptureProvider } from '@/components/quick-capture/quick-capture-provider'
 import { Toast } from '@/components/ui/toast'
+import { FocusModeView } from '@/components/focus/focus-mode-view'
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const { sidebarCollapsed } = useUIStore()
+  const { sidebarCollapsed, focusMode } = useUIStore()
+
+  if (focusMode) {
+    return <FocusModeView />
+  }
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">

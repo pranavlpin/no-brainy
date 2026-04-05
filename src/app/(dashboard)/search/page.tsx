@@ -1,9 +1,16 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { Search } from 'lucide-react'
 import { useGlobalSearch } from '@/hooks/use-search'
+import type { SearchOptions } from '@/hooks/use-search'
 import { SearchResultItem } from '@/components/search/search-result-item'
+import {
+  RecentSearches,
+  getRecentSearches,
+  addRecentSearch,
+  clearRecentSearches,
+} from '@/components/search/recent-searches'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 
@@ -15,17 +22,70 @@ const TYPE_TABS = [
   { value: 'flashcard', label: 'Flashcards' },
 ] as const
 
+const SORT_OPTIONS = [
+  { value: 'relevance', label: 'Relevance' },
+  { value: 'date', label: 'Newest' },
+  { value: 'title', label: 'Title' },
+] as const
+
 type SearchType = (typeof TYPE_TABS)[number]['value']
+type SortBy = (typeof SORT_OPTIONS)[number]['value']
 
 export default function SearchPage() {
   const [query, setQuery] = useState('')
   const [type, setType] = useState<SearchType>('all')
+  const [sortBy, setSortBy] = useState<SortBy>('relevance')
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
+  const [recentSearches, setRecentSearches] = useState<string[]>([])
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const { data, isLoading, isFetching } = useGlobalSearch(query, type)
+  const searchOptions: SearchOptions = {
+    sortBy: sortBy as SearchOptions['sortBy'],
+    dateFrom: dateFrom || undefined,
+    dateTo: dateTo || undefined,
+  }
 
+  const { data, isLoading, isFetching } = useGlobalSearch(query, type, searchOptions)
+
+  // Load recent searches on mount
+  useEffect(() => {
+    setRecentSearches(getRecentSearches())
+  }, [])
+
+  // Focus input on mount
   useEffect(() => {
     inputRef.current?.focus()
+  }, [])
+
+  // Cmd+K shortcut to focus search
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        inputRef.current?.focus()
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
+  // Save to recent searches when results come back
+  useEffect(() => {
+    if (data && data.results.length > 0 && query.trim()) {
+      addRecentSearch(query.trim())
+      setRecentSearches(getRecentSearches())
+    }
+  }, [data, query])
+
+  const handleSelectRecent = useCallback((q: string) => {
+    setQuery(q)
+    inputRef.current?.focus()
+  }, [])
+
+  const handleClearRecent = useCallback(() => {
+    clearRecentSearches()
+    setRecentSearches([])
   }, [])
 
   const hasQuery = query.trim().length > 0
@@ -43,7 +103,7 @@ export default function SearchPage() {
           type="text"
           value={query}
           onChange={e => setQuery(e.target.value)}
-          placeholder="Search across all your content..."
+          placeholder="Search across all your content... (Cmd+K)"
           className="w-full rounded-xl border border-slate-700 bg-slate-900 py-4 pl-12 pr-4 text-lg text-slate-100 placeholder:text-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
         />
         {isFetching && hasQuery && (
@@ -53,37 +113,97 @@ export default function SearchPage() {
         )}
       </div>
 
-      {/* Type filter tabs */}
-      <div className="mt-4 flex gap-1 overflow-x-auto">
-        {TYPE_TABS.map(tab => (
-          <button
-            key={tab.value}
-            onClick={() => setType(tab.value)}
-            className={cn(
-              'shrink-0 rounded-lg px-4 py-2 text-sm font-medium transition-colors',
-              type === tab.value
-                ? 'bg-blue-600 text-white'
-                : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
-            )}
+      {/* Filters row */}
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        {/* Type filter tabs */}
+        <div className="flex gap-1 overflow-x-auto">
+          {TYPE_TABS.map(tab => (
+            <button
+              key={tab.value}
+              onClick={() => setType(tab.value)}
+              className={cn(
+                'shrink-0 rounded-lg px-4 py-2 text-sm font-medium transition-colors',
+                type === tab.value
+                  ? 'bg-blue-600 text-white'
+                  : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="ml-auto flex items-center gap-2">
+          {/* Sort dropdown */}
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as SortBy)}
+            className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-300 focus:border-blue-500 focus:outline-none"
           >
-            {tab.label}
+            {SORT_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Date range filters */}
+      <div className="mt-3 flex items-center gap-3">
+        <label className="flex items-center gap-1.5 text-xs text-slate-500">
+          From
+          <input
+            type="date"
+            value={dateFrom}
+            onChange={(e) => setDateFrom(e.target.value)}
+            className="rounded border border-slate-700 bg-slate-900 px-2 py-1 text-sm text-slate-300 focus:border-blue-500 focus:outline-none"
+          />
+        </label>
+        <label className="flex items-center gap-1.5 text-xs text-slate-500">
+          To
+          <input
+            type="date"
+            value={dateTo}
+            onChange={(e) => setDateTo(e.target.value)}
+            className="rounded border border-slate-700 bg-slate-900 px-2 py-1 text-sm text-slate-300 focus:border-blue-500 focus:outline-none"
+          />
+        </label>
+        {(dateFrom || dateTo) && (
+          <button
+            onClick={() => {
+              setDateFrom('')
+              setDateTo('')
+            }}
+            className="text-xs text-slate-500 hover:text-slate-300"
+          >
+            Clear dates
           </button>
-        ))}
+        )}
       </div>
 
       {/* Results area */}
       <div className="mt-6">
-        {/* Initial empty state */}
+        {/* Recent searches (when no query) */}
         {!hasQuery && (
-          <div className="py-20 text-center">
-            <Search className="mx-auto h-12 w-12 text-slate-600" />
-            <p className="mt-4 text-lg text-slate-400">
-              Search across all your content
-            </p>
-            <p className="mt-1 text-sm text-slate-500">
-              Find notes, tasks, books, and flashcards
-            </p>
-          </div>
+          <>
+            <RecentSearches
+              searches={recentSearches}
+              onSelect={handleSelectRecent}
+              onClear={handleClearRecent}
+            />
+            {recentSearches.length === 0 && (
+              <div className="py-20 text-center">
+                <Search className="mx-auto h-12 w-12 text-slate-600" />
+                <p className="mt-4 text-lg text-slate-400">
+                  Search across all your content
+                </p>
+                <p className="mt-1 text-sm text-slate-500">
+                  Find notes, tasks, books, and flashcards
+                </p>
+              </div>
+            )}
+          </>
         )}
 
         {/* Loading skeleton */}

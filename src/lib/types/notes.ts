@@ -45,3 +45,25 @@ export interface NoteFilters {
   sortBy?: 'createdAt' | 'updatedAt' | 'title' | 'wordCount'
   sortOrder?: 'asc' | 'desc'
 }
+
+export interface BacklinkItem {
+  id: string
+  title: string
+  snippet: string
+  linkedVia: 'notelink' | 'wikilink'
+}
+
+export interface GraphNode {
+  id: string
+  title: string
+}
+
+export interface GraphEdge {
+  source: string
+  target: string
+}
+
+export interface NoteGraph {
+  nodes: GraphNode[]
+  edges: GraphEdge[]
+}

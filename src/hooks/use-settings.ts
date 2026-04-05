@@ -58,3 +58,46 @@ export function useRemoveApiKey() {
     },
   })
 }
+
+// --- Notification Preferences ---
+
+export interface NotificationPreferences {
+  dueTasks: boolean
+  overdueTasks: boolean
+  habitReminders: boolean
+  flashcardReminders: boolean
+  dailyReviewReminders: boolean
+}
+
+const NOTIF_PREFS_KEY = ['settings', 'notification-preferences'] as const
+
+export function useNotificationPreferences() {
+  return useQuery({
+    queryKey: NOTIF_PREFS_KEY,
+    queryFn: async () => {
+      const res = await apiClient<ApiResponse<NotificationPreferences>>(
+        '/api/settings/notification-preferences'
+      )
+      return res.data
+    },
+  })
+}
+
+export function useUpdateNotificationPreferences() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (prefs: Partial<NotificationPreferences>) => {
+      const res = await apiClient<ApiResponse<NotificationPreferences>>(
+        '/api/settings/notification-preferences',
+        {
+          method: 'PUT',
+          body: JSON.stringify(prefs),
+        }
+      )
+      return res.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: NOTIF_PREFS_KEY })
+    },
+  })
+}

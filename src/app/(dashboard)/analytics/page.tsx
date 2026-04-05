@@ -12,6 +12,7 @@ import { StatCard } from '@/components/analytics/stat-card'
 import { BarChart } from '@/components/analytics/bar-chart'
 import { HorizontalBar } from '@/components/analytics/horizontal-bar'
 import { ActivityHeatmap } from '@/components/analytics/activity-heatmap'
+import { InsightsWidget } from '@/components/insights/insights-widget'
 import { cn } from '@/lib/utils'
 
 function ChartCard({
@@ -262,6 +263,11 @@ export default function AnalyticsPage() {
         <ChartCard title="Most Active Hours" className="md:col-span-2">
           <ActivityHeatmap data={data.mostActiveHours} />
         </ChartCard>
+
+        {/* AI Insights Widget */}
+        <div className="md:col-span-2">
+          <InsightsWidget />
+        </div>
       </div>
     </div>
   )

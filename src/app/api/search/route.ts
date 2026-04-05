@@ -19,18 +19,104 @@ function makePreview(text: string, maxLen = 150): string {
   return stripped.slice(0, maxLen) + '...'
 }
 
+/**
+ * Multi-term enhanced scoring.
+ * Title exact match (10x) > title word boundary (5x) > title contains (3x) > tags match (2x) > content match (1x)
+ */
 function scoreResult(
   title: string,
   content: string,
-  query: string
+  query: string,
+  tags: string[] = []
 ): number {
-  const q = query.toLowerCase()
+  const terms = query
+    .toLowerCase()
+    .split(/\s+/)
+    .filter((t) => t.length > 0)
+  if (terms.length === 0) return 0
+
   const t = title.toLowerCase()
-  if (t === q) return 100
-  if (t.startsWith(q)) return 90
-  if (t.includes(q)) return 80
-  if (content.toLowerCase().includes(q)) return 50
-  return 10
+  const c = content.toLowerCase()
+  const tagStr = tags.join(' ').toLowerCase()
+
+  let totalScore = 0
+
+  for (const term of terms) {
+    let termScore = 0
+
+    // Title exact match (10x)
+    if (t === term) {
+      termScore += 100
+    }
+    // Title word boundary match (5x)
+    else if (new RegExp(`\\b${escapeRegex(term)}\\b`, 'i').test(t)) {
+      termScore += 50
+    }
+    // Title contains (3x)
+    else if (t.includes(term)) {
+      termScore += 30
+    }
+
+    // Tags match (2x)
+    if (tagStr.includes(term)) {
+      termScore += 20
+    }
+
+    // Content match (1x)
+    if (c.includes(term)) {
+      termScore += 10
+    }
+
+    totalScore += termScore
+  }
+
+  return totalScore
+}
+
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+/**
+ * Extract highlight snippets from content where search terms appear.
+ */
+function extractHighlights(
+  content: string,
+  query: string,
+  maxSnippets = 3,
+  snippetLen = 100
+): string[] {
+  const stripped = stripMarkdown(content)
+  const terms = query
+    .toLowerCase()
+    .split(/\s+/)
+    .filter((t) => t.length > 0)
+  if (terms.length === 0) return []
+
+  const highlights: string[] = []
+  const lower = stripped.toLowerCase()
+
+  for (const term of terms) {
+    const idx = lower.indexOf(term)
+    if (idx === -1) continue
+
+    const start = Math.max(0, idx - Math.floor(snippetLen / 2))
+    const end = Math.min(stripped.length, idx + term.length + Math.floor(snippetLen / 2))
+    let snippet = stripped.slice(start, end)
+
+    if (start > 0) snippet = '...' + snippet
+    if (end < stripped.length) snippet = snippet + '...'
+
+    // Bold the matched term in the snippet
+    const regex = new RegExp(`(${escapeRegex(term)})`, 'gi')
+    snippet = snippet.replace(regex, '**$1**')
+
+    highlights.push(snippet)
+
+    if (highlights.length >= maxSnippets) break
+  }
+
+  return highlights
 }
 
 export const GET = withAuth(async (req: NextRequest, user) => {
@@ -42,12 +128,25 @@ export const GET = withAuth(async (req: NextRequest, user) => {
     })
 
     const params = searchQuerySchema.parse(queryObj)
-    const { q, type, tags, limit } = params
+    const { q, type, tags, limit, dateFrom, dateTo, sortBy } = params
 
     const searchTitleOnly = q.length < 3
     const tagList = tags
       ? tags.split(',').map(t => t.trim()).filter(Boolean)
       : undefined
+
+    // Build date filter
+    const dateFilter: { updatedAt?: { gte?: Date; lte?: Date } } = {}
+    if (dateFrom || dateTo) {
+      dateFilter.updatedAt = {}
+      if (dateFrom) dateFilter.updatedAt.gte = new Date(dateFrom)
+      if (dateTo) {
+        // Include the entire end date
+        const endDate = new Date(dateTo)
+        endDate.setHours(23, 59, 59, 999)
+        dateFilter.updatedAt.lte = endDate
+      }
+    }
 
     const results: SearchResult[] = []
 
@@ -60,6 +159,7 @@ export const GET = withAuth(async (req: NextRequest, user) => {
           where: {
             userId: user.id,
             isDeleted: false,
+            ...dateFilter,
             ...(tagList && tagList.length > 0
               ? { tags: { hasSome: tagList } }
               : {}),
@@ -89,6 +189,7 @@ export const GET = withAuth(async (req: NextRequest, user) => {
       ? prisma.task.findMany({
           where: {
             userId: user.id,
+            ...dateFilter,
             ...(tagList && tagList.length > 0
               ? { tags: { hasSome: tagList } }
               : {}),
@@ -123,6 +224,7 @@ export const GET = withAuth(async (req: NextRequest, user) => {
       ? prisma.book.findMany({
           where: {
             userId: user.id,
+            ...dateFilter,
             ...(searchTitleOnly
               ? { title: { contains: q, mode: 'insensitive' as const } }
               : {
@@ -156,6 +258,7 @@ export const GET = withAuth(async (req: NextRequest, user) => {
       ? prisma.flashcard.findMany({
           where: {
             userId: user.id,
+            ...dateFilter,
             ...(tagList && tagList.length > 0
               ? { tags: { hasSome: tagList } }
               : {}),
@@ -185,6 +288,7 @@ export const GET = withAuth(async (req: NextRequest, user) => {
       ? prisma.deck.findMany({
           where: {
             userId: user.id,
+            ...dateFilter,
             ...(tagList && tagList.length > 0
               ? { tags: { hasSome: tagList } }
               : {}),
@@ -224,7 +328,8 @@ export const GET = withAuth(async (req: NextRequest, user) => {
         title: note.title || 'Untitled Note',
         excerpt: makePreview(note.contentMd),
         tags: note.tags,
-        score: scoreResult(note.title, note.contentMd, q),
+        score: scoreResult(note.title, note.contentMd, q, note.tags),
+        highlights: extractHighlights(note.contentMd, q),
         createdAt: note.updatedAt.toISOString(),
         updatedAt: note.updatedAt.toISOString(),
       })
@@ -237,7 +342,8 @@ export const GET = withAuth(async (req: NextRequest, user) => {
         title: task.title,
         excerpt: makePreview(task.descriptionMd),
         tags: task.tags,
-        score: scoreResult(task.title, task.descriptionMd, q),
+        score: scoreResult(task.title, task.descriptionMd, q, task.tags),
+        highlights: extractHighlights(task.descriptionMd, q),
         createdAt: task.updatedAt.toISOString(),
         updatedAt: task.updatedAt.toISOString(),
       })
@@ -251,7 +357,8 @@ export const GET = withAuth(async (req: NextRequest, user) => {
         title: book.title,
         excerpt: makePreview(content),
         tags: book.genre,
-        score: scoreResult(book.title, content, q),
+        score: scoreResult(book.title, content, q, book.genre),
+        highlights: extractHighlights(content, q),
         createdAt: book.updatedAt.toISOString(),
         updatedAt: book.updatedAt.toISOString(),
       })
@@ -264,7 +371,8 @@ export const GET = withAuth(async (req: NextRequest, user) => {
         title: stripMarkdown(card.frontMd).slice(0, 80) || 'Flashcard',
         excerpt: makePreview(card.backMd),
         tags: card.tags,
-        score: scoreResult(card.frontMd, card.backMd, q),
+        score: scoreResult(card.frontMd, card.backMd, q, card.tags),
+        highlights: extractHighlights(card.backMd, q),
         createdAt: card.updatedAt.toISOString(),
         updatedAt: card.updatedAt.toISOString(),
       })
@@ -277,17 +385,28 @@ export const GET = withAuth(async (req: NextRequest, user) => {
         title: deck.name,
         excerpt: makePreview(deck.descriptionMd),
         tags: deck.tags,
-        score: scoreResult(deck.name, deck.descriptionMd, q),
+        score: scoreResult(deck.name, deck.descriptionMd, q, deck.tags),
+        highlights: extractHighlights(deck.descriptionMd, q),
         createdAt: deck.updatedAt.toISOString(),
         updatedAt: deck.updatedAt.toISOString(),
       })
     }
 
-    // Sort by relevance score descending, then by updatedAt descending
-    results.sort((a, b) => {
-      if (b.score !== a.score) return b.score - a.score
-      return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-    })
+    // Sort based on sortBy parameter
+    if (sortBy === 'date') {
+      results.sort(
+        (a, b) =>
+          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+      )
+    } else if (sortBy === 'title') {
+      results.sort((a, b) => a.title.localeCompare(b.title))
+    } else {
+      // relevance: score descending, then by updatedAt descending
+      results.sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score
+        return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+      })
+    }
 
     // Limit total results
     const limited = results.slice(0, limit)

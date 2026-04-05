@@ -18,6 +18,7 @@ export interface SearchResult {
   createdAt: string
   updatedAt: string
   metadata?: Record<string, unknown>
+  highlights?: string[]
 }
 
 export interface SearchResponse {

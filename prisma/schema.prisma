@@ -32,7 +32,10 @@ model User {
   habits        Habit[]
   insights      Insight[]
   sessions      UserSession[]
-  reviewSessions ReviewSession[]
+  reviewSessions    ReviewSession[]
+  quizSessions      QuizSession[]
+  notifications     Notification[]
+  pushSubscriptions PushSubscription[]
   @@map("users")
 }
 
@@ -164,8 +167,9 @@ model Deck {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  flashcards Flashcard[]
-  reviews    ReviewSession[]
+  flashcards   Flashcard[]
+  reviews      ReviewSession[]
+  quizSessions QuizSession[]
   @@index([userId])
   @@map("decks")
 }
@@ -301,4 +305,55 @@ model PromptTemplate {
   isActive     Boolean @default(true)
   @@unique([module, action, version])
   @@map("prompt_templates")
+}
+
+model QuizSession {
+  id             String    @id @default(cuid())
+  userId         String
+  deckId         String
+  mode           String    @default("standard")
+  totalCards     Int
+  correctCount   Int       @default(0)
+  incorrectCount Int       @default(0)
+  skippedCount   Int       @default(0)
+  scorePercent   Float     @default(0)
+  timeLimitSec   Int?
+  timeUsedSec    Int?
+  startedAt      DateTime  @default(now())
+  completedAt    DateTime?
+  answers        Json      @default("[]")
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deck Deck @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  @@index([userId])
+  @@index([deckId])
+  @@map("quiz_sessions")
+}
+
+model Notification {
+  id            String    @id @default(cuid())
+  userId        String
+  type          String
+  title         String
+  body          String
+  relatedEntity String?
+  relatedId     String?
+  isRead        Boolean   @default(false)
+  readAt        DateTime?
+  createdAt     DateTime  @default(now())
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, isRead])
+  @@index([userId, createdAt])
+  @@map("notifications")
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   @db.Text
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([userId, endpoint])
+  @@map("push_subscriptions")
 }

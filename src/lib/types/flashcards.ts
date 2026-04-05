@@ -73,6 +73,60 @@ export interface ReviewFlashcardRequest {
   rating: ReviewRating
 }
 
+// Quiz types
+
+export type QuizMode = 'standard' | 'timed' | 'multiple_choice'
+export type QuizAnswer = 'correct' | 'incorrect' | 'skipped'
+
+export interface QuizSessionResponse {
+  id: string
+  userId: string
+  deckId: string
+  mode: QuizMode
+  totalCards: number
+  correctCount: number
+  incorrectCount: number
+  skippedCount: number
+  scorePercent: number
+  timeLimitSec: number | null
+  timeUsedSec: number | null
+  startedAt: string
+  completedAt: string | null
+  answers: QuizAnswerEntry[]
+}
+
+export interface QuizAnswerEntry {
+  cardId: string
+  answer: QuizAnswer
+}
+
+export interface StartQuizRequest {
+  mode: QuizMode
+  cardLimit?: number
+  timeLimitSec?: number
+}
+
+export interface QuizCardData {
+  id: string
+  frontMd: string
+  backMd: string
+  options?: string[] // For multiple_choice mode
+}
+
+export interface StartQuizResponse {
+  session: QuizSessionResponse
+  cards: QuizCardData[]
+}
+
+export interface SubmitAnswerRequest {
+  cardId: string
+  answer: QuizAnswer
+}
+
+export interface CompleteQuizResponse {
+  session: QuizSessionResponse
+}
+
 export interface ReviewSessionResponse {
   id: string
   userId: string
