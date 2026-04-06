@@ -65,6 +65,8 @@
     "@types/web-push": "^3.6.4",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^14.2.35",
     "jsdom": "^25.0.1",
     "postcss": "^8.4.49",
     "prisma": "^5.22.0",
