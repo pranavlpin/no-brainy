@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write  # For Workload Identity Federation
+      id-token: write
 
     steps:
       - uses: actions/checkout@v4
@@ -49,18 +49,6 @@ jobs:
           docker push ${{ env.IMAGE_NAME }}:${{ github.sha }}
           docker push ${{ env.IMAGE_NAME }}:staging-latest
 
-      - name: Run database migrations
-        uses: google-github-actions/deploy-cloudrun@v2
-        with:
-          job: nobrainy-migrate-staging
-          region: ${{ env.GCP_REGION }}
-          image: ${{ env.IMAGE_NAME }}:${{ github.sha }}
-          env_vars: |
-            NODE_ENV=production
-          secrets: |
-            DATABASE_URL=nobrainy-database-url:latest
-          flags: --execute-now --wait
-
       - name: Deploy to Cloud Run
         uses: google-github-actions/deploy-cloudrun@v2
         with:
@@ -82,10 +70,34 @@ jobs:
             --min-instances=0
             --max-instances=5
             --allow-unauthenticated
+            --add-cloudsql-instances=${{ secrets.GCP_PROJECT_ID }}:${{ env.GCP_REGION }}:nobrainy-db
+
+      - name: Run database migrations
+        run: |
+          gcloud run jobs create nobrainy-migrate-staging \
+            --image=${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            --region=${{ env.GCP_REGION }} \
+            --set-secrets=DATABASE_URL=nobrainy-database-url:latest \
+            --add-cloudsql-instances=${{ secrets.GCP_PROJECT_ID }}:${{ env.GCP_REGION }}:nobrainy-db \
+            --command="npx" \
+            --args="prisma,migrate,deploy" \
+            --max-retries=1 \
+            --task-timeout=300s \
+            2>/dev/null || \
+          gcloud run jobs update nobrainy-migrate-staging \
+            --image=${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            --region=${{ env.GCP_REGION }} \
+            --set-secrets=DATABASE_URL=nobrainy-database-url:latest \
+            --add-cloudsql-instances=${{ secrets.GCP_PROJECT_ID }}:${{ env.GCP_REGION }}:nobrainy-db
+          gcloud run jobs execute nobrainy-migrate-staging \
+            --region=${{ env.GCP_REGION }} \
+            --wait
 
       - name: Show deployment URL
         run: |
-          echo "Deployed to:"
-          gcloud run services describe ${{ env.SERVICE_NAME }} \
+          URL=$(gcloud run services describe ${{ env.SERVICE_NAME }} \
             --region=${{ env.GCP_REGION }} \
-            --format="value(status.url)"
+            --format="value(status.url)")
+          echo "Staging deployed to: $URL"
+          echo "## Deployed to Staging" >> $GITHUB_STEP_SUMMARY
+          echo "URL: $URL" >> $GITHUB_STEP_SUMMARY

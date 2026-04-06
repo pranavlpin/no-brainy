@@ -66,8 +66,8 @@ Connect notes to tasks, books to flashcard decks, tasks to goals, and more. Link
 ### Installation
 
 ```bash
-git clone git@github.com:pranavlpin/nobrainy.git
-cd nobrainy
+git clone git@github.com:pranavlpin/no-brainy.git
+cd no-brainy
 pnpm install
 ```
 

@@ -3,11 +3,11 @@ name: Deploy to Production
 on:
   push:
     branches: [main]
-  workflow_dispatch:  # Manual trigger
+  workflow_dispatch:
 
 concurrency:
   group: deploy-production
-  cancel-in-progress: false  # Don't cancel production deploys
+  cancel-in-progress: false
 
 env:
   GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
@@ -16,7 +16,6 @@ env:
   IMAGE_NAME: asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/nobrainy/app
 
 jobs:
-  # Run CI checks first
   ci:
     uses: ./.github/workflows/ci.yml
 
@@ -27,7 +26,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    environment: production  # Requires approval
+    environment: production
 
     steps:
       - uses: actions/checkout@v4
@@ -58,18 +57,6 @@ jobs:
           docker push ${{ env.IMAGE_NAME }}:production-latest
           docker push ${{ env.IMAGE_NAME }}:latest
 
-      - name: Run database migrations
-        uses: google-github-actions/deploy-cloudrun@v2
-        with:
-          job: nobrainy-migrate-production
-          region: ${{ env.GCP_REGION }}
-          image: ${{ env.IMAGE_NAME }}:${{ github.sha }}
-          env_vars: |
-            NODE_ENV=production
-          secrets: |
-            DATABASE_URL=nobrainy-database-url-prod:latest
-          flags: --execute-now --wait
-
       - name: Deploy to Cloud Run
         uses: google-github-actions/deploy-cloudrun@v2
         with:
@@ -88,14 +75,38 @@ jobs:
             --port=3000
             --memory=1Gi
             --cpu=2
-            --min-instances=1
+            --min-instances=0
             --max-instances=10
             --allow-unauthenticated
             --cpu-boost
+            --add-cloudsql-instances=${{ secrets.GCP_PROJECT_ID }}:${{ env.GCP_REGION }}:nobrainy-db
+
+      - name: Run database migrations
+        run: |
+          gcloud run jobs create nobrainy-migrate-prod \
+            --image=${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            --region=${{ env.GCP_REGION }} \
+            --set-secrets=DATABASE_URL=nobrainy-database-url-prod:latest \
+            --add-cloudsql-instances=${{ secrets.GCP_PROJECT_ID }}:${{ env.GCP_REGION }}:nobrainy-db \
+            --command="npx" \
+            --args="prisma,migrate,deploy" \
+            --max-retries=1 \
+            --task-timeout=300s \
+            2>/dev/null || \
+          gcloud run jobs update nobrainy-migrate-prod \
+            --image=${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            --region=${{ env.GCP_REGION }} \
+            --set-secrets=DATABASE_URL=nobrainy-database-url-prod:latest \
+            --add-cloudsql-instances=${{ secrets.GCP_PROJECT_ID }}:${{ env.GCP_REGION }}:nobrainy-db
+          gcloud run jobs execute nobrainy-migrate-prod \
+            --region=${{ env.GCP_REGION }} \
+            --wait
 
       - name: Show deployment URL
         run: |
-          echo "Production deployed to:"
-          gcloud run services describe ${{ env.SERVICE_NAME }} \
+          URL=$(gcloud run services describe ${{ env.SERVICE_NAME }} \
             --region=${{ env.GCP_REGION }} \
-            --format="value(status.url)"
+            --format="value(status.url)")
+          echo "Production deployed to: $URL"
+          echo "## Deployed to Production" >> $GITHUB_STEP_SUMMARY
+          echo "URL: $URL" >> $GITHUB_STEP_SUMMARY
