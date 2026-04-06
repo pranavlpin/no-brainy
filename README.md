@@ -386,58 +386,100 @@ Core CRUD for all modules with no AI dependencies. Fully functional notes, tasks
 
 ## Deployment
 
-NoBrainy deploys as a Docker container. GCP Cloud Run is the recommended production deployment.
+NoBrainy deploys to **GCP Cloud Run** with automated CI/CD via GitHub Actions.
 
-### Option 1: GCP Cloud Run (Recommended)
+### First-Time GCP Setup (One-Time)
 
-Full CI/CD pipeline with GitHub Actions, Cloud SQL, and Artifact Registry. Scales to zero when idle, handles SSL and custom domains automatically.
-
-**Quick start:**
+Prerequisites: [gcloud CLI](https://cloud.google.com/sdk/docs/install) installed, a GCP project with billing enabled.
 
 ```bash
-# One-time GCP infrastructure setup
-export GCP_PROJECT_ID=your-project
+# 1. Authenticate and set your project
+gcloud auth login
+gcloud config set project YOUR_PROJECT_ID
+
+# 2. Run the setup script (creates everything: Cloud SQL, Artifact Registry,
+#    service account, Workload Identity Federation, secrets, GitHub secrets)
 ./scripts/setup-gcp.sh
+```
 
-# Deploy to staging
-./scripts/deploy.sh staging
+This script creates:
+- **Cloud SQL** PostgreSQL 16 instance (`nobrainy-db`, db-f1-micro)
+- **Artifact Registry** for Docker images
+- **Service account** with Cloud Run, Artifact Registry, Secret Manager, Cloud SQL roles
+- **Workload Identity Federation** for keyless GitHub Actions auth
+- **5 secrets** in Secret Manager (DB URL, NextAuth, Google OAuth)
+- **3 GitHub repo secrets** (via `gh` CLI, or prints them for manual entry)
 
-# Deploy to production
+Estimated cost: ~$10-15/month (Cloud SQL db-f1-micro + Cloud Run scales to zero).
+
+### Deploy
+
+**Option A: Manual deploy** (from your machine)
+
+```bash
+./scripts/deploy.sh                    # deploy to production
+./scripts/deploy.sh staging            # deploy to staging
+./scripts/deploy.sh production v1.2    # with custom tag
+```
+
+The deploy script:
+1. Builds Docker image (`linux/amd64`)
+2. Pushes to Artifact Registry
+3. Deploys to Cloud Run (with Cloud SQL connection)
+4. Runs Prisma migrations via Cloud Run Job
+
+**Option B: GitHub Actions** (automated)
+
+| Trigger | Workflow | Target |
+|---------|----------|--------|
+| Push to `develop` | `deploy-staging.yml` | Staging (512Mi, 1 CPU, 0-5 instances) |
+| Push to `main` | `deploy-production.yml` | Production (1Gi, 2 CPU, 0-10 instances) |
+| Manual | `workflow_dispatch` | Production |
+
+CI runs automatically on every push/PR (lint, type-check, test, build).
+
+### Redeploy After Changes
+
+```bash
+# Make your changes, then:
+git add -A && git commit -m "your changes"
+git push origin main          # triggers GitHub Actions deploy
+
+# Or deploy manually:
 ./scripts/deploy.sh production
 ```
 
-**CI/CD (GitHub Actions):**
-- `ci.yml` — Lint, type-check, test on every push/PR
-- `deploy-staging.yml` — Auto-deploy to staging on push to `develop`
-- `deploy-production.yml` — Auto-deploy to production on push to `main` (with approval gate)
-
-**Required GitHub Secrets:**
-
-| Secret | Description |
-|--------|-------------|
-| `GCP_PROJECT_ID` | Your GCP project ID |
-| `GCP_WORKLOAD_IDENTITY_PROVIDER` | Workload Identity Federation provider |
-| `GCP_SERVICE_ACCOUNT` | Service account email for deployments |
-
-**Resources used:**
-- Cloud Run (app hosting, scales to zero)
-- Cloud SQL PostgreSQL 16 (managed database)
-- Artifact Registry (Docker images)
-- Secret Manager (env vars)
-
-**Estimated cost:** ~$15-30/month (staging at scale-to-zero is nearly free)
-
-See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for the complete step-by-step guide including Workload Identity Federation setup, Cloud SQL configuration, and secret management.
-
-### Option 2: Docker (Self-hosted / Any Cloud)
-
-A production-ready multi-stage Dockerfile is included. Deploy to any platform that runs Docker containers (AWS ECS, Azure Container Apps, DigitalOcean App Platform, etc).
+### Other Scripts
 
 ```bash
-# Build the image
-docker build -t nobrainy .
+./scripts/migrate.sh              # run migrations (production)
+./scripts/migrate.sh staging      # run migrations (staging)
+./scripts/logs.sh                 # view production logs
+./scripts/logs.sh staging 100     # view 100 staging log lines
+./scripts/rollback.sh             # list recent revisions
+./scripts/rollback.sh production REVISION_NAME   # rollback
+```
 
-# Run with environment variables
+### After First Deploy
+
+Update the `NEXTAUTH_URL` secret with your actual Cloud Run URL:
+
+```bash
+echo -n 'https://nobrainy-production-XXXXX.a.run.app' | \
+  gcloud secrets versions add nobrainy-nextauth-url-prod --data-file=-
+```
+
+Optional — set Google OAuth credentials:
+
+```bash
+echo -n 'YOUR_CLIENT_ID' | gcloud secrets versions add nobrainy-google-client-id --data-file=-
+echo -n 'YOUR_SECRET'    | gcloud secrets versions add nobrainy-google-client-secret --data-file=-
+```
+
+### Alternative: Docker (Self-hosted)
+
+```bash
+docker build -t nobrainy .
 docker run -p 3000:3000 \
   -e DATABASE_URL="postgresql://user:pass@host:5432/nobrainy" \
   -e NEXTAUTH_SECRET="your-secret" \
@@ -445,34 +487,10 @@ docker run -p 3000:3000 \
   nobrainy
 ```
 
-Or use `docker-compose.prod.yml` for a full stack (app + PostgreSQL):
+Or full stack with `docker-compose.prod.yml`:
 
 ```bash
 docker-compose -f docker-compose.prod.yml up -d
-```
-
-### Option 3: Railway
-
-Simple alternative with managed PostgreSQL:
-
-1. Go to [railway.app](https://railway.app), create a project
-2. Add PostgreSQL service + GitHub repo
-3. Set environment variables, deploy
-
-### Database
-
-All options require PostgreSQL 16+. For GCP, use Cloud SQL (set up by `setup-gcp.sh`). For other deployments:
-
-| Provider | Free Tier | Notes |
-|----------|-----------|-------|
-| [Neon](https://neon.tech) | 0.5 GB | Serverless Postgres |
-| [Supabase](https://supabase.com) | 500 MB | Postgres + extras |
-| [Railway](https://railway.app) | $5 credit | Simple, integrated |
-
-After connecting your database:
-
-```bash
-pnpm db:migrate
 ```
 
 ## License
