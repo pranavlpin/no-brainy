@@ -384,6 +384,97 @@ Core CRUD for all modules with no AI dependencies. Fully functional notes, tasks
 - Redis caching and background job queues (BullMQ)
 - Offline support with service worker and IndexedDB
 
+## Deployment
+
+NoBrainy deploys as a Docker container. GCP Cloud Run is the recommended production deployment.
+
+### Option 1: GCP Cloud Run (Recommended)
+
+Full CI/CD pipeline with GitHub Actions, Cloud SQL, and Artifact Registry. Scales to zero when idle, handles SSL and custom domains automatically.
+
+**Quick start:**
+
+```bash
+# One-time GCP infrastructure setup
+export GCP_PROJECT_ID=your-project
+./scripts/setup-gcp.sh
+
+# Deploy to staging
+./scripts/deploy.sh staging
+
+# Deploy to production
+./scripts/deploy.sh production
+```
+
+**CI/CD (GitHub Actions):**
+- `ci.yml` — Lint, type-check, test on every push/PR
+- `deploy-staging.yml` — Auto-deploy to staging on push to `develop`
+- `deploy-production.yml` — Auto-deploy to production on push to `main` (with approval gate)
+
+**Required GitHub Secrets:**
+
+| Secret | Description |
+|--------|-------------|
+| `GCP_PROJECT_ID` | Your GCP project ID |
+| `GCP_WORKLOAD_IDENTITY_PROVIDER` | Workload Identity Federation provider |
+| `GCP_SERVICE_ACCOUNT` | Service account email for deployments |
+
+**Resources used:**
+- Cloud Run (app hosting, scales to zero)
+- Cloud SQL PostgreSQL 16 (managed database)
+- Artifact Registry (Docker images)
+- Secret Manager (env vars)
+
+**Estimated cost:** ~$15-30/month (staging at scale-to-zero is nearly free)
+
+See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for the complete step-by-step guide including Workload Identity Federation setup, Cloud SQL configuration, and secret management.
+
+### Option 2: Docker (Self-hosted / Any Cloud)
+
+A production-ready multi-stage Dockerfile is included. Deploy to any platform that runs Docker containers (AWS ECS, Azure Container Apps, DigitalOcean App Platform, etc).
+
+```bash
+# Build the image
+docker build -t nobrainy .
+
+# Run with environment variables
+docker run -p 3000:3000 \
+  -e DATABASE_URL="postgresql://user:pass@host:5432/nobrainy" \
+  -e NEXTAUTH_SECRET="your-secret" \
+  -e NEXTAUTH_URL="https://your-domain.com" \
+  nobrainy
+```
+
+Or use `docker-compose.prod.yml` for a full stack (app + PostgreSQL):
+
+```bash
+docker-compose -f docker-compose.prod.yml up -d
+```
+
+### Option 3: Railway
+
+Simple alternative with managed PostgreSQL:
+
+1. Go to [railway.app](https://railway.app), create a project
+2. Add PostgreSQL service + GitHub repo
+3. Set environment variables, deploy
+
+### Database
+
+All options require PostgreSQL 16+. For GCP, use Cloud SQL (set up by `setup-gcp.sh`). For other deployments:
+
+| Provider | Free Tier | Notes |
+|----------|-----------|-------|
+| [Neon](https://neon.tech) | 0.5 GB | Serverless Postgres |
+| [Supabase](https://supabase.com) | 500 MB | Postgres + extras |
+| [Railway](https://railway.app) | $5 credit | Simple, integrated |
+
+After connecting your database:
+
+```bash
+pnpm db:migrate
+```
+
 ## License
 
 Private / TBD
