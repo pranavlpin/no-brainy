@@ -32,7 +32,7 @@ export function MarkdownCheatsheet() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="fixed left-4 bottom-4 z-40 flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-2 text-xs font-medium text-muted-foreground shadow-sm hover:text-foreground hover:shadow-md transition-all"
+        className="fixed right-0 top-1/2 z-40 -translate-y-1/2 flex items-center gap-1.5 rounded-l-md border border-r-0 border-border bg-card px-3 py-2 text-xs font-medium text-muted-foreground shadow-sm hover:text-foreground hover:shadow-md transition-all"
         title="Markdown Guide"
       >
         <BookOpen className="h-3.5 w-3.5" />
