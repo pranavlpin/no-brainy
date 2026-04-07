@@ -9,6 +9,7 @@ import { NoteCard } from '@/components/notes/note-card'
 import { NoteFiltersBar } from '@/components/notes/note-filters'
 import { useNotes } from '@/hooks/use-notes'
 import { cn } from '@/lib/utils'
+import { MarkdownCheatsheet } from '@/components/notes/markdown-cheatsheet'
 import type { NoteFilters } from '@/lib/types/notes'
 
 export default function NotesPage() {
@@ -158,6 +159,7 @@ export default function NotesPage() {
           ))}
         </div>
       )}
+      <MarkdownCheatsheet />
     </div>
   )
 }

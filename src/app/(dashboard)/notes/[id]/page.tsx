@@ -13,6 +13,7 @@ import { useNoteLinks, useAddNoteLink, useRemoveNoteLink } from '@/hooks/use-lin
 import { LinkManager } from '@/components/linking/link-manager'
 import { BacklinksPanel } from '@/components/notes/backlinks-panel'
 import { NoteAIPanel } from '@/components/notes/note-ai-panel'
+import { MarkdownCheatsheet } from '@/components/notes/markdown-cheatsheet'
 import { FlashcardGenerator } from '@/components/ai/flashcard-generator'
 import { ActionItemsPreview } from '@/components/ai/action-items-preview'
 import { AIActionButton } from '@/components/ai/ai-action-button'
@@ -251,6 +252,8 @@ export default function NoteDetailPage() {
 
       {/* Backlinks */}
       <BacklinksPanel noteId={noteId} />
+
+      <MarkdownCheatsheet />
 
       {/* Delete confirmation dialog */}
       <Dialog
