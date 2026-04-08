@@ -13,12 +13,21 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 # Generate Prisma client
 RUN pnpm prisma generate
-# Build Next.js
+# Build Next.js (standalone mode bundles node_modules including Prisma)
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN pnpm build
 
-# Stage 3: Production
+# Stage 3: Migrator (used by Cloud Run Jobs for DB migrations)
+FROM node:20-alpine AS migrator
+RUN apk add --no-cache openssl
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY prisma ./prisma
+COPY package.json ./
+
+# Stage 4: Production
 FROM node:20-alpine AS runner
+RUN apk add --no-cache openssl
 WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -26,13 +35,11 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Copy built assets
+# Copy built assets — standalone already includes node_modules
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 
 USER nextjs
 EXPOSE 3000

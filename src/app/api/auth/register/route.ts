@@ -72,6 +72,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    console.error('Register API error:', error)
     return NextResponse.json(
       {
         success: false,
