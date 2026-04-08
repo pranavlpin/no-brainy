@@ -6,12 +6,14 @@ import {
   Brain,
   Flame,
   TrendingUp,
+  Wallet,
 } from 'lucide-react'
 import { useAnalytics } from '@/hooks/use-analytics'
 import { StatCard } from '@/components/analytics/stat-card'
 import { BarChart } from '@/components/analytics/bar-chart'
 import { HorizontalBar } from '@/components/analytics/horizontal-bar'
 import { ActivityHeatmap } from '@/components/analytics/activity-heatmap'
+import { ExpenseAnalyticsSection } from '@/components/analytics/expense-analytics'
 import { InsightsWidget } from '@/components/insights/insights-widget'
 import { cn } from '@/lib/utils'
 
@@ -262,6 +264,11 @@ export default function AnalyticsPage() {
         {/* Most Active Hours */}
         <ChartCard title="Most Active Hours" className="md:col-span-2">
           <ActivityHeatmap data={data.mostActiveHours} />
+        </ChartCard>
+
+        {/* Expense Analytics */}
+        <ChartCard title="Expenses" className="md:col-span-2">
+          <ExpenseAnalyticsSection />
         </ChartCard>
 
         {/* AI Insights Widget */}
