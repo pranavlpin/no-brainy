@@ -128,13 +128,6 @@ const steps = [
   },
 ]
 
-const highlights = [
-  { label: '12+ Modules', description: 'Notes, Tasks, Books, Flashcards, Planner, Expenses & more' },
-  { label: 'AI-Powered', description: 'Bring your own OpenAI key for summaries, prioritization & insights' },
-  { label: 'Import Ready', description: 'CSV & SMS import for bank transactions with auto-categorization' },
-  { label: 'Self-Hosted', description: 'Deploy on your own GCP Cloud Run. Your data stays yours' },
-]
-
 export default function LandingPage(): React.ReactElement {
   return (
     <div className="min-h-screen bg-white">
@@ -165,18 +158,6 @@ export default function LandingPage(): React.ReactElement {
             >
               See Features
             </a>
-          </div>
-          {/* Highlight pills */}
-          <div className="mt-12 flex flex-wrap items-center justify-center gap-3">
-            {highlights.map((h) => (
-              <span
-                key={h.label}
-                className="inline-flex items-center rounded-full bg-white px-4 py-2 text-xs font-medium text-gray-700 shadow-sm border border-gray-100"
-                title={h.description}
-              >
-                {h.label}
-              </span>
-            ))}
           </div>
         </div>
       </section>
