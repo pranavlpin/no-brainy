@@ -20,6 +20,8 @@ PROJECT_ID=$(gcloud config get-value project 2>/dev/null)
 SERVICE_NAME="nobrainy-${ENVIRONMENT}"
 IMAGE="$REGION-docker.pkg.dev/$PROJECT_ID/nobrainy/app:$TAG"
 IMAGE_LATEST="$REGION-docker.pkg.dev/$PROJECT_ID/nobrainy/app:${ENVIRONMENT}-latest"
+MIGRATOR_IMAGE="$REGION-docker.pkg.dev/$PROJECT_ID/nobrainy/migrator:$TAG"
+MIGRATOR_LATEST="$REGION-docker.pkg.dev/$PROJECT_ID/nobrainy/migrator:${ENVIRONMENT}-latest"
 
 if [ -z "$PROJECT_ID" ]; then
   echo "ERROR: No GCP project set. Run: gcloud config set project YOUR_PROJECT_ID"
@@ -51,25 +53,33 @@ echo "Tag:      $TAG"
 echo ""
 
 # ----------------------------------------------------------
-# Step 1: Build Docker image
+# Step 1: Build Docker images
 # ----------------------------------------------------------
-echo "[1/4] Building Docker image..."
+echo "[1/5] Building app image..."
 docker build --platform=linux/amd64 \
   -t "$IMAGE" \
   -t "$IMAGE_LATEST" \
   .
 
+echo "[2/5] Building migrator image..."
+docker build --platform=linux/amd64 --target=migrator \
+  -t "$MIGRATOR_IMAGE" \
+  -t "$MIGRATOR_LATEST" \
+  .
+
 # ----------------------------------------------------------
-# Step 2: Push to Artifact Registry
+# Step 3: Push to Artifact Registry
 # ----------------------------------------------------------
-echo "[2/4] Pushing to Artifact Registry..."
+echo "[3/5] Pushing to Artifact Registry..."
 docker push "$IMAGE"
 docker push "$IMAGE_LATEST"
+docker push "$MIGRATOR_IMAGE"
+docker push "$MIGRATOR_LATEST"
 
 # ----------------------------------------------------------
 # Step 3: Deploy to Cloud Run
 # ----------------------------------------------------------
-echo "[3/4] Deploying to Cloud Run..."
+echo "[4/5] Deploying to Cloud Run..."
 gcloud run deploy "$SERVICE_NAME" \
   --image="$IMAGE" \
   --region="$REGION" \
@@ -89,26 +99,27 @@ gcloud run deploy "$SERVICE_NAME" \
 # ----------------------------------------------------------
 # Step 4: Run database migrations
 # ----------------------------------------------------------
-echo "[4/4] Running database migrations..."
+echo "[5/5] Running database migrations..."
 MIGRATE_JOB="nobrainy-migrate-${ENVIRONMENT}"
 
 # Create or update the migration job
 gcloud run jobs create "$MIGRATE_JOB" \
-  --image="$IMAGE" \
+  --image="$MIGRATOR_IMAGE" \
   --region="$REGION" \
   --set-secrets="DATABASE_URL=${DB_SECRET}:latest" \
-  --add-cloudsql-instances="${PROJECT_ID}:${REGION}:nobrainy-db" \
+  --set-cloudsql-instances="${PROJECT_ID}:${REGION}:nobrainy-db" \
   --command="npx" \
   --args="prisma,migrate,deploy" \
+  --memory=1Gi \
   --max-retries=1 \
   --task-timeout=300s \
   --quiet \
   2>/dev/null || \
 gcloud run jobs update "$MIGRATE_JOB" \
-  --image="$IMAGE" \
+  --image="$MIGRATOR_IMAGE" \
   --region="$REGION" \
   --set-secrets="DATABASE_URL=${DB_SECRET}:latest" \
-  --add-cloudsql-instances="${PROJECT_ID}:${REGION}:nobrainy-db" \
+  --set-cloudsql-instances="${PROJECT_ID}:${REGION}:nobrainy-db" \
   --quiet
 
 gcloud run jobs execute "$MIGRATE_JOB" \
