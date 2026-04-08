@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bulbGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#818CF8"/>
+      <stop offset="50%" stop-color="#6366F1"/>
+      <stop offset="100%" stop-color="#4F46E5"/>
+    </linearGradient>
+    <linearGradient id="lightGlow" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#FDE68A"/>
+      <stop offset="100%" stop-color="#F59E0B"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="240" fill="url(#bulbGlow)"/>
+  <!-- Light rays -->
+  <g filter="url(#glow)" opacity="0.6">
+    <line x1="256" y1="60" x2="256" y2="95" stroke="#FDE68A" stroke-width="8" stroke-linecap="round"/>
+    <line x1="120" y1="110" x2="145" y2="135" stroke="#FDE68A" stroke-width="8" stroke-linecap="round"/>
+    <line x1="392" y1="110" x2="367" y2="135" stroke="#FDE68A" stroke-width="8" stroke-linecap="round"/>
+    <line x1="80" y1="230" x2="115" y2="230" stroke="#FDE68A" stroke-width="8" stroke-linecap="round"/>
+    <line x1="432" y1="230" x2="397" y2="230" stroke="#FDE68A" stroke-width="8" stroke-linecap="round"/>
+  </g>
+  <!-- Brain-bulb shape -->
+  <g transform="translate(256,240)">
+    <!-- Bulb glass - brain shape -->
+    <path d="M-80,-80 C-80,-140 -40,-170 0,-170 C40,-170 80,-140 80,-80 C80,-40 60,-10 50,20 L-50,20 C-60,-10 -80,-40 -80,-80Z" fill="white" opacity="0.95"/>
+    <!-- Brain fissure - center line -->
+    <path d="M0,-160 C-5,-120 5,-80 -5,-40 C5,0 -5,15 0,20" fill="none" stroke="url(#bulbGlow)" stroke-width="5" stroke-linecap="round"/>
+    <!-- Brain fissure - left curves -->
+    <path d="M-40,-120 C-20,-110 -25,-90 -45,-80" fill="none" stroke="url(#bulbGlow)" stroke-width="4" stroke-linecap="round"/>
+    <path d="M-50,-65 C-25,-55 -30,-35 -45,-25" fill="none" stroke="url(#bulbGlow)" stroke-width="4" stroke-linecap="round"/>
+    <!-- Brain fissure - right curves -->
+    <path d="M40,-120 C20,-110 25,-90 45,-80" fill="none" stroke="url(#bulbGlow)" stroke-width="4" stroke-linecap="round"/>
+    <path d="M50,-65 C25,-55 30,-35 45,-25" fill="none" stroke="url(#bulbGlow)" stroke-width="4" stroke-linecap="round"/>
+    <!-- Bulb base/screw -->
+    <rect x="-30" y="20" width="60" height="12" rx="3" fill="#E2E8F0"/>
+    <rect x="-25" y="35" width="50" height="10" rx="3" fill="#CBD5E1"/>
+    <rect x="-20" y="48" width="40" height="10" rx="5" fill="#94A3B8"/>
+    <!-- Inner glow -->
+    <circle cx="0" cy="-80" r="35" fill="url(#lightGlow)" opacity="0.3"/>
+  </g>
+</svg>

@@ -11,6 +11,9 @@ const GA_ID = "G-ZYZSB3R02L"
 export const metadata: Metadata = {
   title: "NoBrainy",
   description: "Your personal productivity and learning hub",
+  icons: {
+    icon: "/icon.svg",
+  },
 }
 
 export default function RootLayout({
