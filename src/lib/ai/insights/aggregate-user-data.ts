@@ -1,6 +1,15 @@
 import { prisma } from '@/lib/prisma'
 
 export interface UserDataSummary {
+  expenses: {
+    totalSpent30d: number
+    transactionCount30d: number
+    topCategories: Array<{ name: string; total: number; count: number }>
+    avgPerTransaction: number
+    highestSingle: { name: string; amount: number; date: string } | null
+    monthOverMonthChange: number | null
+    dailyAverage: number
+  }
   tasks: {
     total: number
     completedLast30Days: number
@@ -36,6 +45,8 @@ export async function aggregateUserData(userId: string): Promise<UserDataSummary
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
 
   // Run queries in parallel
+  const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000)
+
   const [
     allTasks,
     completedTasks,
@@ -45,6 +56,8 @@ export async function aggregateUserData(userId: string): Promise<UserDataSummary
     flashcards,
     habits,
     habitLogs,
+    recentExpenses,
+    prevMonthExpenses,
   ] = await Promise.all([
     // All user tasks
     prisma.task.findMany({
@@ -88,6 +101,16 @@ export async function aggregateUserData(userId: string): Promise<UserDataSummary
         logDate: { gte: thirtyDaysAgo },
       },
       select: { habitId: true, logDate: true, completed: true },
+    }),
+    // Expenses in last 30 days
+    prisma.expense.findMany({
+      where: { userId, date: { gte: thirtyDaysAgo } },
+      select: { name: true, amount: true, date: true, categoryId: true, category: { select: { name: true } } },
+    }),
+    // Expenses from 31-60 days ago (for month-over-month)
+    prisma.expense.findMany({
+      where: { userId, date: { gte: sixtyDaysAgo, lt: thirtyDaysAgo } },
+      select: { amount: true },
     }),
   ])
 
@@ -209,7 +232,44 @@ export async function aggregateUserData(userId: string): Promise<UserDataSummary
     }
   })
 
+  // --- Expenses aggregation ---
+  const totalSpent30d = recentExpenses.reduce((sum, e) => sum + Number(e.amount), 0)
+  const prevTotal = prevMonthExpenses.reduce((sum, e) => sum + Number(e.amount), 0)
+
+  const categoryTotals = new Map<string, { name: string; total: number; count: number }>()
+  for (const exp of recentExpenses) {
+    const catName = exp.category?.name ?? 'Unknown'
+    const existing = categoryTotals.get(catName) ?? { name: catName, total: 0, count: 0 }
+    existing.total += Number(exp.amount)
+    existing.count++
+    categoryTotals.set(catName, existing)
+  }
+  const topCategories = Array.from(categoryTotals.values())
+    .sort((a, b) => b.total - a.total)
+    .slice(0, 8)
+
+  let highestSingle: { name: string; amount: number; date: string } | null = null
+  for (const exp of recentExpenses) {
+    const amt = Number(exp.amount)
+    if (!highestSingle || amt > highestSingle.amount) {
+      highestSingle = { name: exp.name, amount: amt, date: exp.date.toISOString().split('T')[0] }
+    }
+  }
+
+  const monthOverMonthChange = prevTotal > 0
+    ? Math.round(((totalSpent30d - prevTotal) / prevTotal) * 100)
+    : null
+
   return {
+    expenses: {
+      totalSpent30d,
+      transactionCount30d: recentExpenses.length,
+      topCategories,
+      avgPerTransaction: recentExpenses.length > 0 ? Math.round(totalSpent30d / recentExpenses.length) : 0,
+      highestSingle,
+      monthOverMonthChange,
+      dailyAverage: Math.round(totalSpent30d / 30),
+    },
     tasks: {
       total: allTasks.length,
       completedLast30Days: completedTasks.length,

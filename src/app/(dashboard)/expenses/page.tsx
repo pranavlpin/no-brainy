@@ -11,6 +11,7 @@ import { ExpenseFiltersBar } from '@/components/expenses/expense-filters'
 import { ExpenseMatrix } from '@/components/expenses/expense-matrix'
 import { ExpenseImportWizard } from '@/components/expenses/expense-import-wizard'
 import { ExpenseCharts } from '@/components/expenses/expense-charts'
+import { ExpenseAIPanel } from '@/components/expenses/expense-ai-panel'
 import { useExpenses, useCreateExpense, useUpdateExpense, useDeleteExpense } from '@/hooks/use-expenses'
 import { formatINR, getCurrentMonth, getMonthDateRange } from '@/lib/expenses/formatters'
 import type { ExpenseFilters, ExpenseResponse, CreateExpenseRequest, UpdateExpenseRequest } from '@/lib/types/expenses'
@@ -192,7 +193,12 @@ export default function ExpensesPage(): React.ReactElement {
 
       {activeTab === 'summary' && <ExpenseMatrix />}
 
-      {activeTab === 'charts' && <ExpenseCharts />}
+      {activeTab === 'charts' && (
+        <div className="space-y-6">
+          <ExpenseAIPanel />
+          <ExpenseCharts />
+        </div>
+      )}
 
       {/* Import wizard */}
       {showImport && (
