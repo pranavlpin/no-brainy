@@ -56,16 +56,16 @@ export function ExpenseMatrix(): React.ReactElement {
       <div className="overflow-x-auto rounded-lg border border-border">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-retro-dark">
-              <th className="sticky left-0 z-10 bg-retro-dark px-4 py-3 text-left font-mono text-xs uppercase tracking-wider text-retro-cream">
+            <tr className="bg-retro-blue/10">
+              <th className="sticky left-0 z-10 bg-retro-blue/10 px-4 py-3 text-left font-mono text-xs uppercase tracking-wider text-retro-dark/60">
                 Category
               </th>
               {data.months.map((month) => (
-                <th key={month} className="px-4 py-3 text-right font-mono text-xs uppercase tracking-wider text-retro-cream whitespace-nowrap">
+                <th key={month} className="px-4 py-3 text-right font-mono text-xs uppercase tracking-wider text-retro-dark/60 whitespace-nowrap">
                   {formatMonthLabel(month)}
                 </th>
               ))}
-              <th className="px-4 py-3 text-right font-mono text-xs uppercase tracking-wider text-retro-cream">Total</th>
+              <th className="px-4 py-3 text-right font-mono text-xs uppercase tracking-wider text-retro-dark/60">Total</th>
             </tr>
           </thead>
           <tbody>

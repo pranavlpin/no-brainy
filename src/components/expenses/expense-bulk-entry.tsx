@@ -143,14 +143,14 @@ export function ExpenseBulkEntry(): React.ReactElement {
       <div ref={tableRef} className="overflow-x-auto rounded-lg border border-border">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-retro-dark text-left">
-              <th className="px-2 py-2.5 font-mono text-xs uppercase tracking-wider text-retro-cream/70 w-8">#</th>
-              <th className="px-2 py-2.5 font-mono text-xs uppercase tracking-wider text-retro-cream/70 w-32">Date</th>
-              <th className="px-2 py-2.5 font-mono text-xs uppercase tracking-wider text-retro-cream/70 min-w-[180px]">Name</th>
-              <th className="px-2 py-2.5 font-mono text-xs uppercase tracking-wider text-retro-cream/70 w-28">Amount (₹)</th>
-              <th className="px-2 py-2.5 font-mono text-xs uppercase tracking-wider text-retro-cream/70 w-40">Category</th>
-              <th className="px-2 py-2.5 font-mono text-xs uppercase tracking-wider text-retro-cream/70 w-32">Tags</th>
-              <th className="px-2 py-2.5 font-mono text-xs uppercase tracking-wider text-retro-cream/70 w-36">Notes</th>
+            <tr className="bg-retro-blue/10 text-left">
+              <th className="px-2 py-2.5 font-mono text-xs uppercase tracking-wider text-retro-dark/60 w-8">#</th>
+              <th className="px-2 py-2.5 font-mono text-xs uppercase tracking-wider text-retro-dark/60 w-32">Date</th>
+              <th className="px-2 py-2.5 font-mono text-xs uppercase tracking-wider text-retro-dark/60 min-w-[180px]">Name</th>
+              <th className="px-2 py-2.5 font-mono text-xs uppercase tracking-wider text-retro-dark/60 w-28">Amount (₹)</th>
+              <th className="px-2 py-2.5 font-mono text-xs uppercase tracking-wider text-retro-dark/60 w-40">Category</th>
+              <th className="px-2 py-2.5 font-mono text-xs uppercase tracking-wider text-retro-dark/60 w-32">Tags</th>
+              <th className="px-2 py-2.5 font-mono text-xs uppercase tracking-wider text-retro-dark/60 w-36">Notes</th>
               <th className="px-2 py-2.5 w-10"></th>
             </tr>
           </thead>
