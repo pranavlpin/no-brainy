@@ -3,8 +3,6 @@
 import { useState } from 'react'
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Select } from '@/components/ui/select'
 import { MonthlyBarChart } from './charts/monthly-bar-chart'
 import { CategoryDonutChart } from './charts/category-donut-chart'
 import { CategoryTrendChart } from './charts/category-trend-chart'
@@ -20,7 +18,7 @@ function StatCard({ label, value, subtext, trend }: {
 }): React.ReactElement {
   return (
     <div className="border-2 border-retro-dark/15 p-4">
-      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="font-mono text-xs text-muted-foreground">{label}</p>
       <p className="mt-1 text-2xl font-bold">{value}</p>
       {(subtext || trend !== undefined) && (
         <div className="mt-1 flex items-center gap-1 text-xs">
@@ -45,14 +43,17 @@ function StatCard({ label, value, subtext, trend }: {
   )
 }
 
-const MONTH_OPTIONS = [3, 6, 9, 12]
-
 export function ExpenseCharts(): React.ReactElement {
-  const [months, setMonths] = useState(6)
-  const [statsMonth, setStatsMonth] = useState(getCurrentMonth())
+  const now = new Date()
+  const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1)
 
-  const { data: trends, isLoading: trendsLoading } = useExpenseTrends(months)
-  const { data: stats, isLoading: statsLoading } = useExpenseStats(statsMonth)
+  const [fromMonth, setFromMonth] = useState(
+    `${sixMonthsAgo.getFullYear()}-${String(sixMonthsAgo.getMonth() + 1).padStart(2, '0')}`
+  )
+  const [toMonth, setToMonth] = useState(getCurrentMonth())
+
+  const { data: trends, isLoading: trendsLoading } = useExpenseTrends({ fromMonth, toMonth })
+  const { data: stats, isLoading: statsLoading } = useExpenseStats(toMonth)
 
   if (trendsLoading || statsLoading) {
     return <div className="py-12 text-center text-muted-foreground">Loading charts...</div>
@@ -70,40 +71,37 @@ export function ExpenseCharts(): React.ReactElement {
 
   return (
     <div className="space-y-6">
-      {/* Date range controls */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-end gap-4">
-        <div>
-          <Label htmlFor="statsMonth" className="text-xs">Stats for month</Label>
+      {/* Date range */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+        <div className="flex items-center gap-2">
+          <label htmlFor="fromMonth" className="font-mono text-xs uppercase tracking-wider text-retro-dark/60">From</label>
           <Input
-            id="statsMonth"
+            id="fromMonth"
             type="month"
-            value={statsMonth}
-            onChange={(e) => setStatsMonth(e.target.value)}
+            value={fromMonth}
+            onChange={(e) => setFromMonth(e.target.value)}
             className="w-40"
           />
         </div>
-        <div>
-          <Label htmlFor="trendRange" className="text-xs">Chart range</Label>
-          <Select
-            id="trendRange"
-            value={String(months)}
-            onChange={(e) => setMonths(Number(e.target.value))}
+        <div className="flex items-center gap-2">
+          <label htmlFor="toMonth" className="font-mono text-xs uppercase tracking-wider text-retro-dark/60">To</label>
+          <Input
+            id="toMonth"
+            type="month"
+            value={toMonth}
+            onChange={(e) => setToMonth(e.target.value)}
             className="w-40"
-          >
-            {MONTH_OPTIONS.map((m) => (
-              <option key={m} value={m}>Last {m} months</option>
-            ))}
-          </Select>
+          />
         </div>
       </div>
 
       {/* Stats cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard
-          label="This Month"
+          label="Selected Month"
           value={formatINR(stats.total)}
           trend={stats.changePercent}
-          subtext="vs last month"
+          subtext="vs prev month"
         />
         <StatCard
           label="Transactions"
