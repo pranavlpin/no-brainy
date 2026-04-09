@@ -60,14 +60,6 @@ function NavBar(): React.ReactElement {
           <a href="#features" className="font-mono text-sm underline underline-offset-4 decoration-2 text-retro-dark hover:text-retro-blue transition-colors">
             Features
           </a>
-          <a
-            href="https://github.com/pranavlpin/no-brainy"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-mono text-sm underline underline-offset-4 decoration-2 text-retro-dark hover:text-retro-blue transition-colors"
-          >
-            GitHub
-          </a>
         </div>
         <Link href="/login" className="font-mono font-bold text-sm px-4 py-2 bg-retro-yellow text-retro-dark border-3 border-retro-dark shadow-hard hover-shadow-grow">
           Sign In
