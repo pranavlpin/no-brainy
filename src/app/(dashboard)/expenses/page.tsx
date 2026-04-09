@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { Plus, Upload, List, TableProperties, BarChart3, Settings2, PenLine, Sheet } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -24,6 +24,13 @@ export default function ExpensesPage(): React.ReactElement {
   const [createMode, setCreateMode] = useState<CreateMode>('bulk')
   const [showImport, setShowImport] = useState(false)
   const [editingExpense, setEditingExpense] = useState<ExpenseResponse | undefined>()
+  const editFormRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (editingExpense && editFormRef.current) {
+      editFormRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }, [editingExpense])
 
   const currentMonth = getCurrentMonth()
   const { startDate, endDate } = getMonthDateRange(currentMonth)
@@ -98,7 +105,7 @@ export default function ExpensesPage(): React.ReactElement {
 
       {/* Edit form (shown on list tab when editing) */}
       {editingExpense && (
-        <div className="rounded-lg border border-border bg-background p-6">
+        <div ref={editFormRef} className="rounded-lg border border-border bg-background p-6">
           <div className="mb-4">
             <h2 className="text-lg font-semibold">Edit Expense</h2>
           </div>
