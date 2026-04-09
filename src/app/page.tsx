@@ -438,6 +438,75 @@ function ExpenseSection(): React.ReactElement {
   )
 }
 
+/* ─── AI Section ─── */
+function AISection(): React.ReactElement {
+  const capabilities = [
+    { label: 'Flashcard Generation', desc: 'Turn any note or book into study-ready flashcards instantly.', color: 'border-l-retro-mint' },
+    { label: 'Smart Summaries', desc: 'Condense long notes into key takeaways with one click.', color: 'border-l-retro-pink' },
+    { label: 'Task Prioritization', desc: 'AI ranks your tasks by urgency and impact. Focus on what matters.', color: 'border-l-retro-blue' },
+    { label: 'Daily Briefs', desc: 'Start each day with an AI-generated overview of your plan.', color: 'border-l-retro-yellow' },
+    { label: 'Insight Extraction', desc: 'Surface hidden patterns from your notes, habits, and reviews.', color: 'border-l-retro-orange' },
+    { label: 'Auto-Categorization', desc: 'Imported expenses get tagged to the right category automatically.', color: 'border-l-retro-mint' },
+  ]
+
+  return (
+    <section className="bg-retro-dark py-16 sm:py-24 px-4 sm:px-6 relative overflow-hidden">
+      <Circle className="absolute top-10 right-[8%] w-14 h-14 opacity-15 animate-float bg-retro-yellow" />
+      <Cross className="absolute bottom-12 left-[6%] opacity-15 animate-spin-slow text-retro-pink" />
+      <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div>
+          <div className="font-mono text-xs uppercase tracking-widest text-retro-yellow mb-3">AI-Powered</div>
+          <h2 className="font-display font-bold text-3xl sm:text-4xl text-retro-cream mb-6 leading-tight">
+            Your brain&apos;s{' '}
+            <span className="relative inline-block">
+              <span className="relative z-10 text-retro-yellow">co-pilot.</span>
+              <span className="absolute -bottom-1 left-0 w-full h-3 bg-retro-pink -z-0 rotate-1" />
+            </span>
+          </h2>
+          <p className="font-body text-sm text-retro-cream/70 leading-relaxed mb-6">
+            Connect your OpenAI API key and unlock intelligent features across every module.
+            Summarize notes, generate flashcards from any content, prioritize tasks, and get
+            daily insights — all without leaving your workspace.
+          </p>
+          <div className="flex gap-3 flex-wrap">
+            {['BYOK Model', 'GPT-4o', 'Your Key, Your Data'].map((tag) => (
+              <span key={tag} className="font-mono text-xs px-3 py-1 border-2 border-retro-cream text-retro-cream">
+                {tag}
+              </span>
+            ))}
+          </div>
+        </div>
+        {/* AI Capabilities mockup */}
+        <div className="border-4 border-retro-cream bg-retro-cream p-6 shadow-hard-lg">
+          <div className="font-mono text-xs text-retro-dark/40 mb-4 uppercase tracking-widest">AI Capabilities</div>
+          <div className="space-y-0">
+            {capabilities.map((cap) => (
+              <div key={cap.label} className={`border-l-3 ${cap.color} pl-4 py-3 border-b border-retro-dark/10 last:border-b-0`}>
+                <div className="font-display font-bold text-sm text-retro-dark">{cap.label}</div>
+                <div className="font-body text-xs text-retro-dark/60 mt-0.5">{cap.desc}</div>
+              </div>
+            ))}
+          </div>
+          {/* Mini flashcard generation demo */}
+          <div className="mt-4 border-3 border-retro-dark bg-retro-dark p-4">
+            <div className="font-mono text-[10px] text-retro-cream/40 mb-2">GENERATED FROM NOTE</div>
+            <div className="space-y-2">
+              <div className="border border-retro-cream/20 p-2">
+                <div className="font-mono text-[10px] text-retro-pink mb-1">Q</div>
+                <div className="font-mono text-xs text-retro-cream/80">What is spaced repetition?</div>
+              </div>
+              <div className="border border-retro-cream/20 p-2">
+                <div className="font-mono text-[10px] text-retro-mint mb-1">A</div>
+                <div className="font-mono text-xs text-retro-cream/80">A learning technique that reviews material at increasing intervals to optimize long-term retention.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 /* ─── How It Works ─── */
 function HowItWorks(): React.ReactElement {
   const steps = [
@@ -580,6 +649,7 @@ export default function LandingPage(): React.ReactElement {
       <Hero />
       <FeaturesTimeline />
       <ExpenseSection />
+      <AISection />
       <HowItWorks />
       <TrustSection />
       <FooterCTA />
