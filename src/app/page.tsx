@@ -512,10 +512,10 @@ function TrustSection(): React.ReactElement {
           <div className="border-4 border-retro-cream bg-retro-blue p-8 shadow-hard-lg hover-shadow-grow">
             <h3 className="font-display font-bold text-2xl text-retro-cream mb-3">Total Control</h3>
             <p className="font-body text-sm text-retro-cream/80 leading-relaxed mb-4">
-              Self-host on your own server. Docker, GCP, or bare metal. 100% open-source. Fork it, mod it, own it.
+              Self-host on your own server. Docker, GCP, or bare metal. Your data never leaves your infrastructure.
             </p>
             <div className="flex gap-2 flex-wrap">
-              {['Docker', 'GCP', 'Open Source'].map((tag) => (
+              {['Docker', 'GCP', 'Self-Hosted'].map((tag) => (
                 <span key={tag} className="font-mono text-[10px] px-2 py-1 border-2 border-retro-cream text-retro-cream uppercase tracking-wider">
                   {tag}
                 </span>
@@ -535,9 +535,6 @@ function FooterCTA(): React.ReactElement {
       <Triangle className="absolute top-6 left-[10%] w-14 h-14 opacity-15 animate-float text-retro-pink" />
       <Circle className="absolute bottom-6 right-[10%] w-10 h-10 opacity-15 animate-float-reverse bg-retro-yellow" />
       <div className="max-w-3xl mx-auto text-center relative">
-        <div className="absolute -top-4 right-4 sm:right-16 font-mono text-xs bg-retro-yellow text-retro-dark px-3 py-1 border-2 border-retro-dark shadow-hard rotate-6">
-          100% FREE
-        </div>
         <h2 className="font-display font-bold text-3xl sm:text-5xl lg:text-6xl text-retro-dark mb-4 leading-tight">
           Start organizing your{' '}
           <span className="relative inline-block">
@@ -547,7 +544,7 @@ function FooterCTA(): React.ReactElement {
           today.
         </h2>
         <p className="font-body text-sm sm:text-base text-retro-dark/60 mb-8">
-          Free to use. Open-source. Deploy in minutes.
+          Deploy in minutes. Start building better habits today.
         </p>
         <Link href="/register" className="inline-block font-mono font-bold text-lg px-10 py-4 bg-retro-pink text-white border-4 border-retro-dark shadow-hard-lg hover-shadow-grow">
           Get Started Now &rarr;
@@ -576,7 +573,7 @@ function PageFooter(): React.ReactElement {
           ))}
         </div>
         <span className="font-mono text-xs text-retro-cream/30">
-          &copy; 2026 NoBrainy. Open Source.
+          &copy; 2026 NoBrainy.
         </span>
       </div>
     </footer>
