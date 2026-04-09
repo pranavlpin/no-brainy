@@ -40,12 +40,26 @@ export interface UserDataSummary {
   }
 }
 
-export async function aggregateUserData(userId: string): Promise<UserDataSummary> {
+export type InsightModule = 'tasks' | 'notes' | 'flashcards' | 'habits' | 'expenses'
+
+export const ALL_INSIGHT_MODULES: { key: InsightModule; label: string; icon: string }[] = [
+  { key: 'expenses', label: 'Expenses', icon: 'wallet' },
+  { key: 'tasks', label: 'Tasks', icon: 'check-square' },
+  { key: 'notes', label: 'Notes', icon: 'file-text' },
+  { key: 'flashcards', label: 'Flashcards', icon: 'layers' },
+  { key: 'habits', label: 'Habits', icon: 'target' },
+]
+
+export async function aggregateUserData(userId: string, modules?: InsightModule[]): Promise<Partial<UserDataSummary>> {
+  const selected = modules ?? ALL_INSIGHT_MODULES.map((m) => m.key)
   const now = new Date()
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
 
   // Run queries in parallel
   const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000)
+
+  // Only query modules the user selected
+  const emptyArr: never[] = []
 
   const [
     allTasks,
@@ -59,59 +73,46 @@ export async function aggregateUserData(userId: string): Promise<UserDataSummary
     recentExpenses,
     prevMonthExpenses,
   ] = await Promise.all([
-    // All user tasks
-    prisma.task.findMany({
+    selected.includes('tasks') ? prisma.task.findMany({
       where: { userId },
       select: { id: true, title: true, priority: true, status: true, dueDate: true, completedAt: true, createdAt: true },
-    }),
-    // Tasks completed in last 30 days
-    prisma.task.findMany({
+    }) : emptyArr,
+    selected.includes('tasks') ? prisma.task.findMany({
       where: { userId, status: 'completed', completedAt: { gte: thirtyDaysAgo } },
       select: { id: true, title: true, priority: true, completedAt: true },
-    }),
-    // Overdue tasks
-    prisma.task.findMany({
+    }) : emptyArr,
+    selected.includes('tasks') ? prisma.task.findMany({
       where: { userId, status: { not: 'completed' }, dueDate: { lt: now } },
       select: { id: true, title: true, dueDate: true },
-    }),
-    // Notes created in last 30 days
-    prisma.note.findMany({
+    }) : emptyArr,
+    selected.includes('notes') ? prisma.note.findMany({
       where: { userId, isDeleted: false, createdAt: { gte: thirtyDaysAgo } },
       select: { id: true, tags: true, createdAt: true },
-    }),
-    // Review sessions in last 30 days
-    prisma.reviewSession.findMany({
+    }) : emptyArr,
+    selected.includes('flashcards') ? prisma.reviewSession.findMany({
       where: { userId, startedAt: { gte: thirtyDaysAgo } },
       select: { startedAt: true, cardsReviewed: true, cardsForgot: true, cardsEasy: true, cardsMedium: true, cardsHard: true },
-    }),
-    // User flashcards with learning state
-    prisma.flashcard.findMany({
+    }) : emptyArr,
+    selected.includes('flashcards') ? prisma.flashcard.findMany({
       where: { userId, state: 'learning' },
       select: { tags: true, reviewCount: true, lastRating: true },
-    }),
-    // Habits
-    prisma.habit.findMany({
+    }) : emptyArr,
+    selected.includes('habits') ? prisma.habit.findMany({
       where: { userId },
       select: { id: true, title: true, frequency: true },
-    }),
-    // Habit logs in last 30 days
-    prisma.habitLog.findMany({
-      where: {
-        habit: { userId },
-        logDate: { gte: thirtyDaysAgo },
-      },
+    }) : emptyArr,
+    selected.includes('habits') ? prisma.habitLog.findMany({
+      where: { habit: { userId }, logDate: { gte: thirtyDaysAgo } },
       select: { habitId: true, logDate: true, completed: true },
-    }),
-    // Expenses in last 30 days
-    prisma.expense.findMany({
+    }) : emptyArr,
+    selected.includes('expenses') ? prisma.expense.findMany({
       where: { userId, date: { gte: thirtyDaysAgo } },
       select: { name: true, amount: true, date: true, categoryId: true, category: { select: { name: true } } },
-    }),
-    // Expenses from 31-60 days ago (for month-over-month)
-    prisma.expense.findMany({
+    }) : emptyArr,
+    selected.includes('expenses') ? prisma.expense.findMany({
       where: { userId, date: { gte: sixtyDaysAgo, lt: thirtyDaysAgo } },
       select: { amount: true },
-    }),
+    }) : emptyArr,
   ])
 
   // --- Tasks aggregation ---
@@ -260,8 +261,10 @@ export async function aggregateUserData(userId: string): Promise<UserDataSummary
     ? Math.round(((totalSpent30d - prevTotal) / prevTotal) * 100)
     : null
 
-  return {
-    expenses: {
+  const result: Partial<UserDataSummary> = {}
+
+  if (selected.includes('expenses')) {
+    result.expenses = {
       totalSpent30d,
       transactionCount30d: recentExpenses.length,
       topCategories,
@@ -269,8 +272,11 @@ export async function aggregateUserData(userId: string): Promise<UserDataSummary
       highestSingle,
       monthOverMonthChange,
       dailyAverage: Math.round(totalSpent30d / 30),
-    },
-    tasks: {
+    }
+  }
+
+  if (selected.includes('tasks')) {
+    result.tasks = {
       total: allTasks.length,
       completedLast30Days: completedTasks.length,
       overdueCount: overdueTasks.length,
@@ -278,20 +284,31 @@ export async function aggregateUserData(userId: string): Promise<UserDataSummary
       completionByPriority,
       completionByDayOfWeek,
       completionTimestamps,
-    },
-    notes: {
+    }
+  }
+
+  if (selected.includes('notes')) {
+    result.notes = {
       totalCreatedLast30Days: notes.length,
       tagFrequency,
       creationTimestamps,
-    },
-    flashcards: {
+    }
+  }
+
+  if (selected.includes('flashcards')) {
+    result.flashcards = {
       totalReviewed,
       forgotRate,
       weakTags,
       reviewStreak,
-    },
-    habits: {
-      habits: habitData,
-    },
+    }
   }
+
+  if (selected.includes('habits')) {
+    result.habits = {
+      habits: habitData,
+    }
+  }
+
+  return result
 }

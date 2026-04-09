@@ -4,7 +4,7 @@ import { withAI } from '@/lib/ai/middleware'
 import { callAI } from '@/lib/ai/call-ai'
 import { handleAIError } from '@/lib/ai/error-handler'
 import { insightGeneratePrompt } from '@/lib/ai/prompts'
-import { aggregateUserData } from '@/lib/ai/insights/aggregate-user-data'
+import { aggregateUserData, type InsightModule } from '@/lib/ai/insights/aggregate-user-data'
 
 interface GeneratedInsight {
   insightType: string
@@ -17,8 +17,19 @@ interface InsightGenerationResult {
   insights: GeneratedInsight[]
 }
 
-export const POST = withAI(async (_req: NextRequest, { user, apiKey }) => {
+export const POST = withAI(async (req: NextRequest, { user, apiKey }) => {
   try {
+    // Parse optional modules from request body
+    let selectedModules: InsightModule[] | undefined
+    try {
+      const body = await req.json()
+      if (body.modules && Array.isArray(body.modules)) {
+        selectedModules = body.modules as InsightModule[]
+      }
+    } catch {
+      // No body or invalid JSON — use all modules
+    }
+
     // Delete expired insights
     await prisma.insight.deleteMany({
       where: {
@@ -27,8 +38,8 @@ export const POST = withAI(async (_req: NextRequest, { user, apiKey }) => {
       },
     })
 
-    // Aggregate user data
-    const data = await aggregateUserData(user.id)
+    // Aggregate user data (only selected modules)
+    const data = await aggregateUserData(user.id, selectedModules)
 
     // Call AI
     const result = await callAI<InsightGenerationResult>({

@@ -1,6 +1,8 @@
 import { AI_MODELS } from '../openai-client'
 import type { UserDataSummary } from '../insights/aggregate-user-data'
 
+type PartialUserData = Partial<UserDataSummary>
+
 export const insightGeneratePrompt = {
   model: AI_MODELS.FAST,
   maxTokens: 2048,
@@ -19,6 +21,8 @@ Rules:
 
 Return JSON: { "insights": [{ "insightType": "...", "contentMd": "...", "severity": "...", "relatedEntity": "..." }] }`,
 
-  userPrompt: (data: UserDataSummary) =>
-    `Here is my productivity data for the last 30 days:\n\n${JSON.stringify(data, null, 2)}`,
+  userPrompt: (data: PartialUserData) => {
+    const modules = Object.keys(data).filter((k) => data[k as keyof UserDataSummary] !== undefined)
+    return `Here is my data for the last 30 days (modules included: ${modules.join(', ')}):\n\n${JSON.stringify(data, null, 2)}`
+  },
 }
