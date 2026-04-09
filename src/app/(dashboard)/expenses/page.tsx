@@ -20,7 +20,7 @@ type CreateMode = 'single' | 'bulk'
 
 export default function ExpensesPage(): React.ReactElement {
   const [activeTab, setActiveTab] = useState<Tab>('create')
-  const [createMode, setCreateMode] = useState<CreateMode>('single')
+  const [createMode, setCreateMode] = useState<CreateMode>('bulk')
   const [showImport, setShowImport] = useState(false)
   const [editingExpense, setEditingExpense] = useState<ExpenseResponse | undefined>()
 
@@ -134,20 +134,20 @@ export default function ExpensesPage(): React.ReactElement {
           {/* Mode toggle */}
           <div className="flex items-center gap-2">
             <Button
-              variant={createMode === 'single' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setCreateMode('single')}
-            >
-              <PenLine className="mr-2 h-4 w-4" />
-              Single Entry
-            </Button>
-            <Button
               variant={createMode === 'bulk' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setCreateMode('bulk')}
             >
               <Sheet className="mr-2 h-4 w-4" />
               Bulk Entry
+            </Button>
+            <Button
+              variant={createMode === 'single' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setCreateMode('single')}
+            >
+              <PenLine className="mr-2 h-4 w-4" />
+              Single Entry
             </Button>
           </div>
 

@@ -1,12 +1,16 @@
 'use client'
 
-import { TrendingUp, TrendingDown, Minus, Receipt, DollarSign, ArrowUpRight } from 'lucide-react'
+import { useState } from 'react'
+import { TrendingUp, TrendingDown, Minus } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Select } from '@/components/ui/select'
 import { MonthlyBarChart } from './charts/monthly-bar-chart'
 import { CategoryDonutChart } from './charts/category-donut-chart'
 import { CategoryTrendChart } from './charts/category-trend-chart'
 import { TopCategoriesBar } from './charts/top-categories-bar'
 import { useExpenseTrends, useExpenseStats } from '@/hooks/use-expense-trends'
-import { formatINR } from '@/lib/expenses/formatters'
+import { formatINR, getCurrentMonth } from '@/lib/expenses/formatters'
 
 function StatCard({ label, value, subtext, trend }: {
   label: string
@@ -41,9 +45,14 @@ function StatCard({ label, value, subtext, trend }: {
   )
 }
 
+const MONTH_OPTIONS = [3, 6, 9, 12]
+
 export function ExpenseCharts(): React.ReactElement {
-  const { data: trends, isLoading: trendsLoading } = useExpenseTrends(6)
-  const { data: stats, isLoading: statsLoading } = useExpenseStats()
+  const [months, setMonths] = useState(6)
+  const [statsMonth, setStatsMonth] = useState(getCurrentMonth())
+
+  const { data: trends, isLoading: trendsLoading } = useExpenseTrends(months)
+  const { data: stats, isLoading: statsLoading } = useExpenseStats(statsMonth)
 
   if (trendsLoading || statsLoading) {
     return <div className="py-12 text-center text-muted-foreground">Loading charts...</div>
@@ -61,6 +70,33 @@ export function ExpenseCharts(): React.ReactElement {
 
   return (
     <div className="space-y-6">
+      {/* Date range controls */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-end gap-4">
+        <div>
+          <Label htmlFor="statsMonth" className="text-xs">Stats for month</Label>
+          <Input
+            id="statsMonth"
+            type="month"
+            value={statsMonth}
+            onChange={(e) => setStatsMonth(e.target.value)}
+            className="w-40"
+          />
+        </div>
+        <div>
+          <Label htmlFor="trendRange" className="text-xs">Chart range</Label>
+          <Select
+            id="trendRange"
+            value={String(months)}
+            onChange={(e) => setMonths(Number(e.target.value))}
+            className="w-40"
+          >
+            {MONTH_OPTIONS.map((m) => (
+              <option key={m} value={m}>Last {m} months</option>
+            ))}
+          </Select>
+        </div>
+      </div>
+
       {/* Stats cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard
