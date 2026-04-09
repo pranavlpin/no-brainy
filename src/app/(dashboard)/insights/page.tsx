@@ -5,6 +5,7 @@ import {
   Lightbulb, Wallet, CheckSquare, FileText, Layers, Target, X,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { AIActionButton } from '@/components/ai/ai-action-button'
 import { InsightCard } from '@/components/insights/insight-card'
 import { useInsights, useGenerateInsights, useDismissInsight } from '@/hooks/use-insights'
@@ -40,6 +41,12 @@ export default function InsightsPage(): React.ReactElement {
     MODULES.map((m) => m.key)
   )
 
+  // Default date range: last 30 days
+  const defaultFrom = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+  const defaultTo = new Date().toISOString().split('T')[0]
+  const [dateFrom, setDateFrom] = useState(defaultFrom)
+  const [dateTo, setDateTo] = useState(defaultTo)
+
   const { data, isLoading } = useInsights({
     dismissed: showDismissed,
     type: typeFilter || undefined,
@@ -57,7 +64,7 @@ export default function InsightsPage(): React.ReactElement {
   }
 
   const handleGenerate = (): void => {
-    generateInsights.mutate(selectedModules)
+    generateInsights.mutate({ modules: selectedModules, dateFrom, dateTo })
     setShowModuleSelector(false)
   }
 
@@ -171,7 +178,48 @@ export default function InsightsPage(): React.ReactElement {
                 )
               })}
             </div>
-            <div className="mt-6 flex items-center justify-between">
+            {/* Date range */}
+            <div className="mt-5 border-t-2 border-retro-dark/10 pt-4">
+              <label className="font-mono text-xs uppercase tracking-wider text-retro-dark/60 mb-2 block">
+                Date Range
+              </label>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                  className="flex-1"
+                />
+                <span className="text-sm text-muted-foreground">to</span>
+                <Input
+                  type="date"
+                  value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
+                  className="flex-1"
+                />
+              </div>
+              <div className="mt-2 flex gap-2">
+                {[
+                  { label: '30 days', days: 30 },
+                  { label: '90 days', days: 90 },
+                  { label: '6 months', days: 180 },
+                  { label: '1 year', days: 365 },
+                ].map((preset) => (
+                  <button
+                    key={preset.label}
+                    onClick={() => {
+                      setDateFrom(new Date(Date.now() - preset.days * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
+                      setDateTo(new Date().toISOString().split('T')[0])
+                    }}
+                    className="font-mono text-[10px] px-2 py-1 border border-retro-dark/20 text-retro-dark/60 hover:bg-retro-blue/5 hover:border-retro-blue/30 transition-colors"
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-5 flex items-center justify-between">
               <button
                 onClick={() => {
                   if (selectedModules.length === MODULES.length) {

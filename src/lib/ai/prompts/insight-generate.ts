@@ -21,8 +21,11 @@ Rules:
 
 Return JSON: { "insights": [{ "insightType": "...", "contentMd": "...", "severity": "...", "relatedEntity": "..." }] }`,
 
-  userPrompt: (data: PartialUserData) => {
+  userPrompt: (data: PartialUserData, dateRange?: { from?: string; to?: string }) => {
     const modules = Object.keys(data).filter((k) => data[k as keyof UserDataSummary] !== undefined)
-    return `Here is my data for the last 30 days (modules included: ${modules.join(', ')}):\n\n${JSON.stringify(data, null, 2)}`
+    const rangeLabel = dateRange?.from && dateRange?.to
+      ? `from ${dateRange.from} to ${dateRange.to}`
+      : 'the last 30 days'
+    return `Here is my data for ${rangeLabel} (modules included: ${modules.join(', ')}):\n\n${JSON.stringify(data, null, 2)}`
   },
 }

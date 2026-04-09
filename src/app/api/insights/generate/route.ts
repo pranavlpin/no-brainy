@@ -19,15 +19,19 @@ interface InsightGenerationResult {
 
 export const POST = withAI(async (req: NextRequest, { user, apiKey }) => {
   try {
-    // Parse optional modules from request body
+    // Parse optional modules and date range from request body
     let selectedModules: InsightModule[] | undefined
+    let dateFrom: string | undefined
+    let dateTo: string | undefined
     try {
       const body = await req.json()
       if (body.modules && Array.isArray(body.modules)) {
         selectedModules = body.modules as InsightModule[]
       }
+      if (body.dateFrom) dateFrom = body.dateFrom as string
+      if (body.dateTo) dateTo = body.dateTo as string
     } catch {
-      // No body or invalid JSON — use all modules
+      // No body or invalid JSON — use defaults
     }
 
     // Delete expired insights
@@ -38,15 +42,15 @@ export const POST = withAI(async (req: NextRequest, { user, apiKey }) => {
       },
     })
 
-    // Aggregate user data (only selected modules)
-    const data = await aggregateUserData(user.id, selectedModules)
+    // Aggregate user data (only selected modules, within date range)
+    const data = await aggregateUserData(user.id, selectedModules, dateFrom, dateTo)
 
     // Call AI
     const result = await callAI<InsightGenerationResult>({
       apiKey,
       model: insightGeneratePrompt.model,
       systemPrompt: insightGeneratePrompt.systemPrompt,
-      userPrompt: insightGeneratePrompt.userPrompt(data),
+      userPrompt: insightGeneratePrompt.userPrompt(data, { from: dateFrom, to: dateTo }),
       maxTokens: insightGeneratePrompt.maxTokens,
       temperature: insightGeneratePrompt.temperature,
       responseFormat: 'json',

@@ -50,13 +50,12 @@ export const ALL_INSIGHT_MODULES: { key: InsightModule; label: string; icon: str
   { key: 'habits', label: 'Habits', icon: 'target' },
 ]
 
-export async function aggregateUserData(userId: string, modules?: InsightModule[]): Promise<Partial<UserDataSummary>> {
+export async function aggregateUserData(userId: string, modules?: InsightModule[], dateFrom?: string, dateTo?: string): Promise<Partial<UserDataSummary>> {
   const selected = modules ?? ALL_INSIGHT_MODULES.map((m) => m.key)
-  const now = new Date()
-  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
-
-  // Run queries in parallel
-  const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000)
+  const now = dateTo ? new Date(dateTo) : new Date()
+  const thirtyDaysAgo = dateFrom ? new Date(dateFrom) : new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+  const rangeDays = Math.max(1, Math.round((now.getTime() - thirtyDaysAgo.getTime()) / (24 * 60 * 60 * 1000)))
+  const sixtyDaysAgo = new Date(thirtyDaysAgo.getTime() - rangeDays * 24 * 60 * 60 * 1000)
 
   // Only query modules the user selected
   const emptyArr: never[] = []
@@ -271,7 +270,7 @@ export async function aggregateUserData(userId: string, modules?: InsightModule[
       avgPerTransaction: recentExpenses.length > 0 ? Math.round(totalSpent30d / recentExpenses.length) : 0,
       highestSingle,
       monthOverMonthChange,
-      dailyAverage: Math.round(totalSpent30d / 30),
+      dailyAverage: Math.round(totalSpent30d / rangeDays),
     }
   }
 
