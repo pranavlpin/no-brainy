@@ -8,6 +8,11 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        mono: ["Space Mono", "monospace"],
+        display: ["Space Grotesk", "sans-serif"],
+        body: ["Inter", "sans-serif"],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -42,11 +47,24 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        retro: {
+          pink: "hsl(var(--retro-pink))",
+          yellow: "hsl(var(--retro-yellow))",
+          blue: "hsl(var(--retro-blue))",
+          mint: "hsl(var(--retro-mint))",
+          orange: "hsl(var(--retro-orange))",
+          dark: "hsl(var(--retro-dark))",
+          cream: "hsl(var(--retro-cream))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      borderWidth: {
+        "3": "3px",
+        "4": "4px",
       },
     },
   },

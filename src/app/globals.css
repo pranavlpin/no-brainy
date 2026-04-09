@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -24,6 +25,15 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 221.2 83.2% 53.3%;
     --radius: 0.5rem;
+
+    /* Retro accent palette */
+    --retro-pink: 336 100% 58%;
+    --retro-yellow: 52 100% 50%;
+    --retro-blue: 233 100% 59%;
+    --retro-mint: 160 100% 45%;
+    --retro-orange: 18 100% 60%;
+    --retro-dark: 240 20% 13%;
+    --retro-cream: 44 100% 95%;
   }
 
   .dark {
@@ -55,5 +65,55 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: 'Inter', sans-serif;
   }
 }
+
+/* Hard shadow utilities */
+.shadow-hard {
+  box-shadow: 4px 4px 0px hsl(240 20% 13%);
+}
+.shadow-hard-lg {
+  box-shadow: 8px 8px 0px hsl(240 20% 13%);
+}
+.shadow-hard-pink {
+  box-shadow: 4px 4px 0px hsl(336 100% 58%);
+}
+.shadow-hard-blue {
+  box-shadow: 4px 4px 0px hsl(233 100% 59%);
+}
+.shadow-hard-yellow {
+  box-shadow: 4px 4px 0px hsl(52 100% 50%);
+}
+.shadow-hard-mint {
+  box-shadow: 4px 4px 0px hsl(160 100% 45%);
+}
+.shadow-hard-orange {
+  box-shadow: 4px 4px 0px hsl(18 100% 60%);
+}
+
+/* Hover shadow animation */
+.hover-shadow-grow {
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.hover-shadow-grow:hover {
+  box-shadow: 8px 8px 0px hsl(240 20% 13%);
+  transform: translate(-2px, -2px);
+}
+
+/* Retro animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(5deg); }
+}
+@keyframes float-reverse {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(10px) rotate(-5deg); }
+}
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.animate-float { animation: float 4s ease-in-out infinite; }
+.animate-float-reverse { animation: float-reverse 5s ease-in-out infinite; }
+.animate-spin-slow { animation: spin-slow 20s linear infinite; }
