@@ -8,7 +8,7 @@ import { CategoryDonutChart } from './charts/category-donut-chart'
 import { CategoryTrendChart } from './charts/category-trend-chart'
 import { TopCategoriesBar } from './charts/top-categories-bar'
 import { useExpenseTrends, useExpenseStats } from '@/hooks/use-expense-trends'
-import { formatINR, getCurrentMonth } from '@/lib/expenses/formatters'
+import { formatINR, getCurrentMonth, formatMonthLabel } from '@/lib/expenses/formatters'
 
 function StatCard({ label, value, subtext, trend }: {
   label: string
@@ -46,14 +46,16 @@ function StatCard({ label, value, subtext, trend }: {
 export function ExpenseCharts(): React.ReactElement {
   const now = new Date()
   const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1)
+  const currentMonth = getCurrentMonth()
 
   const [fromMonth, setFromMonth] = useState(
     `${sixMonthsAgo.getFullYear()}-${String(sixMonthsAgo.getMonth() + 1).padStart(2, '0')}`
   )
-  const [toMonth, setToMonth] = useState(getCurrentMonth())
+  const [toMonth, setToMonth] = useState(currentMonth)
+  const [selectedMonth, setSelectedMonth] = useState(currentMonth)
 
   const { data: trends, isLoading: trendsLoading } = useExpenseTrends({ fromMonth, toMonth })
-  const { data: stats, isLoading: statsLoading } = useExpenseStats(toMonth)
+  const { data: stats, isLoading: statsLoading } = useExpenseStats(selectedMonth)
 
   if (trendsLoading || statsLoading) {
     return <div className="py-12 text-center text-muted-foreground">Loading charts...</div>
@@ -68,6 +70,9 @@ export function ExpenseCharts(): React.ReactElement {
     color: c.color,
     total: c.total,
   }))
+
+  const isCurrentMonth = selectedMonth === currentMonth
+  const statsLabel = isCurrentMonth ? 'This Month' : formatMonthLabel(selectedMonth)
 
   return (
     <div className="space-y-6">
@@ -93,12 +98,20 @@ export function ExpenseCharts(): React.ReactElement {
             className="w-44"
           />
         </div>
+        {!isCurrentMonth && (
+          <button
+            onClick={() => setSelectedMonth(currentMonth)}
+            className="font-mono text-xs text-retro-blue hover:underline"
+          >
+            Reset to this month
+          </button>
+        )}
       </div>
 
       {/* Stats cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard
-          label="Selected Month"
+          label={statsLabel}
           value={formatINR(stats.total)}
           trend={stats.changePercent}
           subtext="vs prev month"
@@ -120,7 +133,11 @@ export function ExpenseCharts(): React.ReactElement {
 
       {/* Charts grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <MonthlyBarChart data={trends.monthlyTotals} />
+        <MonthlyBarChart
+          data={trends.monthlyTotals}
+          selectedMonth={selectedMonth}
+          onMonthClick={(month) => setSelectedMonth(month)}
+        />
         <CategoryDonutChart data={categoryTotals} />
         <CategoryTrendChart months={trends.months} categories={trends.categories} />
         <TopCategoriesBar data={categoryTotals} />
