@@ -43,21 +43,16 @@ export function MonthlyBarChart({ data, selectedMonth, onMonthClick }: MonthlyBa
           <XAxis dataKey="month" className="text-xs" tick={{ fill: 'currentColor', fontSize: 11 }} />
           <YAxis className="text-xs" tick={{ fill: 'currentColor', fontSize: 11 }} tickFormatter={(v: number) => `₹${(v / 1000).toFixed(0)}k`} />
           <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(233 100% 59% / 0.05)' }} />
-          <Bar
-            dataKey="total"
-            radius={[4, 4, 0, 0]}
-            cursor="pointer"
-            onClick={(_data: unknown, index: number) => {
-              if (onMonthClick && chartData[index]) {
-                onMonthClick(chartData[index].rawMonth)
-              }
-            }}
-          >
+          <Bar dataKey="total" radius={[4, 4, 0, 0]}>
             {chartData.map((entry, idx) => (
               <Cell
                 key={idx}
                 fill={entry.rawMonth === selectedMonth ? '#2D4CFF' : '#6366F1'}
                 opacity={selectedMonth && entry.rawMonth !== selectedMonth ? 0.4 : 1}
+                cursor="pointer"
+                onClick={() => {
+                  if (onMonthClick) onMonthClick(entry.rawMonth)
+                }}
               />
             ))}
           </Bar>
