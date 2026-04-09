@@ -56,12 +56,19 @@ export function useInsights(filters?: { dismissed?: boolean; type?: string }) {
   })
 }
 
+interface GenerateParams {
+  modules?: string[]
+  dateFrom?: string
+  dateTo?: string
+}
+
 export function useGenerateInsights() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: () =>
+    mutationFn: (params?: GenerateParams) =>
       apiClient<GenerateResponse>('/api/insights/generate', {
         method: 'POST',
+        body: params ? JSON.stringify(params) : undefined,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: INSIGHTS_KEY })

@@ -43,6 +43,7 @@ export interface HabitResponse {
   currentStreak?: number
   longestStreak?: number
   completionRate?: number
+  completedToday?: boolean
 }
 
 export interface CreateHabitRequest {

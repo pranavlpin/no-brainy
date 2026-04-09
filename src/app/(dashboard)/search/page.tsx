@@ -97,18 +97,18 @@ export default function SearchPage() {
     <div className="mx-auto max-w-3xl px-4 py-8">
       {/* Search input */}
       <div className="relative">
-        <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+        <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-retro-dark/40" />
         <input
           ref={inputRef}
           type="text"
           value={query}
           onChange={e => setQuery(e.target.value)}
           placeholder="Search across all your content... (Cmd+K)"
-          className="w-full rounded-xl border border-slate-700 bg-slate-900 py-4 pl-12 pr-4 text-lg text-slate-100 placeholder:text-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="w-full rounded-xl border border-retro-dark/20 bg-retro-dark/5 py-4 pl-12 pr-4 text-lg text-retro-dark placeholder:text-retro-dark/40 focus:border-retro-blue focus:outline-none focus:ring-1 focus:ring-retro-blue"
         />
         {isFetching && hasQuery && (
           <div className="absolute right-4 top-1/2 -translate-y-1/2">
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-500 border-t-blue-400" />
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-retro-dark/20 border-t-retro-blue" />
           </div>
         )}
       </div>
@@ -124,8 +124,8 @@ export default function SearchPage() {
               className={cn(
                 'shrink-0 rounded-lg px-4 py-2 text-sm font-medium transition-colors',
                 type === tab.value
-                  ? 'bg-blue-600 text-white'
-                  : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                  ? 'bg-retro-blue text-white font-mono'
+                  : 'text-retro-dark/40 hover:bg-retro-blue/10 hover:text-retro-dark/70 font-mono'
               )}
             >
               {tab.label}
@@ -138,7 +138,7 @@ export default function SearchPage() {
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as SortBy)}
-            className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-300 focus:border-blue-500 focus:outline-none"
+            className="rounded-lg border border-retro-dark/20 bg-retro-dark/5 px-3 py-2 text-sm text-retro-dark/70 focus:border-retro-blue focus:outline-none"
           >
             {SORT_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -151,22 +151,22 @@ export default function SearchPage() {
 
       {/* Date range filters */}
       <div className="mt-3 flex items-center gap-3">
-        <label className="flex items-center gap-1.5 text-xs text-slate-500">
+        <label className="flex items-center gap-1.5 text-xs text-retro-dark/40">
           From
           <input
             type="date"
             value={dateFrom}
             onChange={(e) => setDateFrom(e.target.value)}
-            className="rounded border border-slate-700 bg-slate-900 px-2 py-1 text-sm text-slate-300 focus:border-blue-500 focus:outline-none"
+            className="rounded border border-retro-dark/20 bg-retro-dark/5 px-2 py-1 text-sm text-retro-dark/70 focus:border-retro-blue focus:outline-none"
           />
         </label>
-        <label className="flex items-center gap-1.5 text-xs text-slate-500">
+        <label className="flex items-center gap-1.5 text-xs text-retro-dark/40">
           To
           <input
             type="date"
             value={dateTo}
             onChange={(e) => setDateTo(e.target.value)}
-            className="rounded border border-slate-700 bg-slate-900 px-2 py-1 text-sm text-slate-300 focus:border-blue-500 focus:outline-none"
+            className="rounded border border-retro-dark/20 bg-retro-dark/5 px-2 py-1 text-sm text-retro-dark/70 focus:border-retro-blue focus:outline-none"
           />
         </label>
         {(dateFrom || dateTo) && (
@@ -175,7 +175,7 @@ export default function SearchPage() {
               setDateFrom('')
               setDateTo('')
             }}
-            className="text-xs text-slate-500 hover:text-slate-300"
+            className="text-xs text-retro-dark/40 hover:text-retro-dark/70"
           >
             Clear dates
           </button>
@@ -194,11 +194,11 @@ export default function SearchPage() {
             />
             {recentSearches.length === 0 && (
               <div className="py-20 text-center">
-                <Search className="mx-auto h-12 w-12 text-slate-600" />
-                <p className="mt-4 text-lg text-slate-400">
+                <Search className="mx-auto h-12 w-12 text-retro-dark/30" />
+                <p className="mt-4 text-lg text-retro-dark/40">
                   Search across all your content
                 </p>
-                <p className="mt-1 text-sm text-slate-500">
+                <p className="mt-1 text-sm text-retro-dark/40">
                   Find notes, tasks, books, and flashcards
                 </p>
               </div>
@@ -226,7 +226,7 @@ export default function SearchPage() {
         {/* Results list */}
         {showResults && (
           <div className="space-y-1">
-            <p className="mb-3 text-xs text-slate-500">
+            <p className="mb-3 text-xs text-retro-dark/40">
               {data.total} result{data.total !== 1 ? 's' : ''} for &ldquo;
               {data.query}&rdquo;
             </p>
@@ -243,10 +243,10 @@ export default function SearchPage() {
         {/* No results */}
         {showEmpty && (
           <div className="py-16 text-center">
-            <p className="text-lg text-slate-400">
+            <p className="text-lg text-retro-dark/40">
               No results for &ldquo;{query}&rdquo;
             </p>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-retro-dark/40">
               Try a different search term or filter
             </p>
           </div>

@@ -23,7 +23,7 @@ export default function AICoachPage() {
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900/30">
           <Sparkles className="h-8 w-8 text-purple-500" />
         </div>
-        <h1 className="text-2xl font-bold">AI Coach</h1>
+        <h1 className="font-display text-2xl font-bold text-retro-dark">AI Coach</h1>
         <p className="max-w-md text-muted-foreground">
           Configure your OpenAI API key in Settings to start chatting with your
           AI coach.

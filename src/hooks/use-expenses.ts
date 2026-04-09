@@ -1,5 +1,6 @@
 import {
   useQuery,
+  useInfiniteQuery,
   useMutation,
   useQueryClient,
 } from '@tanstack/react-query'
@@ -27,14 +28,23 @@ function buildQueryString(filters: ExpenseFilters): string {
   return str ? `?${str}` : ''
 }
 
+const PAGE_SIZE = 50
+
 export function useExpenses(filters: ExpenseFilters = {}) {
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: ['expenses', filters],
-    queryFn: () =>
-      apiClient<ApiResponse<PaginatedResponse<ExpenseResponse>>>(
-        `/api/expenses${buildQueryString(filters)}`
-      ),
-    select: (res) => res.data,
+    queryFn: ({ pageParam = 1 }) => {
+      const qs = buildQueryString(filters)
+      const separator = qs ? '&' : '?'
+      return apiClient<ApiResponse<PaginatedResponse<ExpenseResponse>>>(
+        `/api/expenses${qs}${separator}page=${pageParam}&pageSize=${PAGE_SIZE}`
+      )
+    },
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      const data = lastPage.data
+      return data.hasMore ? data.page + 1 : undefined
+    },
   })
 }
 
@@ -84,6 +94,21 @@ export function useDeleteExpense() {
     mutationFn: (id: string) =>
       apiClient<ApiResponse<{ id: string }>>(`/api/expenses/${id}`, {
         method: 'DELETE',
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['expenses'] })
+      queryClient.invalidateQueries({ queryKey: ['expense-summary'] })
+    },
+  })
+}
+
+export function useBulkUpdateCategory() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (data: { ids: string[]; categoryId: string }) =>
+      apiClient<ApiResponse<{ updated: number }>>('/api/expenses/bulk', {
+        method: 'PATCH',
+        body: JSON.stringify(data),
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['expenses'] })

@@ -117,3 +117,11 @@
 .animate-float { animation: float 4s ease-in-out infinite; }
 .animate-float-reverse { animation: float-reverse 5s ease-in-out infinite; }
 .animate-spin-slow { animation: spin-slow 20s linear infinite; }
+
+/* Remove focus ring from all Recharts elements */
+.recharts-surface,
+.recharts-wrapper,
+.recharts-surface:focus,
+.recharts-wrapper:focus {
+  outline: none !important;
+}

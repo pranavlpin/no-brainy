@@ -32,12 +32,22 @@ interface StatsResponse {
   topCategory: { categoryName: string; color: string; total: number } | null
 }
 
-export function useExpenseTrends(months: number = 6) {
+interface TrendsFilters {
+  fromMonth?: string
+  toMonth?: string
+}
+
+export function useExpenseTrends(filters: TrendsFilters = {}) {
+  const params = new URLSearchParams()
+  if (filters.fromMonth) params.set('fromMonth', filters.fromMonth)
+  if (filters.toMonth) params.set('toMonth', filters.toMonth)
+  const qs = params.toString()
+
   return useQuery({
-    queryKey: ['expense-trends', months],
+    queryKey: ['expense-trends', filters],
     queryFn: () =>
       apiClient<ApiResponse<TrendsResponse>>(
-        `/api/expenses/trends?months=${months}`
+        `/api/expenses/trends${qs ? `?${qs}` : ''}`
       ),
     select: (res) => res.data,
   })

@@ -37,7 +37,7 @@ export function ExpenseMatrix(): React.ReactElement {
             type="month"
             value={startMonth}
             onChange={(e) => setStartMonth(e.target.value)}
-            className="w-40"
+            className="w-44"
           />
         </div>
         <div>
@@ -47,7 +47,7 @@ export function ExpenseMatrix(): React.ReactElement {
             type="month"
             value={endMonth}
             onChange={(e) => setEndMonth(e.target.value)}
-            className="w-40"
+            className="w-44"
           />
         </div>
       </div>
@@ -56,16 +56,16 @@ export function ExpenseMatrix(): React.ReactElement {
       <div className="overflow-x-auto rounded-lg border border-border">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-muted/50">
-              <th className="sticky left-0 z-10 bg-muted/50 px-4 py-3 text-left font-semibold">
+            <tr className="bg-retro-blue/10">
+              <th className="sticky left-0 z-10 bg-retro-blue/10 px-4 py-3 text-left font-mono text-xs uppercase tracking-wider text-retro-dark/60">
                 Category
               </th>
               {data.months.map((month) => (
-                <th key={month} className="px-4 py-3 text-right font-semibold whitespace-nowrap">
+                <th key={month} className="px-4 py-3 text-right font-mono text-xs uppercase tracking-wider text-retro-dark/60 whitespace-nowrap">
                   {formatMonthLabel(month)}
                 </th>
               ))}
-              <th className="px-4 py-3 text-right font-semibold">Total</th>
+              <th className="px-4 py-3 text-right font-mono text-xs uppercase tracking-wider text-retro-dark/60">Total</th>
             </tr>
           </thead>
           <tbody>
@@ -88,8 +88,8 @@ export function ExpenseMatrix(): React.ReactElement {
             ))}
           </tbody>
           <tfoot>
-            <tr className="border-t-2 border-border bg-muted/30 font-semibold">
-              <td className="sticky left-0 z-10 bg-muted/30 px-4 py-3">Total</td>
+            <tr className="border-t-2 border-retro-dark/20 bg-retro-dark/5 font-semibold">
+              <td className="sticky left-0 z-10 bg-retro-dark/5 px-4 py-3 font-mono text-sm">Total</td>
               {data.months.map((month) => (
                 <td key={month} className="px-4 py-3 text-right font-mono text-xs whitespace-nowrap">
                   {formatINR(data.monthTotals[month] ?? 0)}

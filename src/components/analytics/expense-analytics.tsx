@@ -31,7 +31,9 @@ function BarTooltip({ active, payload, label }: { active?: boolean; payload?: Ar
 }
 
 export function ExpenseCategoryDonut(): React.ReactElement {
-  const { data: trends, isLoading } = useExpenseTrends(1)
+  const now = new Date()
+  const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+  const { data: trends, isLoading } = useExpenseTrends({ fromMonth: thisMonth, toMonth: thisMonth })
 
   if (isLoading) {
     return <p className="text-sm text-muted-foreground">Loading...</p>
@@ -83,7 +85,7 @@ export function ExpenseCategoryDonut(): React.ReactElement {
 }
 
 export function ExpenseMonthlyBars(): React.ReactElement {
-  const { data: trends, isLoading } = useExpenseTrends(6)
+  const { data: trends, isLoading } = useExpenseTrends()
 
   if (isLoading) {
     return <p className="text-sm text-muted-foreground">Loading...</p>

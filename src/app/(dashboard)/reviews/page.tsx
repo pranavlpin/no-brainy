@@ -30,7 +30,7 @@ export default function ReviewsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Reviews</h1>
+          <h1 className="font-display text-2xl font-bold text-retro-dark">Reviews</h1>
           <p className="text-sm text-muted-foreground">
             Reflect on your progress and track your journey
           </p>
@@ -44,15 +44,15 @@ export default function ReviewsPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 rounded-lg bg-muted p-1">
+      <div className="flex gap-1 border-2 border-retro-dark/15 bg-white p-1">
         <button
           type="button"
           onClick={() => setActiveTab('daily')}
           className={cn(
             'flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors',
             activeTab === 'daily'
-              ? 'bg-background text-foreground shadow-sm'
-              : 'text-muted-foreground hover:text-foreground'
+              ? 'bg-retro-blue/10 text-retro-dark font-mono'
+              : 'text-retro-dark/40 hover:text-retro-dark/70 font-mono'
           )}
         >
           <Calendar className="h-4 w-4" />
@@ -64,8 +64,8 @@ export default function ReviewsPage() {
           className={cn(
             'flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors',
             activeTab === 'weekly'
-              ? 'bg-background text-foreground shadow-sm'
-              : 'text-muted-foreground hover:text-foreground'
+              ? 'bg-retro-blue/10 text-retro-dark font-mono'
+              : 'text-retro-dark/40 hover:text-retro-dark/70 font-mono'
           )}
         >
           <BarChart3 className="h-4 w-4" />
@@ -81,7 +81,7 @@ export default function ReviewsPage() {
             <Skeleton className="h-16 w-full rounded-lg" />
           ) : todayReview ? (
             <div>
-              <p className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              <p className="mb-2 text-xs font-medium font-mono uppercase tracking-wider text-muted-foreground">
                 Today
               </p>
               <ReviewCard
@@ -115,7 +115,7 @@ export default function ReviewsPage() {
             </div>
           ) : (
             <div>
-              <p className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              <p className="mb-2 text-xs font-medium font-mono uppercase tracking-wider text-muted-foreground">
                 Past Reviews
               </p>
               <div className="space-y-2">

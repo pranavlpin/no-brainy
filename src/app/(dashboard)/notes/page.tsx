@@ -50,7 +50,7 @@ export default function NotesPage() {
     <div className="mx-auto max-w-6xl space-y-6 p-4 md:p-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Notes</h1>
+        <h1 className="font-display text-2xl font-bold text-retro-dark">Notes</h1>
         <div className="flex items-center gap-2">
           <div className="hidden sm:flex items-center rounded-md border border-input">
             <button
@@ -84,10 +84,13 @@ export default function NotesPage() {
             <Network className="mr-1.5 h-4 w-4" />
             View Graph
           </Button>
-          <Button onClick={() => router.push('/notes/new')}>
-            <Plus className="mr-1.5 h-4 w-4" />
+          <button
+            onClick={() => router.push('/notes/new')}
+            className="border-2 border-retro-dark bg-retro-blue px-4 py-2 font-mono text-sm font-bold text-white shadow-hard hover-shadow-grow"
+          >
+            <Plus className="mr-1.5 inline h-4 w-4" />
             New Note
-          </Button>
+          </button>
         </div>
       </div>
 

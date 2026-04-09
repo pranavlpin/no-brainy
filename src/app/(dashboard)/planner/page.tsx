@@ -138,7 +138,7 @@ export default function PlannerPage() {
       <div>
         <div className="flex items-center gap-2">
           <Calendar className="h-5 w-5 text-primary" />
-          <h1 className="text-2xl font-bold">Today</h1>
+          <h1 className="font-display text-2xl font-bold text-retro-dark">Today</h1>
         </div>
         <p className="mt-1 text-sm text-muted-foreground">{dateLabel}</p>
       </div>
@@ -208,7 +208,7 @@ export default function PlannerPage() {
         <div>
           <div className="mb-4 flex items-center gap-2">
             <ListTodo className="h-5 w-5 text-primary" />
-            <h2 className="text-lg font-semibold">Tasks Due Today</h2>
+            <h2 className="font-display text-lg font-semibold">Tasks Due Today</h2>
           </div>
           <TaskSchedule
             tasks={scheduleTasks}

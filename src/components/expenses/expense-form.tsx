@@ -47,7 +47,7 @@ export function ExpenseForm({ expense, onSubmit, onCancel, isPending }: ExpenseF
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <Label htmlFor="name">Name</Label>
+        <label htmlFor="name" className="font-mono text-xs uppercase tracking-wider text-retro-dark/70">Name</label>
         <Input
           id="name"
           value={name}
@@ -59,7 +59,7 @@ export function ExpenseForm({ expense, onSubmit, onCancel, isPending }: ExpenseF
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <Label htmlFor="amount">Amount (₹)</Label>
+          <label htmlFor="amount" className="font-mono text-xs uppercase tracking-wider text-retro-dark/70">Amount (₹)</label>
           <Input
             id="amount"
             type="number"
@@ -71,7 +71,7 @@ export function ExpenseForm({ expense, onSubmit, onCancel, isPending }: ExpenseF
           />
         </div>
         <div>
-          <Label htmlFor="date">Date</Label>
+          <label htmlFor="date" className="font-mono text-xs uppercase tracking-wider text-retro-dark/70">Date</label>
           <Input
             id="date"
             type="date"
@@ -83,7 +83,7 @@ export function ExpenseForm({ expense, onSubmit, onCancel, isPending }: ExpenseF
       </div>
 
       <div>
-        <Label htmlFor="category">Category</Label>
+        <label htmlFor="category" className="font-mono text-xs uppercase tracking-wider text-retro-dark/70">Category</label>
         <Select
           id="category"
           value={categoryId}
@@ -100,7 +100,7 @@ export function ExpenseForm({ expense, onSubmit, onCancel, isPending }: ExpenseF
       </div>
 
       <div>
-        <Label htmlFor="tags">Tags (comma separated)</Label>
+        <label htmlFor="tags" className="font-mono text-xs uppercase tracking-wider text-retro-dark/70">Tags (comma separated)</label>
         <Input
           id="tags"
           value={tags}
@@ -110,7 +110,7 @@ export function ExpenseForm({ expense, onSubmit, onCancel, isPending }: ExpenseF
       </div>
 
       <div>
-        <Label htmlFor="notes">Notes (optional)</Label>
+        <label htmlFor="notes" className="font-mono text-xs uppercase tracking-wider text-retro-dark/70">Notes (optional)</label>
         <Input
           id="notes"
           value={notes}
@@ -123,9 +123,13 @@ export function ExpenseForm({ expense, onSubmit, onCancel, isPending }: ExpenseF
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancel
         </Button>
-        <Button type="submit" disabled={isPending || !name || !amount || !categoryId}>
+        <button
+          type="submit"
+          disabled={isPending || !name || !amount || !categoryId}
+          className="border-2 border-retro-dark bg-retro-blue px-4 py-2 font-mono text-sm font-bold text-white shadow-hard hover-shadow-grow disabled:opacity-50"
+        >
           {isPending ? 'Saving...' : expense ? 'Update' : 'Add Expense'}
-        </Button>
+        </button>
       </div>
     </form>
   )

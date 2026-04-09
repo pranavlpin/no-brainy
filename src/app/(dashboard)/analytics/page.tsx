@@ -33,7 +33,7 @@ function ChartCard({
         className
       )}
     >
-      <h3 className="mb-4 text-sm font-semibold text-foreground">{title}</h3>
+      <h3 className="mb-4 text-sm font-semibold font-mono text-foreground">{title}</h3>
       {children}
     </div>
   )
@@ -142,7 +142,7 @@ export default function AnalyticsPage() {
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold">Analytics</h1>
+        <h1 className="font-display text-2xl font-bold text-retro-dark">Analytics</h1>
         <LoadingSkeleton />
       </div>
     )
@@ -151,7 +151,7 @@ export default function AnalyticsPage() {
   if (error || !data) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold">Analytics</h1>
+        <h1 className="font-display text-2xl font-bold text-retro-dark">Analytics</h1>
         <p className="text-muted-foreground">
           Failed to load analytics data. Please try again later.
         </p>
@@ -161,7 +161,7 @@ export default function AnalyticsPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Analytics</h1>
+      <h1 className="font-display text-2xl font-bold text-retro-dark">Analytics</h1>
 
       {/* Summary Stats */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

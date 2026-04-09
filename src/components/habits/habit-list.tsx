@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Check, Flame } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
@@ -30,6 +30,13 @@ function HabitRow({
 }) {
   const [optimisticChecked, setOptimisticChecked] = useState(isCheckedToday)
   const logMutation = useLogHabit(habit.id)
+
+  // Sync with server state when it changes (after refetch)
+  useEffect(() => {
+    if (!logMutation.isPending) {
+      setOptimisticChecked(isCheckedToday)
+    }
+  }, [isCheckedToday, logMutation.isPending])
 
   function handleToggle() {
     const newValue = !optimisticChecked
