@@ -99,7 +99,15 @@ export function InsightCard({
               {sev.badgeText}
             </span>
           </div>
-          <p className="text-sm text-foreground">{contentMd}</p>
+          <p
+            className="text-sm text-foreground [&_strong]:font-bold"
+            dangerouslySetInnerHTML={{
+              __html: contentMd
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/`(.*?)`/g, '<code class="rounded bg-muted px-1 py-0.5 text-xs font-mono">$1</code>'),
+            }}
+          />
           <p className="mt-1 text-xs text-muted-foreground">
             Generated {timeAgo(generatedAt)}
           </p>
