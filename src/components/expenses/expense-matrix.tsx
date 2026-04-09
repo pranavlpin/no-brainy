@@ -37,7 +37,7 @@ export function ExpenseMatrix(): React.ReactElement {
             type="month"
             value={startMonth}
             onChange={(e) => setStartMonth(e.target.value)}
-            className="w-40"
+            className="w-44"
           />
         </div>
         <div>
@@ -47,7 +47,7 @@ export function ExpenseMatrix(): React.ReactElement {
             type="month"
             value={endMonth}
             onChange={(e) => setEndMonth(e.target.value)}
-            className="w-40"
+            className="w-44"
           />
         </div>
       </div>

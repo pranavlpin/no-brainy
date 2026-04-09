@@ -80,7 +80,7 @@ export function ExpenseCharts(): React.ReactElement {
             type="month"
             value={fromMonth}
             onChange={(e) => setFromMonth(e.target.value)}
-            className="w-40"
+            className="w-44"
           />
         </div>
         <div className="flex items-center gap-2">
@@ -90,7 +90,7 @@ export function ExpenseCharts(): React.ReactElement {
             type="month"
             value={toMonth}
             onChange={(e) => setToMonth(e.target.value)}
-            className="w-40"
+            className="w-44"
           />
         </div>
       </div>
