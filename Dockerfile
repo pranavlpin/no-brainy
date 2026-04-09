@@ -15,6 +15,8 @@ COPY . .
 RUN pnpm prisma generate
 # Build Next.js (standalone mode bundles node_modules including Prisma)
 ENV NEXT_TELEMETRY_DISABLED=1
+ARG NEXT_PUBLIC_GA_ID=""
+ENV NEXT_PUBLIC_GA_ID=$NEXT_PUBLIC_GA_ID
 RUN pnpm build
 
 # Stage 3: Migrator (used by Cloud Run Jobs for DB migrations)

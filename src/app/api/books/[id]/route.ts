@@ -39,7 +39,7 @@ export const GET = withAuth(async (req: NextRequest, user) => {
   }
 })
 
-export const PUT = withAuth(async (req: NextRequest, user) => {
+export const PATCH = withAuth(async (req: NextRequest, user) => {
   try {
     const bookId = extractBookId(req)
     const existing = await getOwnedBook(bookId, user)

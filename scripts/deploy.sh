@@ -57,6 +57,7 @@ echo ""
 # ----------------------------------------------------------
 echo "[1/5] Building app image..."
 docker build --platform=linux/amd64 \
+  --build-arg NEXT_PUBLIC_GA_ID="${NEXT_PUBLIC_GA_ID:-}" \
   -t "$IMAGE" \
   -t "$IMAGE_LATEST" \
   .

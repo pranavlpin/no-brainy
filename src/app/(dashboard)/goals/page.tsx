@@ -33,9 +33,17 @@ export default function GoalsPage() {
   const createGoal = useCreateGoal()
   const createHabit = useCreateHabit()
 
-  // Build today's logs lookup from habits data (logs may be embedded)
-  // For now, we don't have today's logs from the list endpoint, so pass empty
-  const todayLogs: Record<string, boolean> = {}
+  // Build today's logs lookup from habits data
+  const todayLogs: Record<string, boolean> = useMemo(() => {
+    if (!habits) return {}
+    const map: Record<string, boolean> = {}
+    for (const h of habits) {
+      if (h.completedToday) {
+        map[h.id] = true
+      }
+    }
+    return map
+  }, [habits])
 
   // Build goal name lookup for habits
   const goalNames = useMemo(() => {
