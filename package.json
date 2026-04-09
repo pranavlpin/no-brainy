@@ -1,7 +1,13 @@
 {
   "name": "nobrainy",
   "version": "0.1.0",
-  "private": true,
+  "description": "Personal Productivity & Learning Operating System",
+  "license": "GPL-3.0",
+  "author": "Pranav Kumar",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pranavlpin/no-brainy.git"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",

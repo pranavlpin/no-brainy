@@ -13,7 +13,7 @@ async function main() {
       email: 'test@nobrainy.dev',
       name: 'Test User',
       provider: 'email',
-      passwordHash: '$2a$12$LJ3tJMfVmRYGQ1E/axGiZ.rvSz5dlqkXMsNnKqW2r0V7FjB7Gkuiq', // "password123"
+      passwordHash: '$2a$12$LJ3tJMfVmRYGQ1E/axGiZ.rvSz5dlqkXMsNnKqW2r0V7FjB7Gkuiq',
       timezone: 'Asia/Kolkata',
     },
   })
