@@ -54,7 +54,7 @@ export default function GoalsPage() {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Target className="h-5 w-5 text-primary" />
-            <h1 className="text-2xl font-bold">Goals</h1>
+            <h1 className="font-display text-2xl font-bold text-retro-dark">Goals</h1>
           </div>
           <Button size="sm" onClick={() => setShowGoalForm(true)}>
             <Plus className="h-4 w-4 mr-1" />
@@ -65,7 +65,7 @@ export default function GoalsPage() {
         {/* Filters */}
         <div className="flex gap-3 mb-4">
           <Select
-            className="w-36"
+            className="w-36 rounded-none"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as GoalStatus | '')}
           >
@@ -77,7 +77,7 @@ export default function GoalsPage() {
             ))}
           </Select>
           <Select
-            className="w-36"
+            className="w-36 rounded-none"
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
           >
@@ -119,7 +119,7 @@ export default function GoalsPage() {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Repeat className="h-5 w-5 text-primary" />
-            <h2 className="text-xl font-bold">Habits</h2>
+            <h2 className="font-display text-xl font-bold text-retro-dark">Habits</h2>
           </div>
           <Button size="sm" onClick={() => setShowHabitForm(true)}>
             <Plus className="h-4 w-4 mr-1" />

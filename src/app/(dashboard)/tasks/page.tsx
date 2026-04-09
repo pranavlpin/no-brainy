@@ -53,13 +53,16 @@ export default function TasksPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Tasks</h1>
+        <h1 className="font-display text-2xl font-bold text-retro-dark">Tasks</h1>
         <div className="flex items-center gap-2">
           <TaskAIPanel />
-          <Button onClick={() => setShowNewForm(true)}>
-            <Plus className="mr-2 h-4 w-4" />
+          <button
+            onClick={() => setShowNewForm(true)}
+            className="border-2 border-retro-dark bg-retro-blue px-4 py-2 font-mono text-sm font-bold text-white shadow-hard hover-shadow-grow"
+          >
+            <Plus className="mr-2 inline h-4 w-4" />
             New Task
-          </Button>
+          </button>
         </div>
       </div>
 
@@ -67,7 +70,7 @@ export default function TasksPage() {
       {showNewForm && (
         <div className="rounded-lg border border-border bg-background p-6">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-semibold">New Task</h2>
+            <h2 className="font-display text-lg font-semibold">New Task</h2>
             <Button
               variant="ghost"
               size="sm"
@@ -90,12 +93,12 @@ export default function TasksPage() {
           placeholder="Search tasks..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full sm:w-64"
+          className="w-full rounded-none sm:w-64"
         />
         <Select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as TaskStatus | "")}
-          className="w-full sm:w-40"
+          className="w-full rounded-none sm:w-40"
         >
           <option value="">All statuses</option>
           <option value="pending">Pending</option>
@@ -106,7 +109,7 @@ export default function TasksPage() {
         <Select
           value={priorityFilter}
           onChange={(e) => setPriorityFilter(e.target.value as TaskPriority | "")}
-          className="w-full sm:w-40"
+          className="w-full rounded-none sm:w-40"
         >
           <option value="">All priorities</option>
           <option value="urgent">Urgent</option>

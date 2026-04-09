@@ -45,7 +45,7 @@ function getNotificationIcon(type: string) {
     case 'daily_review':
       return <FileText className="h-5 w-5 text-green-500" />
     default:
-      return <Clock className="h-5 w-5 text-gray-500" />
+      return <Clock className="h-5 w-5 text-retro-dark/40" />
   }
 }
 
@@ -91,8 +91,8 @@ export default function NotificationsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Bell className="h-6 w-6 text-gray-700" />
-          <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>
+          <Bell className="h-6 w-6 text-retro-dark/70" />
+          <h1 className="font-display text-2xl font-bold text-retro-dark">Notifications</h1>
         </div>
         <div className="flex items-center gap-2">
           <Button
@@ -119,13 +119,13 @@ export default function NotificationsPage() {
       </div>
 
       {/* Filter */}
-      <div className="flex gap-1 rounded-lg bg-gray-100 p-1">
+      <div className="flex gap-1 border-2 border-retro-dark/15 bg-white p-1">
         <button
           onClick={() => setFilter('all')}
           className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
             filter === 'all'
-              ? 'bg-white text-gray-900 shadow-sm'
-              : 'text-gray-600 hover:text-gray-900'
+              ? 'bg-retro-blue/10 text-retro-dark font-mono'
+              : 'text-retro-dark/40 hover:text-retro-dark/70 font-mono'
           }`}
         >
           All
@@ -134,8 +134,8 @@ export default function NotificationsPage() {
           onClick={() => setFilter('unread')}
           className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
             filter === 'unread'
-              ? 'bg-white text-gray-900 shadow-sm'
-              : 'text-gray-600 hover:text-gray-900'
+              ? 'bg-retro-blue/10 text-retro-dark font-mono'
+              : 'text-retro-dark/40 hover:text-retro-dark/70 font-mono'
           }`}
         >
           Unread
@@ -145,13 +145,13 @@ export default function NotificationsPage() {
       {/* List */}
       <div className="rounded-lg border bg-white">
         {isLoading ? (
-          <div className="px-4 py-12 text-center text-sm text-gray-500">
+          <div className="px-4 py-12 text-center text-sm text-retro-dark/60">
             Loading notifications...
           </div>
         ) : notifications.length === 0 ? (
           <div className="px-4 py-12 text-center">
-            <Bell className="mx-auto h-10 w-10 text-gray-300" />
-            <p className="mt-3 text-sm text-gray-500">
+            <Bell className="mx-auto h-10 w-10 text-retro-dark/20" />
+            <p className="mt-3 text-sm text-retro-dark/60">
               {filter === 'unread'
                 ? 'No unread notifications'
                 : 'No notifications yet. Click "Generate" to check for new ones.'}
@@ -163,8 +163,8 @@ export default function NotificationsPage() {
               <button
                 key={notification.id}
                 onClick={() => handleClick(notification)}
-                className={`flex w-full items-start gap-4 px-4 py-4 text-left transition-colors hover:bg-gray-50 ${
-                  !notification.isRead ? 'bg-indigo-50/40' : ''
+                className={`flex w-full items-start gap-4 px-4 py-4 text-left transition-colors hover:bg-retro-blue/5 ${
+                  !notification.isRead ? 'bg-retro-blue/5' : ''
                 }`}
               >
                 <div className="mt-0.5 shrink-0">
@@ -175,20 +175,20 @@ export default function NotificationsPage() {
                     <p
                       className={`text-sm ${
                         !notification.isRead
-                          ? 'font-semibold text-gray-900'
-                          : 'font-medium text-gray-700'
+                          ? 'font-semibold text-retro-dark'
+                          : 'font-medium text-retro-dark/70'
                       }`}
                     >
                       {notification.title}
                     </p>
                     {!notification.isRead && (
-                      <span className="h-2 w-2 shrink-0 rounded-full bg-indigo-500" />
+                      <span className="h-2 w-2 shrink-0 rounded-full bg-retro-blue" />
                     )}
                   </div>
-                  <p className="mt-0.5 text-sm text-gray-600">
+                  <p className="mt-0.5 text-sm text-retro-dark/60">
                     {notification.body}
                   </p>
-                  <p className="mt-1 text-xs text-gray-400">
+                  <p className="mt-1 text-xs text-retro-dark/40">
                     {getTimeAgo(notification.createdAt)}
                   </p>
                 </div>
@@ -196,7 +196,7 @@ export default function NotificationsPage() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="shrink-0 text-xs text-gray-400 hover:text-gray-600"
+                    className="shrink-0 text-xs text-retro-dark/40 hover:text-retro-dark/60"
                     onClick={(e) => {
                       e.stopPropagation()
                       markRead.mutate(notification.id)

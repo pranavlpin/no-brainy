@@ -37,7 +37,7 @@ export default function InsightsPage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <Lightbulb className="h-7 w-7 text-yellow-500" />
-          <h1 className="text-2xl font-bold">Insights</h1>
+          <h1 className="font-display text-2xl font-bold text-retro-dark">Insights</h1>
         </div>
         <AIActionButton
           label="Generate Insights"
@@ -52,7 +52,7 @@ export default function InsightsPage() {
         <select
           value={typeFilter}
           onChange={(e) => setTypeFilter(e.target.value)}
-          className="rounded-md border border-border bg-background px-3 py-1.5 text-sm"
+          className="rounded-none border border-border bg-background px-3 py-1.5 text-sm font-mono"
         >
           {insightTypes.map((t) => (
             <option key={t.value} value={t.value}>

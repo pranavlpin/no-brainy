@@ -45,9 +45,12 @@ export default function BooksPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Books</h1>
-        <Link href="/books/new" className={buttonVariants()}>
-          <Plus size={16} className="mr-2" />
+        <h1 className="font-display text-2xl font-bold text-retro-dark">Books</h1>
+        <Link
+          href="/books/new"
+          className="border-2 border-retro-dark bg-retro-blue px-4 py-2 font-mono text-sm font-bold text-white shadow-hard hover-shadow-grow"
+        >
+          <Plus size={16} className="mr-2 inline" />
           Add Book
         </Link>
       </div>
@@ -61,8 +64,8 @@ export default function BooksPage() {
             className={cn(
               'rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
               tab === t.value
-                ? 'bg-background text-foreground shadow-sm'
-                : 'text-muted-foreground hover:text-foreground'
+                ? 'bg-retro-blue/10 text-retro-dark font-mono'
+                : 'text-retro-dark/40 hover:text-foreground'
             )}
           >
             {t.label}
@@ -80,7 +83,7 @@ export default function BooksPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search books..."
-          className="pl-9"
+          className="rounded-none pl-9"
         />
       </div>
 
