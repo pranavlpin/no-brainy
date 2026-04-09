@@ -63,6 +63,44 @@ export const POST = withAuth(async (req: NextRequest, user) => {
   }
 })
 
+export const PATCH = withAuth(async (req: NextRequest, user) => {
+  try {
+    const body = await req.json()
+    const { ids, categoryId } = body as { ids: string[]; categoryId: string }
+
+    if (!ids?.length || !categoryId) {
+      return NextResponse.json(
+        { success: false, error: { code: 'VALIDATION_ERROR', message: 'ids and categoryId are required' } },
+        { status: 400 }
+      )
+    }
+
+    // Verify category belongs to user
+    const category = await prisma.expenseCategory.findFirst({
+      where: { id: categoryId, userId: user.id },
+    })
+    if (!category) {
+      return NextResponse.json(
+        { success: false, error: { code: 'NOT_FOUND', message: 'Category not found' } },
+        { status: 404 }
+      )
+    }
+
+    const result = await prisma.expense.updateMany({
+      where: { id: { in: ids }, userId: user.id },
+      data: { categoryId },
+    })
+
+    return NextResponse.json({ success: true, data: { updated: result.count } })
+  } catch (error) {
+    console.error('Bulk expenses PATCH error:', error)
+    return NextResponse.json(
+      { success: false, error: { code: 'INTERNAL_ERROR', message: 'An unexpected error occurred' } },
+      { status: 500 }
+    )
+  }
+})
+
 export const DELETE = withAuth(async (req: NextRequest, user) => {
   try {
     const { searchParams } = new URL(req.url)

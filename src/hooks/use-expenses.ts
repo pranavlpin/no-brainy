@@ -102,6 +102,21 @@ export function useDeleteExpense() {
   })
 }
 
+export function useBulkUpdateCategory() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (data: { ids: string[]; categoryId: string }) =>
+      apiClient<ApiResponse<{ updated: number }>>('/api/expenses/bulk', {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['expenses'] })
+      queryClient.invalidateQueries({ queryKey: ['expense-summary'] })
+    },
+  })
+}
+
 export function useBulkCreateExpenses() {
   const queryClient = useQueryClient()
   return useMutation({
