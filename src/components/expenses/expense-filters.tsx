@@ -60,6 +60,21 @@ export function ExpenseFiltersBar({ filters, onFiltersChange }: ExpenseFiltersBa
         }}
         className="w-full sm:w-44"
       />
+      <Select
+        value={`${filters.sortBy ?? 'date'}_${filters.sortOrder ?? 'desc'}`}
+        onChange={(e) => {
+          const [sortBy, sortOrder] = e.target.value.split('_') as [ExpenseFilters['sortBy'], ExpenseFilters['sortOrder']]
+          update({ sortBy, sortOrder })
+        }}
+        className="w-full sm:w-44"
+      >
+        <option value="date_desc">Date (newest)</option>
+        <option value="date_asc">Date (oldest)</option>
+        <option value="amount_desc">Amount (highest)</option>
+        <option value="amount_asc">Amount (lowest)</option>
+        <option value="name_asc">Name (A-Z)</option>
+        <option value="name_desc">Name (Z-A)</option>
+      </Select>
     </div>
   )
 }
