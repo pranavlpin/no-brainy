@@ -26,18 +26,18 @@ export function ExpenseList({ expenses, onEdit, onDelete, isDeleting }: ExpenseL
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-border text-left text-muted-foreground">
-            <th className="pb-3 pr-4 font-medium">Date</th>
-            <th className="pb-3 pr-4 font-medium">Name</th>
-            <th className="pb-3 pr-4 font-medium">Category</th>
-            <th className="pb-3 pr-4 font-medium">Tags</th>
-            <th className="pb-3 pr-4 text-right font-medium">Amount</th>
-            <th className="pb-3 w-20 font-medium"></th>
+          <tr className="border-b-2 border-retro-dark/10 text-left">
+            <th className="pb-3 pr-4 font-mono text-xs uppercase tracking-wider text-retro-dark/50">Date</th>
+            <th className="pb-3 pr-4 font-mono text-xs uppercase tracking-wider text-retro-dark/50">Name</th>
+            <th className="pb-3 pr-4 font-mono text-xs uppercase tracking-wider text-retro-dark/50">Category</th>
+            <th className="pb-3 pr-4 font-mono text-xs uppercase tracking-wider text-retro-dark/50">Tags</th>
+            <th className="pb-3 pr-4 text-right font-mono text-xs uppercase tracking-wider text-retro-dark/50">Amount</th>
+            <th className="pb-3 w-20"></th>
           </tr>
         </thead>
         <tbody>
           {expenses.map((exp) => (
-            <tr key={exp.id} className="border-b border-border/50 hover:bg-muted/30">
+            <tr key={exp.id} className="border-b border-border/50 hover:bg-retro-cream/50">
               <td className="py-3 pr-4 whitespace-nowrap text-muted-foreground">
                 {formatDate(exp.date)}
               </td>

@@ -19,7 +19,7 @@ function StatCard({ label, value, subtext, trend }: {
   trend?: number
 }): React.ReactElement {
   return (
-    <div className="rounded-lg border border-border p-4">
+    <div className="border-2 border-retro-dark/15 p-4">
       <p className="text-xs text-muted-foreground">{label}</p>
       <p className="mt-1 text-2xl font-bold">{value}</p>
       {(subtext || trend !== undefined) && (

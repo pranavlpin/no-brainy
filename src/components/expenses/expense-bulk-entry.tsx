@@ -128,14 +128,14 @@ export function ExpenseBulkEntry(): React.ReactElement {
               {savedCount} expense{savedCount !== 1 ? 's' : ''} saved!
             </span>
           )}
-          <Button
+          <button
             onClick={handleSave}
             disabled={validRows.length === 0 || bulkCreate.isPending}
-            size="sm"
+            className="flex items-center gap-2 border-2 border-retro-dark bg-retro-blue px-3 py-1.5 font-mono text-xs font-bold text-white shadow-hard hover-shadow-grow disabled:opacity-50"
           >
-            <Save className="mr-2 h-4 w-4" />
+            <Save className="h-3.5 w-3.5" />
             {bulkCreate.isPending ? 'Saving...' : `Save ${validRows.length} Expense${validRows.length !== 1 ? 's' : ''}`}
-          </Button>
+          </button>
         </div>
       </div>
 
@@ -143,14 +143,14 @@ export function ExpenseBulkEntry(): React.ReactElement {
       <div ref={tableRef} className="overflow-x-auto rounded-lg border border-border">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-muted/50 text-left">
-              <th className="px-2 py-2.5 font-medium text-muted-foreground w-8">#</th>
-              <th className="px-2 py-2.5 font-medium text-muted-foreground w-32">Date</th>
-              <th className="px-2 py-2.5 font-medium text-muted-foreground min-w-[180px]">Name</th>
-              <th className="px-2 py-2.5 font-medium text-muted-foreground w-28">Amount (₹)</th>
-              <th className="px-2 py-2.5 font-medium text-muted-foreground w-40">Category</th>
-              <th className="px-2 py-2.5 font-medium text-muted-foreground w-32">Tags</th>
-              <th className="px-2 py-2.5 font-medium text-muted-foreground w-36">Notes</th>
+            <tr className="bg-retro-dark text-left">
+              <th className="px-2 py-2.5 font-mono text-xs uppercase tracking-wider text-retro-cream/70 w-8">#</th>
+              <th className="px-2 py-2.5 font-mono text-xs uppercase tracking-wider text-retro-cream/70 w-32">Date</th>
+              <th className="px-2 py-2.5 font-mono text-xs uppercase tracking-wider text-retro-cream/70 min-w-[180px]">Name</th>
+              <th className="px-2 py-2.5 font-mono text-xs uppercase tracking-wider text-retro-cream/70 w-28">Amount (₹)</th>
+              <th className="px-2 py-2.5 font-mono text-xs uppercase tracking-wider text-retro-cream/70 w-40">Category</th>
+              <th className="px-2 py-2.5 font-mono text-xs uppercase tracking-wider text-retro-cream/70 w-32">Tags</th>
+              <th className="px-2 py-2.5 font-mono text-xs uppercase tracking-wider text-retro-cream/70 w-36">Notes</th>
               <th className="px-2 py-2.5 w-10"></th>
             </tr>
           </thead>
@@ -161,7 +161,7 @@ export function ExpenseBulkEntry(): React.ReactElement {
               return (
                 <tr
                   key={row.id}
-                  className={`border-t border-border/50 ${isValid ? 'bg-green-50/30 dark:bg-green-950/10' : ''} ${isEmpty && idx === rows.length - 1 ? 'opacity-60' : ''}`}
+                  className={`border-t border-border/50 ${isValid ? 'bg-retro-mint/5' : ''} ${isEmpty && idx === rows.length - 1 ? 'opacity-60' : ''}`}
                 >
                   <td className="px-2 py-1 text-muted-foreground text-xs">{idx + 1}</td>
                   <td className="px-1 py-1">

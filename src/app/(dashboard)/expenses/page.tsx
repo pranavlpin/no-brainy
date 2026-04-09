@@ -74,7 +74,7 @@ export default function ExpensesPage(): React.ReactElement {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Expenses</h1>
+          <h1 className="font-display text-2xl font-bold text-retro-dark">Expenses</h1>
           {activeTab === 'list' && expenses.length > 0 && (
             <p className="text-sm text-muted-foreground mt-1">
               {expenses.length} expense{expenses.length !== 1 ? 's' : ''} &middot; {formatINR(total)}
@@ -111,15 +111,15 @@ export default function ExpensesPage(): React.ReactElement {
       )}
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-border">
+      <div className="flex gap-1 border-b-2 border-retro-dark/10">
         {tabs.map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors ${
+            className={`flex items-center gap-2 px-4 py-2.5 font-mono text-sm font-medium transition-colors ${
               activeTab === tab.key
-                ? 'border-b-2 border-primary text-primary'
-                : 'text-muted-foreground hover:text-foreground'
+                ? 'border-b-2 border-retro-blue text-retro-dark'
+                : 'text-retro-dark/40 hover:text-retro-dark/70'
             }`}
           >
             {tab.icon}
@@ -133,22 +133,28 @@ export default function ExpensesPage(): React.ReactElement {
         <div className="space-y-4">
           {/* Mode toggle */}
           <div className="flex items-center gap-2">
-            <Button
-              variant={createMode === 'bulk' ? 'default' : 'outline'}
-              size="sm"
+            <button
               onClick={() => setCreateMode('bulk')}
+              className={`flex items-center gap-2 border-2 px-3 py-1.5 font-mono text-xs font-bold transition-colors ${
+                createMode === 'bulk'
+                  ? 'border-retro-dark bg-retro-dark text-white'
+                  : 'border-retro-dark/30 bg-white text-retro-dark hover:border-retro-dark/60'
+              }`}
             >
-              <Sheet className="mr-2 h-4 w-4" />
+              <Sheet className="h-3.5 w-3.5" />
               Bulk Entry
-            </Button>
-            <Button
-              variant={createMode === 'single' ? 'default' : 'outline'}
-              size="sm"
+            </button>
+            <button
               onClick={() => setCreateMode('single')}
+              className={`flex items-center gap-2 border-2 px-3 py-1.5 font-mono text-xs font-bold transition-colors ${
+                createMode === 'single'
+                  ? 'border-retro-dark bg-retro-dark text-white'
+                  : 'border-retro-dark/30 bg-white text-retro-dark hover:border-retro-dark/60'
+              }`}
             >
-              <PenLine className="mr-2 h-4 w-4" />
+              <PenLine className="h-3.5 w-3.5" />
               Single Entry
-            </Button>
+            </button>
           </div>
 
           {createMode === 'single' ? (

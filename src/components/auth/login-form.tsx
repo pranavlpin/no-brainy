@@ -6,9 +6,7 @@ import Link from 'next/link'
 import { signIn } from 'next-auth/react'
 import { Mail, Lock, Loader2 } from 'lucide-react'
 import { loginSchema, type LoginInput } from '@/lib/validations/auth'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { GoogleButton } from '@/components/auth/google-button'
 
 export function LoginForm() {
@@ -65,7 +63,7 @@ export function LoginForm() {
   return (
     <div className="w-full max-w-sm space-y-6">
       <div className="space-y-2 text-center">
-        <h1 className="text-2xl font-bold tracking-tight">Welcome back</h1>
+        <h1 className="font-display text-2xl font-bold tracking-tight text-retro-dark">Welcome back</h1>
         <p className="text-sm text-muted-foreground">
           Sign in to your account to continue
         </p>
@@ -73,13 +71,15 @@ export function LoginForm() {
 
       <form onSubmit={onSubmit} className="space-y-4">
         {serverError && (
-          <div className="rounded-md bg-red-50 p-3 text-sm text-red-500">
+          <div className="border-2 border-red-300 bg-red-50 p-3 text-sm text-red-600">
             {serverError}
           </div>
         )}
 
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+          <label htmlFor="email" className="font-mono text-xs uppercase tracking-wider text-retro-dark/70">
+            Email
+          </label>
           <div className="relative">
             <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
@@ -87,7 +87,7 @@ export function LoginForm() {
               name="email"
               type="email"
               placeholder="you@example.com"
-              className="pl-9"
+              className="rounded-none border-2 border-retro-dark/30 pl-9 focus:border-retro-blue"
               disabled={isLoading}
             />
           </div>
@@ -97,7 +97,9 @@ export function LoginForm() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
+          <label htmlFor="password" className="font-mono text-xs uppercase tracking-wider text-retro-dark/70">
+            Password
+          </label>
           <div className="relative">
             <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
@@ -105,7 +107,7 @@ export function LoginForm() {
               name="password"
               type="password"
               placeholder="Enter your password"
-              className="pl-9"
+              className="rounded-none border-2 border-retro-dark/30 pl-9 focus:border-retro-blue"
               disabled={isLoading}
             />
           </div>
@@ -114,18 +116,22 @@ export function LoginForm() {
           )}
         </div>
 
-        <Button type="submit" className="w-full" disabled={isLoading}>
+        <button
+          type="submit"
+          className="flex w-full items-center justify-center border-2 border-retro-dark bg-retro-blue py-2.5 font-mono font-bold text-sm text-white shadow-hard hover-shadow-grow disabled:opacity-50"
+          disabled={isLoading}
+        >
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Sign in
-        </Button>
+        </button>
       </form>
 
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t" />
+          <span className="w-full border-t-2 border-retro-dark/15" />
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-white px-2 text-muted-foreground">
+          <span className="bg-white px-2 font-mono text-muted-foreground">
             Or continue with
           </span>
         </div>
@@ -135,7 +141,7 @@ export function LoginForm() {
 
       <p className="text-center text-sm text-muted-foreground">
         Don&apos;t have an account?{' '}
-        <Link href="/register" className="font-medium text-primary hover:underline">
+        <Link href="/register" className="font-mono font-medium text-retro-blue hover:underline">
           Sign up
         </Link>
       </p>
