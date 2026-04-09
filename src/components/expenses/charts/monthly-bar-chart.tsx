@@ -37,7 +37,7 @@ export function MonthlyBarChart({ data, selectedMonth, onMonthClick }: MonthlyBa
   return (
     <div className="rounded-lg border border-border p-4">
       <h3 className="mb-4 text-sm font-semibold">Monthly Spending</h3>
-      <ResponsiveContainer width="100%" height={280}>
+      <ResponsiveContainer width="100%" height={280} className="[&_.recharts-surface]:outline-none [&_.recharts-wrapper]:outline-none">
         <BarChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
           <XAxis dataKey="month" className="text-xs" tick={{ fill: 'currentColor', fontSize: 11 }} />
