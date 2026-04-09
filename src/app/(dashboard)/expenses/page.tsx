@@ -42,12 +42,13 @@ export default function ExpensesPage(): React.ReactElement {
     sortOrder: 'desc',
   })
 
-  const { data, isLoading } = useExpenses(filters)
+  const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } = useExpenses(filters)
   const createExpense = useCreateExpense()
   const updateExpense = useUpdateExpense()
   const deleteExpense = useDeleteExpense()
 
-  const expenses = data?.items ?? []
+  const expenses = data?.pages.flatMap((page) => page.data.items) ?? []
+  const totalCount = data?.pages[0]?.data.total ?? 0
   const total = expenses.reduce((sum, e) => sum + Number(e.amount), 0)
 
   const handleCreate = (formData: CreateExpenseRequest | UpdateExpenseRequest): void => {
@@ -83,9 +84,9 @@ export default function ExpensesPage(): React.ReactElement {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-display text-2xl font-bold text-retro-dark">Expenses</h1>
-          {activeTab === 'list' && expenses.length > 0 && (
+          {activeTab === 'list' && totalCount > 0 && (
             <p className="text-sm text-muted-foreground mt-1">
-              {expenses.length} expense{expenses.length !== 1 ? 's' : ''} &middot; {formatINR(total)}
+              {totalCount} expense{totalCount !== 1 ? 's' : ''} &middot; {formatINR(total)}
             </p>
           )}
         </div>
@@ -188,12 +189,25 @@ export default function ExpensesPage(): React.ReactElement {
           {isLoading ? (
             <div className="py-12 text-center text-muted-foreground">Loading expenses...</div>
           ) : (
-            <ExpenseList
-              expenses={expenses}
-              onEdit={(exp) => setEditingExpense(exp)}
-              onDelete={handleDelete}
-              isDeleting={deleteExpense.isPending}
-            />
+            <>
+              <ExpenseList
+                expenses={expenses}
+                onEdit={(exp) => setEditingExpense(exp)}
+                onDelete={handleDelete}
+                isDeleting={deleteExpense.isPending}
+              />
+              {hasNextPage && (
+                <div className="flex justify-center pt-2">
+                  <button
+                    onClick={() => fetchNextPage()}
+                    disabled={isFetchingNextPage}
+                    className="font-mono text-sm text-retro-blue hover:underline disabled:opacity-50"
+                  >
+                    {isFetchingNextPage ? 'Loading more...' : `Load more (showing ${expenses.length} of ${totalCount})`}
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       )}
