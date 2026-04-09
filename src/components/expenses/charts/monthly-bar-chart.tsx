@@ -16,13 +16,13 @@ interface MonthlyBarChartProps {
   onMonthClick?: (month: string) => void
 }
 
-function CustomTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number; payload: { rawMonth: string } }>; label?: string }): React.ReactElement | null {
+function CustomTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number }>; label?: string }): React.ReactElement | null {
   if (!active || !payload?.length) return null
   return (
     <div className="rounded-lg border border-border bg-background px-3 py-2 shadow-md">
       <p className="text-xs text-muted-foreground">{label}</p>
       <p className="text-sm font-semibold">{formatINR(payload[0].value)}</p>
-      <p className="text-[10px] text-muted-foreground mt-0.5">Click to view details</p>
+      <p className="text-[10px] text-muted-foreground mt-0.5">Click bar to view details</p>
     </div>
   )
 }
@@ -34,25 +34,25 @@ export function MonthlyBarChart({ data, selectedMonth, onMonthClick }: MonthlyBa
     total: Math.round(d.total),
   }))
 
-  const handleClick = (entry: { rawMonth: string }): void => {
-    if (onMonthClick) onMonthClick(entry.rawMonth)
-  }
-
   return (
     <div className="rounded-lg border border-border p-4">
       <h3 className="mb-4 text-sm font-semibold">Monthly Spending</h3>
       <ResponsiveContainer width="100%" height={280}>
-        <BarChart data={chartData} onClick={(state: Record<string, unknown>) => {
-          const payload = state?.activePayload as Array<{ payload: { rawMonth: string } }> | undefined
-          if (payload?.[0]?.payload) {
-            handleClick(payload[0].payload)
-          }
-        }}>
+        <BarChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
           <XAxis dataKey="month" className="text-xs" tick={{ fill: 'currentColor', fontSize: 11 }} />
           <YAxis className="text-xs" tick={{ fill: 'currentColor', fontSize: 11 }} tickFormatter={(v: number) => `₹${(v / 1000).toFixed(0)}k`} />
           <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(233 100% 59% / 0.05)' }} />
-          <Bar dataKey="total" radius={[4, 4, 0, 0]} className="cursor-pointer">
+          <Bar
+            dataKey="total"
+            radius={[4, 4, 0, 0]}
+            cursor="pointer"
+            onClick={(_data: unknown, index: number) => {
+              if (onMonthClick && chartData[index]) {
+                onMonthClick(chartData[index].rawMonth)
+              }
+            }}
+          >
             {chartData.map((entry, idx) => (
               <Cell
                 key={idx}
