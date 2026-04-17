@@ -13,6 +13,8 @@ import {
   Sparkles,
   Lightbulb,
   Wallet,
+  Bookmark,
+  Film,
   PanelLeftClose,
   PanelLeftOpen,
   X,
@@ -32,6 +34,8 @@ const navItems: NavItem[] = [
   { label: 'Search', href: '/search', icon: Search },
   { label: 'Analytics', href: '/analytics', icon: TrendingUp },
   { label: 'Expenses', href: '/expenses', icon: Wallet },
+  { label: 'Bookmarks', href: '/bookmarks', icon: Bookmark },
+  { label: 'Watchlist', href: '/watchlist', icon: Film },
   { label: 'Insights', href: '/insights', icon: Lightbulb },
   { label: 'AI Coach', href: '/ai', icon: Sparkles },
 ]
