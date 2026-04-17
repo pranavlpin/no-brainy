@@ -151,7 +151,7 @@ export function WatchlistImport({ onClose, onComplete }: WatchlistImportProps): 
                 <p className="font-mono text-xs uppercase tracking-wider text-retro-dark/50">How to export</p>
                 <div className="text-sm text-muted-foreground space-y-1">
                   <p><strong>IMDB:</strong> Go to your IMDB Watchlist → three dots menu → Export</p>
-                  <p><strong>Google:</strong> Go to Google Search → "My Watchlist" → Export as CSV</p>
+                  <p><strong>Google:</strong> Go to Google Search → &ldquo;My Watchlist&rdquo; → Export as CSV</p>
                 </div>
               </div>
             </div>
