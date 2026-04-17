@@ -1,12 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Search, Film } from 'lucide-react'
+import { Plus, Search, Film, Upload } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { WatchlistCard } from '@/components/watchlist/watchlist-card'
 import { WatchlistForm } from '@/components/watchlist/watchlist-form'
+import { WatchlistImport } from '@/components/watchlist/watchlist-import'
 import {
   useWatchlist,
   useCreateWatchlistItem,
@@ -62,6 +63,7 @@ export default function WatchlistPage(): JSX.Element {
   const [sort, setSort] = useState('updatedAt:desc')
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingItem, setEditingItem] = useState<WatchlistItemResponse | null>(null)
+  const [showImport, setShowImport] = useState(false)
 
   const [sortBy, sortOrder] = sort.split(':') as [WatchlistFilters['sortBy'], WatchlistFilters['sortOrder']]
 
@@ -108,17 +110,27 @@ export default function WatchlistPage(): JSX.Element {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="font-display text-2xl font-bold text-retro-dark">Watchlist</h1>
-        <button
-          type="button"
-          onClick={() => {
-            setShowAddForm(!showAddForm)
-            setEditingItem(null)
-          }}
-          className="border-2 border-retro-dark bg-retro-blue px-4 py-2 font-mono text-sm font-bold text-white shadow-hard hover-shadow-grow"
-        >
-          <Plus size={16} className="mr-2 inline" />
-          Add
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setShowImport(true)}
+            className="border border-retro-blue/30 bg-background px-3 py-2 font-mono text-sm text-retro-dark hover:bg-retro-blue/5"
+          >
+            <Upload size={16} className="mr-2 inline" />
+            Import
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setShowAddForm(!showAddForm)
+              setEditingItem(null)
+            }}
+            className="border-2 border-retro-dark bg-retro-blue px-4 py-2 font-mono text-sm font-bold text-white shadow-hard hover-shadow-grow"
+          >
+            <Plus size={16} className="mr-2 inline" />
+            Add
+          </button>
+        </div>
       </div>
 
       {/* Add form (inline) */}
@@ -240,6 +252,14 @@ export default function WatchlistPage(): JSX.Element {
             Add Item
           </button>
         </div>
+      )}
+
+      {/* Import wizard */}
+      {showImport && (
+        <WatchlistImport
+          onClose={() => setShowImport(false)}
+          onComplete={() => setShowImport(false)}
+        />
       )}
     </div>
   )
