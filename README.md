@@ -211,6 +211,12 @@ See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for detailed deployment guide.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, coding standards, and PR guidelines.
 
+## TODO
+
+- [ ] Dark mode support (CSS variables defined, `dark:` classes in components — needs `next-themes` + toggle)
+- [ ] Modular plugin architecture ([spec](docs/MODULAR_ARCHITECTURE_SPEC.md))
+- [ ] Stability & UI polish ([sprint plan](docs/STABILITY_SPRINTS.md))
+
 ## Security
 
 See [SECURITY.md](SECURITY.md) for reporting vulnerabilities.
