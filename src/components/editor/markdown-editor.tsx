@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { cn } from "@/lib/utils"
 import { EditorToolbar } from "./editor-toolbar"
 import { CodeMirrorEditor } from "./codemirror-editor"
@@ -24,32 +24,60 @@ export function MarkdownEditor({
   const [viewMode, setViewMode] = useState<"split" | "editor" | "preview">(
     "split"
   )
+  const [isFullscreen, setIsFullscreen] = useState(false)
 
   const handleInsert = useCallback(
     (syntax: string) => {
-      // Simple insert: append syntax at the end or let CodeMirror handle it
-      // For a more sophisticated approach, we'd need cursor position from CodeMirror
       onChange(value + syntax)
     },
     [value, onChange]
   )
 
+  const toggleFullscreen = useCallback(() => {
+    setIsFullscreen((prev) => !prev)
+  }, [])
+
+  // Escape key exits fullscreen
+  useEffect(() => {
+    if (!isFullscreen) return
+    const handleKeyDown = (e: KeyboardEvent): void => {
+      if (e.key === "Escape") setIsFullscreen(false)
+    }
+    document.addEventListener("keydown", handleKeyDown)
+    return () => document.removeEventListener("keydown", handleKeyDown)
+  }, [isFullscreen])
+
+  // Prevent body scroll in fullscreen
+  useEffect(() => {
+    if (isFullscreen) {
+      document.body.style.overflow = "hidden"
+    } else {
+      document.body.style.overflow = ""
+    }
+    return () => { document.body.style.overflow = "" }
+  }, [isFullscreen])
+
   return (
-    <div className="flex flex-col rounded-md border border-border bg-background">
+    <div className={cn(
+      "flex flex-col border border-border bg-background",
+      isFullscreen && "fixed inset-0 z-50 border-0"
+    )}>
       {!readOnly && (
         <EditorToolbar
           viewMode={viewMode}
           onViewModeChange={setViewMode}
           onInsert={handleInsert}
+          isFullscreen={isFullscreen}
+          onToggleFullscreen={toggleFullscreen}
         />
       )}
 
       <div
         className={cn(
-          "flex flex-col md:flex-row",
+          "flex flex-1 flex-col md:flex-row",
           viewMode === "preview" && "md:flex-col"
         )}
-        style={{ minHeight }}
+        style={isFullscreen ? undefined : { minHeight }}
       >
         {/* Editor Panel */}
         {viewMode !== "preview" && (

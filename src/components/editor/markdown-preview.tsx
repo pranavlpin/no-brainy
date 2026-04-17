@@ -104,8 +104,10 @@ function MarkdownPreviewInner({ content, className }: MarkdownPreviewProps) {
   return (
     <div
       className={cn(
-        "prose prose-sm dark:prose-invert max-w-none p-4",
-        "prose-headings:font-semibold prose-headings:tracking-tight",
+        "prose prose-sm max-w-none p-4 text-retro-dark",
+        "prose-p:text-retro-dark prose-li:text-retro-dark prose-strong:text-retro-dark",
+        "prose-td:text-retro-dark prose-th:text-retro-dark prose-blockquote:text-retro-dark/70",
+        "prose-headings:font-semibold prose-headings:tracking-tight prose-headings:text-retro-dark",
         "prose-a:text-primary prose-a:no-underline hover:prose-a:underline",
         "prose-code:before:content-none prose-code:after:content-none",
         "prose-pre:bg-muted prose-pre:border prose-pre:border-border",

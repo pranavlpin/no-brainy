@@ -12,6 +12,8 @@ import {
   Table,
   SplitSquareHorizontal,
   Eye,
+  Maximize2,
+  Minimize2,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -20,6 +22,8 @@ interface EditorToolbarProps {
   viewMode: "split" | "editor" | "preview"
   onViewModeChange: (mode: "split" | "editor" | "preview") => void
   onInsert?: (syntax: string) => void
+  isFullscreen?: boolean
+  onToggleFullscreen?: () => void
 }
 
 const formatButtons = [
@@ -49,6 +53,8 @@ export function EditorToolbar({
   viewMode,
   onViewModeChange,
   onInsert,
+  isFullscreen,
+  onToggleFullscreen,
 }: EditorToolbarProps) {
   return (
     <div className="flex items-center gap-1 border-b border-border bg-muted/50 px-2 py-1">
@@ -87,6 +93,24 @@ export function EditorToolbar({
             <span className="hidden sm:inline">{btn.label}</span>
           </Button>
         ))}
+        {onToggleFullscreen && (
+          <>
+            <div className="mx-1 h-6 w-px bg-border" />
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 px-2 text-xs"
+              title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+              onClick={onToggleFullscreen}
+            >
+              {isFullscreen ? (
+                <Minimize2 className="h-4 w-4" />
+              ) : (
+                <Maximize2 className="h-4 w-4" />
+              )}
+            </Button>
+          </>
+        )}
       </div>
     </div>
   )
