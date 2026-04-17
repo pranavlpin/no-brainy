@@ -110,12 +110,13 @@ export const POST = withAuth(async (req: NextRequest, user) => {
       }
     }
 
-    if (Object.keys(updateData).length > 0) {
-      await prisma.watchlistItem.update({
-        where: { id },
-        data: updateData,
-      })
-    }
+    // Always mark as fetched, even if no fields updated
+    updateData.metadataFetched = true
+
+    await prisma.watchlistItem.update({
+      where: { id },
+      data: updateData,
+    })
 
     return NextResponse.json({
       success: true,

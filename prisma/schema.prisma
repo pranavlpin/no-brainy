@@ -431,10 +431,11 @@ model WatchlistItem {
   notesMd     String    @default("") @db.Text
   coverUrl    String?
   year        Int?
-  platform    String?
-  completedAt DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  platform         String?
+  completedAt      DateTime?
+  metadataFetched  Boolean   @default(false)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   @@index([userId, status])
   @@index([userId, type])

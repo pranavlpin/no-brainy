@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Search, Film, Upload } from 'lucide-react'
+import { Plus, Search, Film, Upload, RefreshCw } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -13,6 +13,7 @@ import {
   useCreateWatchlistItem,
   useUpdateWatchlistItem,
   useDeleteWatchlistItem,
+  useBulkFetchMetadata,
 } from '@/hooks/use-watchlist'
 import { cn } from '@/lib/utils'
 import type {
@@ -76,15 +77,19 @@ export default function WatchlistPage(): JSX.Element {
   }
 
   const hasFilters = Object.keys(filters).length > 2 // sortBy and sortOrder always present
-  const { data: items, isLoading } = useWatchlist(
+  const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } = useWatchlist(
     hasFilters || filters.sortBy !== 'updatedAt' || filters.sortOrder !== 'desc'
       ? filters
       : undefined
   )
 
+  const items = data?.items ?? []
+  const totalCount = data?.total ?? 0
+
   const createMutation = useCreateWatchlistItem()
   const updateMutation = useUpdateWatchlistItem()
   const deleteMutation = useDeleteWatchlistItem()
+  const bulkMetadata = useBulkFetchMetadata()
 
   function handleCreate(data: CreateWatchlistRequest | UpdateWatchlistRequest): void {
     createMutation.mutate(data as CreateWatchlistRequest, {
@@ -111,6 +116,15 @@ export default function WatchlistPage(): JSX.Element {
       <div className="flex items-center justify-between">
         <h1 className="font-display text-2xl font-bold text-retro-dark">Watchlist</h1>
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => bulkMetadata.mutate()}
+            disabled={bulkMetadata.isPending}
+            className="border border-retro-blue/30 bg-background px-3 py-2 font-mono text-sm text-retro-dark hover:bg-retro-blue/5 disabled:opacity-50"
+          >
+            <RefreshCw size={16} className={`mr-2 inline ${bulkMetadata.isPending ? 'animate-spin' : ''}`} />
+            {bulkMetadata.isPending ? 'Fetching...' : 'Update Details'}
+          </button>
           <button
             type="button"
             onClick={() => setShowImport(true)}
@@ -223,19 +237,38 @@ export default function WatchlistPage(): JSX.Element {
             </div>
           ))}
         </div>
-      ) : items && items.length > 0 ? (
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-          {items.map((item) => (
-            <WatchlistCard
-              key={item.id}
-              item={item}
-              onEdit={(i) => {
-                setEditingItem(i)
-                setShowAddForm(false)
-              }}
-              onDelete={handleDelete}
-            />
-          ))}
+      ) : items.length > 0 ? (
+        <div className="space-y-4">
+          {bulkMetadata.isSuccess && (
+            <div className="border-2 border-retro-mint/30 bg-retro-mint/5 p-3 font-mono text-sm text-retro-dark">
+              Updated {bulkMetadata.data.data.updated} item{bulkMetadata.data.data.updated !== 1 ? 's' : ''}
+              {bulkMetadata.data.data.failed > 0 && `, ${bulkMetadata.data.data.failed} not found`}
+            </div>
+          )}
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+            {items.map((item) => (
+              <WatchlistCard
+                key={item.id}
+                item={item}
+                onEdit={(i) => {
+                  setEditingItem(i)
+                  setShowAddForm(false)
+                }}
+                onDelete={handleDelete}
+              />
+            ))}
+          </div>
+          {hasNextPage && (
+            <div className="flex justify-center pt-2">
+              <button
+                onClick={() => fetchNextPage()}
+                disabled={isFetchingNextPage}
+                className="font-mono text-sm text-retro-blue hover:underline disabled:opacity-50"
+              >
+                {isFetchingNextPage ? 'Loading more...' : `Load more (showing ${items.length} of ${totalCount})`}
+              </button>
+            </div>
+          )}
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-retro-dark/20 py-16">

@@ -1,6 +1,6 @@
 'use client'
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api-client'
 import type {
   WatchlistItemResponse,
@@ -11,6 +11,7 @@ import type {
 import type { ApiResponse, PaginatedResponse } from '@/lib/types/api'
 
 const WATCHLIST_KEY = ['watchlist']
+const PAGE_SIZE = 40
 
 function buildQueryString(filters?: WatchlistFilters): string {
   if (!filters) return ''
@@ -31,12 +32,25 @@ function buildQueryString(filters?: WatchlistFilters): string {
 }
 
 export function useWatchlist(filters?: WatchlistFilters) {
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: [...WATCHLIST_KEY, filters],
-    queryFn: () =>
-      apiClient<ApiResponse<PaginatedResponse<WatchlistItemResponse>>>(
-        `/api/watchlist${buildQueryString(filters)}`
-      ).then((res) => res.data.items),
+    queryFn: ({ pageParam = 1 }) => {
+      const qs = buildQueryString(filters)
+      const sep = qs ? '&' : '?'
+      return apiClient<ApiResponse<PaginatedResponse<WatchlistItemResponse>>>(
+        `/api/watchlist${qs}${sep}page=${pageParam}&pageSize=${PAGE_SIZE}`
+      )
+    },
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      const data = lastPage.data
+      return data.hasMore ? data.page + 1 : undefined
+    },
+    select: (data) => ({
+      items: data.pages.flatMap((page) => page.data.items),
+      total: data.pages[0]?.data.total ?? 0,
+      hasNextPage: data.pages[data.pages.length - 1]?.data.hasMore ?? false,
+    }),
   })
 }
 
@@ -86,6 +100,19 @@ export function useDeleteWatchlistItem() {
     mutationFn: (id: string) =>
       apiClient<ApiResponse<null>>(`/api/watchlist/${id}`, {
         method: 'DELETE',
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: WATCHLIST_KEY })
+    },
+  })
+}
+
+export function useBulkFetchMetadata() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: () =>
+      apiClient<ApiResponse<{ updated: number; failed: number; total: number }>>('/api/watchlist/metadata/bulk', {
+        method: 'POST',
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: WATCHLIST_KEY })
