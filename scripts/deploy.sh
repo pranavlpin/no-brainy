@@ -13,6 +13,13 @@ set -e
 #   ./scripts/deploy.sh production v1.2  # with custom tag
 # ============================================================
 
+# Load .env file if present (for build args and env vars)
+if [ -f .env ]; then
+  set -a
+  source .env
+  set +a
+fi
+
 ENVIRONMENT="${1:-production}"
 TAG="${2:-$(git rev-parse --short HEAD)}"
 REGION="${GCP_REGION:-asia-south1}"
