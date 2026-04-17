@@ -92,7 +92,7 @@ gcloud run deploy "$SERVICE_NAME" \
   --cpu="$CPU" \
   --min-instances=0 \
   --max-instances="$MAX_INSTANCES" \
-  --set-env-vars="NODE_ENV=production" \
+  --set-env-vars="NODE_ENV=production,OMDB_API_KEY=${OMDB_API_KEY:-}" \
   --set-secrets="DATABASE_URL=${DB_SECRET}:latest,NEXTAUTH_SECRET=${AUTH_SECRET}:latest,NEXTAUTH_URL=${URL_SECRET}:latest,GOOGLE_CLIENT_ID=nobrainy-google-client-id:latest,GOOGLE_CLIENT_SECRET=nobrainy-google-client-secret:latest" \
   --add-cloudsql-instances="${PROJECT_ID}:${REGION}:nobrainy-db" \
   --cpu-boost \
