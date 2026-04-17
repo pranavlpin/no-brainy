@@ -16,7 +16,8 @@ set -e
 ENVIRONMENT="${1:-production}"
 TAG="${2:-$(git rev-parse --short HEAD)}"
 REGION="${GCP_REGION:-asia-south1}"
-PROJECT_ID=$(gcloud config get-value project 2>/dev/null)
+PROJECT_ID="${GCP_PROJECT_ID:-nobrainy-prod}"
+gcloud config set project "$PROJECT_ID" --quiet
 SERVICE_NAME="nobrainy-${ENVIRONMENT}"
 IMAGE="$REGION-docker.pkg.dev/$PROJECT_ID/nobrainy/app:$TAG"
 IMAGE_LATEST="$REGION-docker.pkg.dev/$PROJECT_ID/nobrainy/app:${ENVIRONMENT}-latest"
