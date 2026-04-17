@@ -119,9 +119,24 @@ export function CodeMirrorEditor({
     }
   }, [value])
 
+  // Block browser shortcuts that conflict with CodeMirror when editor is focused
+  const handleKeyDown = useCallback((e: React.KeyboardEvent): void => {
+    const mod = e.metaKey || e.ctrlKey
+    if (!mod) return
+
+    // Cmd+F: find (block browser search)
+    // Cmd+H: replace (block browser hide window / Chrome history)
+    // Cmd+G: find next (block browser find next)
+    // Cmd+D: block browser bookmark dialog
+    if (['f', 'h', 'g', 'd'].includes(e.key.toLowerCase())) {
+      e.preventDefault()
+    }
+  }, [])
+
   return (
     <div
       ref={containerRef}
+      onKeyDown={handleKeyDown}
       className="h-full overflow-auto [&_.cm-editor]:h-full"
     />
   )
