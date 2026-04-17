@@ -140,6 +140,49 @@ echo "Environment: $ENVIRONMENT"
 echo "Image:       $IMAGE"
 echo ""
 
-# Update NEXTAUTH_URL secret if this is first deploy
-echo "If this is the first deploy, update NEXTAUTH_URL:"
-echo "  echo -n '$APP_URL' | gcloud secrets versions add ${URL_SECRET} --data-file=-"
+# Show GCP resources summary
+echo "=== GCP Resources ==="
+echo ""
+
+# Cloud Run Service
+echo "Cloud Run Service:"
+gcloud run services describe "$SERVICE_NAME" --region="$REGION" --format="table[box](
+  status.url:label=URL,
+  spec.template.spec.containers[0].resources.limits.memory:label=MEMORY,
+  spec.template.spec.containers[0].resources.limits.cpu:label=CPU,
+  spec.template.metadata.annotations.'autoscaling.knative.dev/minScale':label=MIN_INSTANCES,
+  spec.template.metadata.annotations.'autoscaling.knative.dev/maxScale':label=MAX_INSTANCES
+)" 2>/dev/null || true
+echo ""
+
+# Cloud SQL
+echo "Cloud SQL:"
+gcloud sql instances describe nobrainy-db --format="table[box](
+  name:label=INSTANCE,
+  settings.tier:label=TIER,
+  databaseVersion:label=VERSION,
+  settings.dataDiskSizeGb:label=DISK_GB,
+  state:label=STATE,
+  region:label=REGION
+)" 2>/dev/null || true
+echo ""
+
+# Artifact Registry
+echo "Artifact Registry:"
+echo "  Repo: $REGION-docker.pkg.dev/$PROJECT_ID/nobrainy"
+echo "  App:  $IMAGE"
+echo "  Migrator: $MIGRATOR_IMAGE"
+echo ""
+
+# Secrets
+echo "Secrets:"
+gcloud secrets list --format="table(name, createTime.date())" --filter="name~nobrainy" 2>/dev/null || true
+echo ""
+
+# Estimated monthly cost
+echo "Estimated Monthly Cost:"
+echo "  Cloud SQL (db-f1-micro):  ~\$8-10"
+echo "  Cloud Run (scale to 0):   ~\$0-5 (usage-based)"
+echo "  Artifact Registry:        ~\$0.10/GB"
+echo "  Secret Manager:           ~\$0.06/secret"
+echo "  Total (low traffic):      ~\$10-20/month"
