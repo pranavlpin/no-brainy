@@ -1,10 +1,12 @@
 "use client"
 
 import { useEffect, useRef, useCallback } from "react"
-import { EditorView, keymap, placeholder as placeholderExt } from "@codemirror/view"
+import { EditorView, keymap, placeholder as placeholderExt, highlightSpecialChars } from "@codemirror/view"
 import { EditorState } from "@codemirror/state"
 import { markdown } from "@codemirror/lang-markdown"
 import { defaultHighlightStyle, syntaxHighlighting } from "@codemirror/language"
+import { search, searchKeymap, highlightSelectionMatches } from "@codemirror/search"
+import { defaultKeymap, history, historyKeymap } from "@codemirror/commands"
 
 interface CodeMirrorEditorProps {
   value: string
@@ -52,6 +54,11 @@ export function CodeMirrorEditor({
       baseTheme,
       markdown(),
       syntaxHighlighting(defaultHighlightStyle),
+      highlightSpecialChars(),
+      history(),
+      search({ top: true }),
+      highlightSelectionMatches(),
+      keymap.of([...defaultKeymap, ...historyKeymap, ...searchKeymap]),
       EditorView.lineWrapping,
       EditorView.updateListener.of((update) => {
         if (update.docChanged) {
