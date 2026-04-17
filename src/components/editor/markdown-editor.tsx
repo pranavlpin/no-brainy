@@ -74,7 +74,8 @@ export function MarkdownEditor({
 
       <div
         className={cn(
-          "flex flex-1 flex-col md:flex-row",
+          "flex flex-col md:flex-row overflow-hidden",
+          isFullscreen ? "flex-1" : "",
           viewMode === "preview" && "md:flex-col"
         )}
         style={isFullscreen ? undefined : { minHeight }}
@@ -83,9 +84,9 @@ export function MarkdownEditor({
         {viewMode !== "preview" && (
           <div
             className={cn(
-              "flex-1 overflow-hidden",
+              "flex-1 overflow-auto",
               viewMode === "split" && "md:border-r md:border-border",
-              viewMode === "split" ? "min-h-[200px] md:min-h-0" : ""
+              !isFullscreen && viewMode === "split" ? "min-h-[200px] md:min-h-0" : ""
             )}
           >
             <CodeMirrorEditor
@@ -103,7 +104,7 @@ export function MarkdownEditor({
             className={cn(
               "flex-1 overflow-auto",
               viewMode === "split" && "border-t md:border-t-0",
-              viewMode === "split" ? "min-h-[200px] md:min-h-0" : ""
+              !isFullscreen && viewMode === "split" ? "min-h-[200px] md:min-h-0" : ""
             )}
           >
             <MarkdownPreview content={value} />
