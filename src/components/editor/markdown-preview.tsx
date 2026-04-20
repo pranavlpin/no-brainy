@@ -109,8 +109,9 @@ function MarkdownPreviewInner({ content, className }: MarkdownPreviewProps) {
         "prose-td:text-retro-dark prose-th:text-retro-dark prose-blockquote:text-retro-dark/70",
         "prose-headings:font-semibold prose-headings:tracking-tight prose-headings:text-retro-dark",
         "prose-a:text-primary prose-a:no-underline hover:prose-a:underline",
-        "prose-code:before:content-none prose-code:after:content-none",
-        "prose-pre:bg-muted prose-pre:border prose-pre:border-border",
+        "prose-code:before:content-none prose-code:after:content-none prose-code:text-retro-dark prose-code:bg-retro-dark/5 prose-code:px-1.5 prose-code:py-0.5 prose-code:text-sm",
+        "prose-pre:bg-retro-dark prose-pre:text-retro-cream prose-pre:border-2 prose-pre:border-retro-dark/20",
+        "[&_pre_code]:bg-transparent [&_pre_code]:text-retro-cream [&_pre_code]:p-0",
         className
       )}
     >
