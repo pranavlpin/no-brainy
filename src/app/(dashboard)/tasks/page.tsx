@@ -42,9 +42,8 @@ export default function TasksPage() {
 
   const handleCreate = (formData: CreateTaskRequest) => {
     createTask.mutate(formData, {
-      onSuccess: (res) => {
+      onSuccess: () => {
         setShowNewForm(false)
-        router.push(`/tasks/${res.data.id}`)
       },
     })
   }
