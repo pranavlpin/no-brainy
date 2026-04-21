@@ -182,8 +182,8 @@ export default function AnalyticsPage() {
         />
         <StatCard
           icon={TrendingUp}
-          value={`${data.habitCompletionRate}%`}
-          label="Habit Completion"
+          value={data.totalNotes}
+          label="Total Notes"
         />
       </div>
 

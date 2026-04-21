@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
   const now = new Date()
   const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
 
-  const [activeTasks, completedThisWeek, recentNotes, habits] = await Promise.all([
+  const [activeTasks, completedThisWeek, recentNotes] = await Promise.all([
     prisma.task.findMany({
       where: { userId: user.id, status: { in: ['pending', 'in_progress'] } },
       select: { title: true, priority: true, status: true, dueDate: true },
@@ -60,10 +60,6 @@ export async function POST(req: NextRequest) {
       select: { title: true, tags: true, updatedAt: true },
       orderBy: { updatedAt: 'desc' },
       take: 3,
-    }),
-    prisma.habit.findMany({
-      where: { userId: user.id },
-      select: { title: true, frequency: true },
     }),
   ])
 
@@ -82,10 +78,7 @@ export async function POST(req: NextRequest) {
         tags: n.tags,
         updatedAt: n.updatedAt,
       })),
-      habits: habits.map((h) => ({
-        title: h.title,
-        frequency: h.frequency,
-      })),
+      habits: [],
       timezone: user.timezone || 'UTC',
     }) + `\n\nAdditional context: User completed ${completedThisWeek} task(s) this week.`
 

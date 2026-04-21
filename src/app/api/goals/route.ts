@@ -28,7 +28,7 @@ export const GET = withAuth(async (req: NextRequest, user) => {
         skip: (page - 1) * pageSize,
         take: pageSize,
         include: {
-          _count: { select: { tasks: true, habits: true } },
+          _count: { select: { tasks: true } },
           tasks: { select: { status: true } },
         },
       }),

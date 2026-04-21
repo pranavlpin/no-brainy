@@ -30,24 +30,15 @@ export interface UserDataSummary {
     weakTags: Array<{ tag: string; forgotCount: number }>
     reviewStreak: number
   }
-  habits: {
-    habits: Array<{
-      title: string
-      frequency: string
-      currentStreak: number
-      completionRate30d: number
-    }>
-  }
 }
 
-export type InsightModule = 'tasks' | 'notes' | 'flashcards' | 'habits' | 'expenses'
+export type InsightModule = 'tasks' | 'notes' | 'flashcards' | 'expenses'
 
 export const ALL_INSIGHT_MODULES: { key: InsightModule; label: string; icon: string }[] = [
   { key: 'expenses', label: 'Expenses', icon: 'wallet' },
   { key: 'tasks', label: 'Tasks', icon: 'check-square' },
   { key: 'notes', label: 'Notes', icon: 'file-text' },
   { key: 'flashcards', label: 'Flashcards', icon: 'layers' },
-  { key: 'habits', label: 'Habits', icon: 'target' },
 ]
 
 export async function aggregateUserData(userId: string, modules?: InsightModule[], dateFrom?: string, dateTo?: string): Promise<Partial<UserDataSummary>> {
@@ -67,8 +58,6 @@ export async function aggregateUserData(userId: string, modules?: InsightModule[
     notes,
     reviewSessions,
     flashcards,
-    habits,
-    habitLogs,
     recentExpenses,
     prevMonthExpenses,
   ] = await Promise.all([
@@ -95,14 +84,6 @@ export async function aggregateUserData(userId: string, modules?: InsightModule[
     selected.includes('flashcards') ? prisma.flashcard.findMany({
       where: { userId, state: 'learning' },
       select: { tags: true, reviewCount: true, lastRating: true },
-    }) : emptyArr,
-    selected.includes('habits') ? prisma.habit.findMany({
-      where: { userId },
-      select: { id: true, title: true, frequency: true },
-    }) : emptyArr,
-    selected.includes('habits') ? prisma.habitLog.findMany({
-      where: { habit: { userId }, logDate: { gte: thirtyDaysAgo } },
-      select: { habitId: true, logDate: true, completed: true },
     }) : emptyArr,
     selected.includes('expenses') ? prisma.expense.findMany({
       where: { userId, date: { gte: thirtyDaysAgo } },
@@ -196,42 +177,6 @@ export async function aggregateUserData(userId: string, modules?: InsightModule[
     }
   }
 
-  // --- Habits aggregation ---
-  const habitData = habits.map((habit) => {
-    const logs = habitLogs.filter((l) => l.habitId === habit.id)
-    const completedLogs = logs.filter((l) => l.completed)
-    const completionRate30d = logs.length > 0
-      ? Math.round((completedLogs.length / logs.length) * 100)
-      : 0
-
-    // Calculate current streak
-    let currentStreak = 0
-    const sortedLogs = logs
-      .filter((l) => l.completed)
-      .sort((a, b) => b.logDate.getTime() - a.logDate.getTime())
-
-    if (sortedLogs.length > 0) {
-      const streakDate = new Date(now)
-      for (const log of sortedLogs) {
-        const logDateStr = log.logDate.toISOString().split('T')[0]
-        const checkStr = streakDate.toISOString().split('T')[0]
-        if (logDateStr === checkStr) {
-          currentStreak++
-          streakDate.setDate(streakDate.getDate() - 1)
-        } else {
-          break
-        }
-      }
-    }
-
-    return {
-      title: habit.title,
-      frequency: habit.frequency,
-      currentStreak,
-      completionRate30d,
-    }
-  })
-
   // --- Expenses aggregation ---
   const totalSpent30d = recentExpenses.reduce((sum, e) => sum + Number(e.amount), 0)
   const prevTotal = prevMonthExpenses.reduce((sum, e) => sum + Number(e.amount), 0)
@@ -303,11 +248,6 @@ export async function aggregateUserData(userId: string, modules?: InsightModule[
     }
   }
 
-  if (selected.includes('habits')) {
-    result.habits = {
-      habits: habitData,
-    }
-  }
 
   return result
 }

@@ -30,7 +30,6 @@ model User {
   dayPlans      DayPlan[]
   dailyReviews  DailyReview[]
   goals         Goal[]
-  habits        Habit[]
   insights      Insight[]
   sessions      UserSession[]
   reviewSessions    ReviewSession[]
@@ -252,33 +251,8 @@ model Goal {
   updatedAt   DateTime  @updatedAt
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   tasks  Task[]
-  habits Habit[]
   @@index([userId, status])
   @@map("goals")
-}
-
-model Habit {
-  id        String   @id @default(cuid())
-  userId    String
-  goalId    String?
-  title     String
-  frequency String
-  createdAt DateTime @default(now())
-  user User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  goal Goal?     @relation(fields: [goalId], references: [id], onDelete: SetNull)
-  logs HabitLog[]
-  @@index([userId])
-  @@map("habits")
-}
-
-model HabitLog {
-  id        String   @id @default(cuid())
-  habitId   String
-  logDate   DateTime @db.Date
-  completed Boolean  @default(false)
-  habit Habit @relation(fields: [habitId], references: [id], onDelete: Cascade)
-  @@unique([habitId, logDate])
-  @@map("habit_logs")
 }
 
 model Insight {

@@ -1,7 +1,5 @@
 export type GoalStatus = 'active' | 'completed' | 'paused' | 'abandoned'
 
-export type HabitFrequency = 'daily' | 'weekly' | 'monthly'
-
 export interface GoalResponse {
   id: string
   userId: string
@@ -14,7 +12,6 @@ export interface GoalResponse {
   updatedAt: string
   taskCount?: number
   completedTaskCount?: number
-  habits?: HabitResponse[]
 }
 
 export interface CreateGoalRequest {
@@ -31,41 +28,4 @@ export interface UpdateGoalRequest {
   category?: string | null
   targetDate?: string | null
   status?: GoalStatus
-}
-
-export interface HabitResponse {
-  id: string
-  userId: string
-  goalId: string | null
-  title: string
-  frequency: HabitFrequency
-  createdAt: string
-  currentStreak?: number
-  longestStreak?: number
-  completionRate?: number
-  completedToday?: boolean
-}
-
-export interface CreateHabitRequest {
-  title: string
-  frequency: HabitFrequency
-  goalId?: string
-}
-
-export interface UpdateHabitRequest {
-  title?: string
-  frequency?: HabitFrequency
-  goalId?: string | null
-}
-
-export interface HabitLogResponse {
-  id: string
-  habitId: string
-  logDate: string
-  completed: boolean
-}
-
-export interface CreateHabitLogRequest {
-  logDate: string
-  completed: boolean
 }

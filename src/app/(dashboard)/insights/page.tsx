@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import {
-  Lightbulb, Wallet, CheckSquare, FileText, Layers, Target, X,
+  Lightbulb, Wallet, CheckSquare, FileText, Layers, X,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -16,7 +16,6 @@ const MODULES: { key: string; label: string; icon: LucideIcon }[] = [
   { key: 'tasks', label: 'Tasks', icon: CheckSquare },
   { key: 'notes', label: 'Notes', icon: FileText },
   { key: 'flashcards', label: 'Flashcards', icon: Layers },
-  { key: 'habits', label: 'Habits', icon: Target },
 ]
 
 const insightTypes = [

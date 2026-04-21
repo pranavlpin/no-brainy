@@ -21,7 +21,6 @@ export const GET = withAuth(async (_req: NextRequest, user) => {
       totalNotes,
       flashcardStates,
       reviewSessions,
-      habitData,
       totalBooksRead,
       totalCardsReviewed,
     ] = await Promise.all([
@@ -80,18 +79,6 @@ export const GET = withAuth(async (_req: NextRequest, user) => {
         },
         select: { completedAt: true, cardsReviewed: true },
         orderBy: { completedAt: 'desc' },
-      }),
-
-      // Habit data for this month
-      prisma.habit.findMany({
-        where: { userId: user.id },
-        include: {
-          logs: {
-            where: {
-              logDate: { gte: startOfMonth },
-            },
-          },
-        },
       }),
 
       // Total books read
@@ -229,22 +216,6 @@ export const GET = withAuth(async (_req: NextRequest, user) => {
     }
 
     // --- Habit Completion Rate ---
-    let habitCompletionRate = 0
-    if (habitData.length > 0) {
-      const daysInMonth = now.getDate()
-      // For daily habits, expected = daysInMonth per habit
-      // Simplified: count completed logs / (habits * days so far)
-      const totalExpected = habitData.length * daysInMonth
-      const totalCompleted = habitData.reduce(
-        (sum, h) => sum + h.logs.filter((l) => l.completed).length,
-        0
-      )
-      habitCompletionRate =
-        totalExpected > 0
-          ? Math.round((totalCompleted / totalExpected) * 100)
-          : 0
-    }
-
     // --- Most Active Hours ---
     const hourBuckets: number[] = new Array(24).fill(0)
     allTasksLast30.forEach((t) => {
@@ -272,7 +243,6 @@ export const GET = withAuth(async (_req: NextRequest, user) => {
         totalNotes,
         flashcardStats,
         reviewStreak,
-        habitCompletionRate,
         mostActiveHours,
         totalTasksCompleted,
         totalBooksRead,

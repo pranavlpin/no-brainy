@@ -35,7 +35,6 @@ export function GoalCard({ goal, onClick }: GoalCardProps) {
   const totalTasks = goal.taskCount ?? 0
   const completedTasks = goal.completedTaskCount ?? 0
   const progressPct = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
-  const habitCount = goal.habits?.length ?? 0
 
   const isOverdue =
     goal.targetDate &&
@@ -98,9 +97,6 @@ export function GoalCard({ goal, onClick }: GoalCardProps) {
               <CheckCircle2 className="h-3.5 w-3.5" />
               {completedTasks}/{totalTasks} tasks
             </span>
-          )}
-          {habitCount > 0 && (
-            <span>{habitCount} habit{habitCount !== 1 ? 's' : ''}</span>
           )}
         </div>
         {goal.targetDate && (

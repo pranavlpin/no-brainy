@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { ArrowLeft, Calendar, Trash2, CheckCircle2, Repeat } from 'lucide-react'
+import { ArrowLeft, Calendar, Trash2, CheckCircle2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Select } from '@/components/ui/select'
@@ -69,7 +69,6 @@ export default function GoalDetailPage() {
   const totalTasks = goal.taskCount ?? 0
   const completedTasks = goal.completedTaskCount ?? 0
   const progressPct = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
-  const habitCount = goal.habits?.length ?? 0
 
   const isOverdue =
     goal.targetDate &&
@@ -178,30 +177,6 @@ export default function GoalDetailPage() {
         )}
       </div>
 
-      {/* Linked habits */}
-      <div className="rounded-lg border border-border p-4 bg-white dark:bg-gray-900">
-        <div className="flex items-center gap-2 mb-3">
-          <Repeat className="h-4 w-4 text-primary" />
-          <h3 className="font-semibold">Linked Habits</h3>
-          <span className="text-xs text-muted-foreground">({habitCount})</span>
-        </div>
-        {goal.habits && goal.habits.length > 0 ? (
-          <ul className="space-y-2">
-            {goal.habits.map((habit) => (
-              <li key={habit.id} className="flex items-center justify-between text-sm">
-                <span>{habit.title}</span>
-                <Badge variant="blue" className="text-xs">
-                  {habit.frequency}
-                </Badge>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            No habits linked to this goal yet.
-          </p>
-        )}
-      </div>
 
       {/* Edit Dialog */}
       <Dialog

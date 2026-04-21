@@ -17,7 +17,6 @@ export const GET = withAuth(async (req: NextRequest, user) => {
     const goal = await prisma.goal.findFirst({
       where: { id, userId: user.id },
       include: {
-        habits: true,
         tasks: { select: { id: true, status: true } },
       },
     })
@@ -51,14 +50,6 @@ export const GET = withAuth(async (req: NextRequest, user) => {
         updatedAt: goal.updatedAt.toISOString(),
         taskCount,
         completedTaskCount,
-        habits: goal.habits.map((h) => ({
-          id: h.id,
-          userId: h.userId,
-          goalId: h.goalId,
-          title: h.title,
-          frequency: h.frequency,
-          createdAt: h.createdAt.toISOString(),
-        })),
       },
     })
   } catch {

@@ -314,7 +314,7 @@ function FeaturesTimeline(): React.ReactElement {
     { title: 'Book Tracker', desc: 'Track every book. Log progress, capture highlights, never lose a reading insight.', ui: <BookTrackerMiniUI />, accent: 'retro-yellow' },
     { title: 'Flashcards', desc: 'Spaced repetition built in. Create, review, and master any subject.', ui: <FlashcardMiniUI />, accent: 'retro-mint' },
     { title: 'Daily Planner', desc: 'Time-block your day. Drag, drop, and own every hour.', ui: <DailyPlannerMiniUI />, accent: 'retro-orange' },
-    { title: 'Goals & Habits', desc: 'Track streaks, visualize consistency, build the life you want.', ui: <HabitHeatmapMiniUI />, accent: 'retro-pink' },
+    { title: 'Goals', desc: 'Set goals, link tasks, track progress. Auto-complete when all tasks are done.', ui: <HabitHeatmapMiniUI />, accent: 'retro-pink' },
   ]
   return (
     <section id="features" className="bg-retro-dark py-16 sm:py-24 px-4 sm:px-6 relative overflow-hidden">
@@ -445,7 +445,7 @@ function AISection(): React.ReactElement {
     { label: 'Smart Summaries', desc: 'Condense long notes into key takeaways with one click.', color: 'border-l-retro-pink' },
     { label: 'Task Prioritization', desc: 'AI ranks your tasks by urgency and impact. Focus on what matters.', color: 'border-l-retro-blue' },
     { label: 'Daily Briefs', desc: 'Start each day with an AI-generated overview of your plan.', color: 'border-l-retro-yellow' },
-    { label: 'Insight Extraction', desc: 'Surface hidden patterns from your notes, habits, and reviews.', color: 'border-l-retro-orange' },
+    { label: 'Insight Extraction', desc: 'Surface hidden patterns from your notes, goals, and reviews.', color: 'border-l-retro-orange' },
     { label: 'Auto-Categorization', desc: 'Imported expenses get tagged to the right category automatically.', color: 'border-l-retro-mint' },
   ]
 
@@ -512,7 +512,7 @@ function HowItWorks(): React.ReactElement {
   const steps = [
     { num: '01', title: 'Capture', desc: 'Dump everything into NoBrainy. Notes, tasks, expenses, ideas — just get it out of your head.' },
     { num: '02', title: 'Organize', desc: 'Let modules auto-sort your chaos. Tasks get prioritized. Notes get linked. Expenses get categorized.' },
-    { num: '03', title: 'Reflect', desc: 'Weekly reviews, habit streaks, expense trends. See how far you\'ve come and where to go next.' },
+    { num: '03', title: 'Reflect', desc: 'Weekly reviews, goal progress, expense trends. See how far you\'ve come and where to go next.' },
   ]
   return (
     <section className="bg-retro-cream py-16 sm:py-24 px-4 sm:px-6 relative overflow-hidden">
@@ -605,7 +605,7 @@ function FooterCTA(): React.ReactElement {
           today.
         </h2>
         <p className="font-body text-sm sm:text-base text-retro-dark/60 mb-8">
-          Deploy in minutes. Start building better habits today.
+          Deploy in minutes. Start organizing your life today.
         </p>
         <Link href="/register" className="inline-block font-mono font-bold text-lg px-10 py-4 bg-retro-pink text-white border-4 border-retro-dark shadow-hard-lg hover-shadow-grow">
           Get Started Now &rarr;

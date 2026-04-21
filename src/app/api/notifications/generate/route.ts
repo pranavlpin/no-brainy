@@ -89,43 +89,6 @@ export const POST = withAuth(async (_req: NextRequest, user) => {
       }
     }
 
-    // 3. Habit reminders - habits not logged today
-    if (isEnabled('habitReminders')) {
-      const habits = await prisma.habit.findMany({
-        where: { userId: user.id },
-        include: {
-          logs: {
-            where: { logDate: { gte: todayStart, lt: todayEnd } },
-          },
-        },
-      })
-
-      for (const habit of habits) {
-        if (habit.logs.length === 0) {
-          const exists = await prisma.notification.findFirst({
-            where: {
-              userId: user.id,
-              type: 'habit_reminder',
-              relatedId: habit.id,
-              createdAt: { gte: todayStart, lt: todayEnd },
-            },
-          })
-          if (!exists) {
-            await prisma.notification.create({
-              data: {
-                userId: user.id,
-                type: 'habit_reminder',
-                title: 'Habit reminder',
-                body: `Don't forget: ${habit.title}`,
-                relatedEntity: 'habit',
-                relatedId: habit.id,
-              },
-            })
-            created.push(`habit_reminder:${habit.id}`)
-          }
-        }
-      }
-    }
 
     // 4. Flashcard review reminders - cards due for review
     if (isEnabled('flashcardReminders')) {
