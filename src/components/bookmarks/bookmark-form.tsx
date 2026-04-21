@@ -2,19 +2,20 @@
 
 import { useState } from 'react'
 import { Input } from '@/components/ui/input'
-import type { CreateBookmarkRequest } from '@/lib/types/bookmarks'
+import type { BookmarkResponse, CreateBookmarkRequest, UpdateBookmarkRequest } from '@/lib/types/bookmarks'
 
 interface BookmarkFormProps {
-  onSubmit: (data: CreateBookmarkRequest) => void
+  bookmark?: BookmarkResponse
+  onSubmit: (data: CreateBookmarkRequest | UpdateBookmarkRequest) => void
   onCancel: () => void
   isLoading?: boolean
 }
 
-export function BookmarkForm({ onSubmit, onCancel, isLoading }: BookmarkFormProps) {
-  const [title, setTitle] = useState('')
-  const [url, setUrl] = useState('')
-  const [description, setDescription] = useState('')
-  const [tagsInput, setTagsInput] = useState('')
+export function BookmarkForm({ bookmark, onSubmit, onCancel, isLoading }: BookmarkFormProps) {
+  const [title, setTitle] = useState(bookmark?.title ?? '')
+  const [url, setUrl] = useState(bookmark?.url ?? '')
+  const [description, setDescription] = useState(bookmark?.description ?? '')
+  const [tagsInput, setTagsInput] = useState(bookmark?.tags?.join(', ') ?? '')
 
   function handleSubmit(e: React.FormEvent): void {
     e.preventDefault()
@@ -25,8 +26,8 @@ export function BookmarkForm({ onSubmit, onCancel, isLoading }: BookmarkFormProp
     onSubmit({
       title,
       url,
-      ...(description ? { description } : {}),
-      ...(tags.length > 0 ? { tags } : {}),
+      description: description || undefined,
+      tags: tags.length > 0 ? tags : undefined,
     })
   }
 
@@ -71,7 +72,7 @@ export function BookmarkForm({ onSubmit, onCancel, isLoading }: BookmarkFormProp
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Optional description"
           rows={2}
-          className="w-full rounded-none border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="w-full rounded-none border-2 border-retro-dark/20 bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-retro-blue"
         />
       </div>
 
@@ -93,7 +94,7 @@ export function BookmarkForm({ onSubmit, onCancel, isLoading }: BookmarkFormProp
           disabled={isLoading}
           className="border-2 border-retro-dark bg-retro-blue px-4 py-2 font-mono text-sm font-bold text-white shadow-hard hover-shadow-grow disabled:opacity-50"
         >
-          {isLoading ? 'Saving...' : 'Save Bookmark'}
+          {isLoading ? 'Saving...' : bookmark ? 'Update Bookmark' : 'Save Bookmark'}
         </button>
         <button
           type="button"

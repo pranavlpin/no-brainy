@@ -7,13 +7,14 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { BookmarkCard } from '@/components/bookmarks/bookmark-card'
 import { BookmarkForm } from '@/components/bookmarks/bookmark-form'
 import { BookmarkPreview } from '@/components/bookmarks/bookmark-preview'
-import { useBookmarks, useCreateBookmark, useDeleteBookmark } from '@/hooks/use-bookmarks'
+import { useBookmarks, useCreateBookmark, useUpdateBookmark, useDeleteBookmark } from '@/hooks/use-bookmarks'
 import { cn } from '@/lib/utils'
-import type { BookmarkResponse, BookmarkFilters } from '@/lib/types/bookmarks'
+import type { BookmarkResponse, BookmarkFilters, CreateBookmarkRequest, UpdateBookmarkRequest } from '@/lib/types/bookmarks'
 
 export default function BookmarksPage() {
   const [search, setSearch] = useState('')
   const [showForm, setShowForm] = useState(false)
+  const [editingBookmark, setEditingBookmark] = useState<BookmarkResponse | null>(null)
   const [selectedBookmark, setSelectedBookmark] = useState<BookmarkResponse | null>(null)
 
   const filters: BookmarkFilters = {
@@ -24,12 +25,21 @@ export default function BookmarksPage() {
     Object.keys(filters).length > 0 ? filters : undefined
   )
   const createBookmark = useCreateBookmark()
+  const updateBookmark = useUpdateBookmark()
   const deleteBookmark = useDeleteBookmark()
 
-  function handleCreate(data: Parameters<typeof createBookmark.mutate>[0]): void {
-    createBookmark.mutate(data, {
+  function handleCreate(data: CreateBookmarkRequest | UpdateBookmarkRequest): void {
+    createBookmark.mutate(data as CreateBookmarkRequest, {
       onSuccess: () => setShowForm(false),
     })
+  }
+
+  function handleUpdate(data: CreateBookmarkRequest | UpdateBookmarkRequest): void {
+    if (!editingBookmark) return
+    updateBookmark.mutate(
+      { id: editingBookmark.id, data: data as UpdateBookmarkRequest },
+      { onSuccess: () => setEditingBookmark(null) },
+    )
   }
 
   function handleDelete(bookmark: BookmarkResponse): void {
@@ -42,8 +52,8 @@ export default function BookmarksPage() {
   }
 
   function handleEdit(bookmark: BookmarkResponse): void {
-    // For now, open in preview; a full edit form can be added later
-    setSelectedBookmark(bookmark)
+    setEditingBookmark(bookmark)
+    setShowForm(false)
   }
 
   return (
@@ -67,12 +77,22 @@ export default function BookmarksPage() {
           </button>
         </div>
 
-        {/* Inline form */}
+        {/* Create form */}
         {showForm && (
           <BookmarkForm
             onSubmit={handleCreate}
             onCancel={() => setShowForm(false)}
             isLoading={createBookmark.isPending}
+          />
+        )}
+
+        {/* Edit form */}
+        {editingBookmark && (
+          <BookmarkForm
+            bookmark={editingBookmark}
+            onSubmit={handleUpdate}
+            onCancel={() => setEditingBookmark(null)}
+            isLoading={updateBookmark.isPending}
           />
         )}
 
