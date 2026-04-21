@@ -12,6 +12,7 @@ interface MarkdownEditorProps {
   placeholder?: string
   minHeight?: string
   readOnly?: boolean
+  noteId?: string
 }
 
 export function MarkdownEditor({
@@ -20,6 +21,7 @@ export function MarkdownEditor({
   placeholder = "Start writing in markdown...",
   minHeight = "400px",
   readOnly = false,
+  noteId,
 }: MarkdownEditorProps) {
   const [viewMode, setViewMode] = useState<"split" | "editor" | "preview">(
     "split"
@@ -161,6 +163,7 @@ export function MarkdownEditor({
               onChange={onChange}
               placeholder={placeholder}
               readOnly={readOnly}
+              noteId={noteId}
             />
           </div>
         )}

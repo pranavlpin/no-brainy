@@ -198,7 +198,7 @@ export default function NoteDetailPage() {
       <TagInput tags={tags} onChange={handleTagsChange} />
 
       {/* Editor */}
-      <MarkdownEditor value={content} onChange={handleContentChange} minHeight="500px" />
+      <MarkdownEditor value={content} onChange={handleContentChange} minHeight="500px" noteId={noteId} />
 
       {/* AI Actions */}
       <NoteAIPanel

@@ -7,12 +7,16 @@ import { markdown } from "@codemirror/lang-markdown"
 import { defaultHighlightStyle, syntaxHighlighting } from "@codemirror/language"
 import { search, searchKeymap, highlightSelectionMatches } from "@codemirror/search"
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands"
+import { autocompletion, completionKeymap } from "@codemirror/autocomplete"
+import { slashCommandCompletions } from "@/lib/editor/slash-commands"
+import { linkCommandCompletions } from "@/lib/editor/link-command"
 
 interface CodeMirrorEditorProps {
   value: string
   onChange: (value: string) => void
   placeholder?: string
   readOnly?: boolean
+  noteId?: string
 }
 
 const baseTheme = EditorView.theme({
@@ -89,6 +93,7 @@ export function CodeMirrorEditor({
   onChange,
   placeholder,
   readOnly = false,
+  noteId,
 }: CodeMirrorEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const viewRef = useRef<EditorView | null>(null)
@@ -106,7 +111,12 @@ export function CodeMirrorEditor({
       history(),
       search({ top: true }),
       highlightSelectionMatches(),
-      keymap.of([...markdownKeymap, ...defaultKeymap, ...historyKeymap, ...searchKeymap]),
+      autocompletion({
+        override: [slashCommandCompletions, linkCommandCompletions(noteId)],
+        activateOnTyping: true,
+        icons: false,
+      }),
+      keymap.of([...markdownKeymap, ...completionKeymap, ...defaultKeymap, ...historyKeymap, ...searchKeymap]),
       EditorView.lineWrapping,
       EditorView.updateListener.of((update) => {
         if (update.docChanged) {
@@ -125,7 +135,7 @@ export function CodeMirrorEditor({
     }
 
     return extensions
-  }, [placeholder, readOnly])
+  }, [placeholder, readOnly, noteId])
 
   // Create editor
   useEffect(() => {

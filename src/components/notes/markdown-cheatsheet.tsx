@@ -55,7 +55,39 @@ const shortcuts = [
   ]},
 ]
 
-type Tab = 'syntax' | 'shortcuts'
+const slashCommands = [
+  { category: 'Headings & Text', items: [
+    { command: '/h1', desc: 'Heading 1' },
+    { command: '/h2', desc: 'Heading 2' },
+    { command: '/h3', desc: 'Heading 3' },
+    { command: '/quote', desc: 'Blockquote' },
+    { command: '/callout', desc: 'Callout box' },
+    { command: '/divider', desc: 'Horizontal rule' },
+  ]},
+  { category: 'Lists', items: [
+    { command: '/bullets', desc: 'Bullet list' },
+    { command: '/numbered', desc: 'Numbered list' },
+    { command: '/todo', desc: 'Unchecked todo' },
+    { command: '/done', desc: 'Checked todo' },
+  ]},
+  { category: 'Code & Tables', items: [
+    { command: '/code', desc: 'Code block' },
+    { command: '/codejs', desc: 'JavaScript block' },
+    { command: '/codepy', desc: 'Python block' },
+    { command: '/codebash', desc: 'Bash block' },
+    { command: '/codejson', desc: 'JSON block' },
+    { command: '/codesql', desc: 'SQL block' },
+    { command: '/table', desc: 'Table (3 cols)' },
+    { command: '/table2', desc: 'Table (2 cols)' },
+    { command: '/table4', desc: 'Table (4 cols)' },
+  ]},
+  { category: 'Other', items: [
+    { command: '/date', desc: "Insert today's date" },
+    { command: '/link', desc: 'Search & link to a note' },
+  ]},
+]
+
+type Tab = 'syntax' | 'shortcuts' | 'commands'
 
 export function MarkdownCheatsheet(): React.ReactElement {
   const [open, setOpen] = useState(false)
@@ -119,6 +151,17 @@ export function MarkdownCheatsheet(): React.ReactElement {
                 <Keyboard className="h-3.5 w-3.5" />
                 Shortcuts
               </button>
+              <button
+                onClick={() => setTab('commands')}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 font-mono text-xs font-medium transition-colors ${
+                  tab === 'commands'
+                    ? 'border-b-2 border-retro-blue text-retro-dark'
+                    : 'text-retro-dark/40 hover:text-retro-dark/70'
+                }`}
+              >
+                <span className="font-mono text-sm">/</span>
+                Commands
+              </button>
             </div>
 
             <div className="max-h-[60vh] overflow-y-auto p-4">
@@ -151,6 +194,29 @@ export function MarkdownCheatsheet(): React.ReactElement {
                             <kbd className="border border-retro-dark/15 bg-muted px-2 py-0.5 font-mono text-xs text-retro-dark">
                               {item.keys}
                             </kbd>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {tab === 'commands' && (
+                <div className="space-y-5">
+                  <p className="text-xs text-retro-dark/50">
+                    Type <kbd className="border border-retro-dark/15 bg-muted px-1 py-0.5 font-mono text-[10px]">/</kbd> at the start of a line or after a space to open the command palette.
+                  </p>
+                  {slashCommands.map((section) => (
+                    <div key={section.category}>
+                      <h3 className="font-mono text-xs uppercase tracking-wider text-retro-dark/50 mb-2">
+                        {section.category}
+                      </h3>
+                      <div className="space-y-1.5">
+                        {section.items.map((item) => (
+                          <div key={item.command} className="flex items-center justify-between text-sm">
+                            <code className="font-mono text-xs text-retro-blue">{item.command}</code>
+                            <span className="text-retro-dark/60 text-xs">{item.desc}</span>
                           </div>
                         ))}
                       </div>
