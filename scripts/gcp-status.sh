@@ -69,9 +69,17 @@ gcloud sql instances list --format="table[box](
 )" 2>/dev/null || echo "  No Cloud SQL instances found"
 echo ""
 
-# DB size
-echo "  Database sizes:"
-gcloud sql databases list --instance=nobrainy-db --format="table(name, charset)" 2>/dev/null || echo "  Could not query databases"
+# DB disk usage
+echo "  Disk usage:"
+DISK_USED=$(gcloud sql instances describe nobrainy-db --format="value(diskEncryptionStatus.kind,settings.dataDiskSizeGb)" 2>/dev/null)
+gcloud monitoring metrics list --filter="metric.type=cloudsql.googleapis.com/database/disk/bytes_used" --limit=1 > /dev/null 2>&1
+# Show current disk allocation and databases
+DISK_SIZE=$(gcloud sql instances describe nobrainy-db --format="value(settings.dataDiskSizeGb)" 2>/dev/null || echo "?")
+echo "    Disk allocated: ${DISK_SIZE}GB"
+echo "    Databases:"
+gcloud sql databases list --instance=nobrainy-db --format="value(name)" 2>/dev/null | while read -r db; do
+  echo "      - $db"
+done
 echo ""
 
 # ----------------------------------------------------------
