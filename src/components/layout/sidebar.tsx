@@ -23,26 +23,32 @@ import { cn } from '@/lib/utils'
 import { useUIStore } from '@/stores/ui-store'
 import { SidebarNavItem, type NavItem } from './sidebar-nav'
 
-const navItems: NavItem[] = [
-  { label: 'Notes', href: '/notes', icon: FileText },
-  { label: 'Tasks', href: '/tasks', icon: CheckSquare },
-  { label: 'Books', href: '/books', icon: BookOpen },
-  { label: 'Flashcards', href: '/flashcards', icon: Layers },
-  { label: 'Planner', href: '/planner', icon: Calendar },
-  { label: 'Reviews', href: '/reviews', icon: BarChart3 },
-  { label: 'Goals', href: '/goals', icon: Target },
-  { label: 'Search', href: '/search', icon: Search },
-  { label: 'Analytics', href: '/analytics', icon: TrendingUp },
-  { label: 'Expenses', href: '/expenses', icon: Wallet },
-  { label: 'Bookmarks', href: '/bookmarks', icon: Bookmark },
-  { label: 'Watchlist', href: '/watchlist', icon: Film },
-  { label: 'Insights', href: '/insights', icon: Lightbulb },
-  { label: 'AI Coach', href: '/ai', icon: Sparkles },
-]
+const NAV_ITEMS_MAP: Record<string, NavItem> = {
+  '/notes': { label: 'Notes', href: '/notes', icon: FileText },
+  '/tasks': { label: 'Tasks', href: '/tasks', icon: CheckSquare },
+  '/books': { label: 'Books', href: '/books', icon: BookOpen },
+  '/flashcards': { label: 'Flashcards', href: '/flashcards', icon: Layers },
+  '/planner': { label: 'Planner', href: '/planner', icon: Calendar },
+  '/reviews': { label: 'Reviews', href: '/reviews', icon: BarChart3 },
+  '/goals': { label: 'Goals', href: '/goals', icon: Target },
+  '/search': { label: 'Search', href: '/search', icon: Search },
+  '/analytics': { label: 'Analytics', href: '/analytics', icon: TrendingUp },
+  '/expenses': { label: 'Expenses', href: '/expenses', icon: Wallet },
+  '/bookmarks': { label: 'Bookmarks', href: '/bookmarks', icon: Bookmark },
+  '/watchlist': { label: 'Watchlist', href: '/watchlist', icon: Film },
+  '/insights': { label: 'Insights', href: '/insights', icon: Lightbulb },
+  '/ai': { label: 'AI Coach', href: '/ai', icon: Sparkles },
+}
+
+export { NAV_ITEMS_MAP }
 
 export function Sidebar() {
-  const { sidebarCollapsed, toggleSidebar, mobileSidebarOpen, setMobileSidebarOpen } =
+  const { sidebarCollapsed, toggleSidebar, mobileSidebarOpen, setMobileSidebarOpen, navOrder } =
     useUIStore()
+
+  const navItems = navOrder
+    .map((href) => NAV_ITEMS_MAP[href])
+    .filter(Boolean) as NavItem[]
 
   return (
     <>
