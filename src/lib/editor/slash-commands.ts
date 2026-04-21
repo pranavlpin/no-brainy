@@ -30,6 +30,7 @@ const STATIC_COMMANDS: SlashCommand[] = [
   { label: '/table4', detail: 'Table (4 cols)', insert: '| Col 1 | Col 2 | Col 3 | Col 4 |\n|-------|-------|-------|-------|\n|       |       |       |       |\n', cursorOffset: 0 },
   { label: '/date', detail: 'Insert today\'s date', insert: new Date().toISOString().split('T')[0], cursorOffset: 0 },
   { label: '/callout', detail: 'Callout box', insert: '> **Note:** ', cursorOffset: 0 },
+  { label: '/url', detail: 'External link [text](url)', insert: '[text](https://)', cursorOffset: 1 },
 ]
 
 function applySlashCommand(

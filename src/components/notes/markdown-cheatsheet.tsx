@@ -84,6 +84,7 @@ const slashCommands = [
   { category: 'Other', items: [
     { command: '/date', desc: "Insert today's date" },
     { command: '/link', desc: 'Search & link to a note' },
+    { command: '/url', desc: 'External link [text](url)' },
   ]},
 ]
 
