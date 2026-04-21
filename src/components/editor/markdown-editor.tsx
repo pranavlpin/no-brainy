@@ -5,6 +5,8 @@ import { cn } from "@/lib/utils"
 import { EditorToolbar } from "./editor-toolbar"
 import { CodeMirrorEditor } from "./codemirror-editor"
 import { MarkdownPreview } from "./markdown-preview"
+import { getColorCSS, stripColorStyles } from "@/lib/markdown/color-blocks"
+import { X } from "lucide-react"
 
 interface MarkdownEditorProps {
   value: string
@@ -40,9 +42,18 @@ export function MarkdownEditor({
     setIsFullscreen((prev) => !prev)
   }, [])
 
-  const handlePrint = useCallback(() => {
+  const [showPrintDialog, setShowPrintDialog] = useState(false)
+  const [printWithColors, setPrintWithColors] = useState(true)
+
+  const executePrint = useCallback((withColors: boolean) => {
     const previewEl = previewRef.current
     if (!previewEl) return
+
+    let bodyHtml = previewEl.innerHTML
+    const colorCSS = withColors ? getColorCSS() : ''
+    if (!withColors) {
+      bodyHtml = stripColorStyles(bodyHtml)
+    }
 
     const printWindow = window.open('', '_blank')
     if (!printWindow) return
@@ -65,15 +76,21 @@ export function MarkdownEditor({
           th { background: #f9f9f9; }
           img { max-width: 100%; }
           a { color: #2D4CFF; }
+          ${colorCSS}
           @media print { body { padding: 0; } }
         </style>
       </head>
-      <body>${previewEl.innerHTML}</body>
+      <body>${bodyHtml}</body>
       </html>
     `)
     printWindow.document.close()
     printWindow.focus()
     setTimeout(() => { printWindow.print(); printWindow.close() }, 300)
+    setShowPrintDialog(false)
+  }, [])
+
+  const handlePrint = useCallback(() => {
+    setShowPrintDialog(true)
   }, [])
 
   const handleExportDoc = useCallback(() => {
@@ -90,6 +107,7 @@ export function MarkdownEditor({
         table { border-collapse: collapse; width: 100%; }
         th, td { border: 1px solid #999; padding: 6px; }
         blockquote { border-left: 3px solid #ccc; padding-left: 12px; color: #555; }
+        ${getColorCSS()}
       </style></head>
       <body>${previewEl.innerHTML}</body></html>
     `
@@ -182,6 +200,47 @@ export function MarkdownEditor({
           </div>
         )}
       </div>
+
+      {/* Print dialog */}
+      {showPrintDialog && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center">
+          <div className="fixed inset-0 bg-black/40" onClick={() => setShowPrintDialog(false)} />
+          <div className="relative z-[60] w-full max-w-sm border-2 border-retro-dark bg-white p-6 shadow-hard">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-display text-lg font-bold text-retro-dark">Print Note</h3>
+              <button onClick={() => setShowPrintDialog(false)} className="text-muted-foreground hover:text-foreground">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <label className="flex items-center gap-3 cursor-pointer py-2">
+              <input
+                type="checkbox"
+                checked={printWithColors}
+                onChange={(e) => setPrintWithColors(e.target.checked)}
+                className="h-4 w-4 accent-retro-blue"
+              />
+              <span className="text-sm text-retro-dark">Include color blocks and inline colors</span>
+            </label>
+            <p className="text-xs text-muted-foreground mt-1 ml-7">
+              Uncheck for a clean black & white print
+            </p>
+            <div className="mt-5 flex justify-end gap-3">
+              <button
+                onClick={() => setShowPrintDialog(false)}
+                className="border border-retro-dark/20 px-3 py-1.5 font-mono text-xs text-retro-dark hover:bg-muted"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => executePrint(printWithColors)}
+                className="border-2 border-retro-dark bg-retro-blue px-4 py-1.5 font-mono text-xs font-bold text-white shadow-hard hover-shadow-grow"
+              >
+                Print / Save as PDF
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

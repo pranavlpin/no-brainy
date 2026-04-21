@@ -19,6 +19,8 @@ const syntaxItems = [
   { element: 'Strikethrough', syntax: '~~struck text~~' },
   { element: 'Task List', syntax: '- [x] Done\\n- [ ] Todo' },
   { element: 'Footnote', syntax: 'Text [^1]\\n[^1]: Note' },
+  { element: 'Color Block', syntax: ':::blue\\ncontent\\n:::' },
+  { element: 'Inline Color', syntax: '{red}colored text{/red}' },
 ]
 
 const isMac = typeof navigator !== 'undefined' && /Mac/.test(navigator.userAgent)
@@ -80,6 +82,15 @@ const slashCommands = [
     { command: '/table', desc: 'Table (3 cols)' },
     { command: '/table2', desc: 'Table (2 cols)' },
     { command: '/table4', desc: 'Table (4 cols)' },
+  ]},
+  { category: 'Color Blocks', items: [
+    { command: '/blue', desc: 'Blue background block' },
+    { command: '/red', desc: 'Red background block' },
+    { command: '/green', desc: 'Green background block' },
+    { command: '/yellow', desc: 'Yellow background block' },
+    { command: '/purple', desc: 'Purple background block' },
+    { command: '/orange', desc: 'Orange background block' },
+    { command: '/gray', desc: 'Gray background block' },
   ]},
   { category: 'Other', items: [
     { command: '/date', desc: "Insert today's date" },

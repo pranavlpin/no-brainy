@@ -31,6 +31,13 @@ const STATIC_COMMANDS: SlashCommand[] = [
   { label: '/date', detail: 'Insert today\'s date', insert: new Date().toISOString().split('T')[0], cursorOffset: 0 },
   { label: '/callout', detail: 'Callout box', insert: '> **Note:** ', cursorOffset: 0 },
   { label: '/url', detail: 'External link [text](url)', insert: '[text](https://)', cursorOffset: 1 },
+  { label: '/blue', detail: 'Blue block', insert: ':::blue\n\n:::', cursorOffset: 4 },
+  { label: '/red', detail: 'Red block', insert: ':::red\n\n:::', cursorOffset: 4 },
+  { label: '/green', detail: 'Green block', insert: ':::green\n\n:::', cursorOffset: 4 },
+  { label: '/yellow', detail: 'Yellow block', insert: ':::yellow\n\n:::', cursorOffset: 4 },
+  { label: '/purple', detail: 'Purple block', insert: ':::purple\n\n:::', cursorOffset: 4 },
+  { label: '/orange', detail: 'Orange block', insert: ':::orange\n\n:::', cursorOffset: 4 },
+  { label: '/gray', detail: 'Gray block', insert: ':::gray\n\n:::', cursorOffset: 4 },
 ]
 
 function applySlashCommand(

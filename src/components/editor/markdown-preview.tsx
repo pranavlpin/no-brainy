@@ -1,12 +1,12 @@
 "use client"
 
-import { memo, createElement } from "react"
+import { memo, createElement, useMemo } from "react"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import rehypeHighlight from "rehype-highlight"
-import rehypeSanitize from "rehype-sanitize"
-import { sanitizeSchema } from "@/lib/markdown/sanitize"
+import rehypeRaw from "rehype-raw"
 import { parseWikiLinks } from "@/lib/markdown/plugins"
+import { processColors } from "@/lib/markdown/color-blocks"
 import { WikiLink } from "./wiki-link"
 import { MermaidDiagram } from "./mermaid-diagram"
 import { cn } from "@/lib/utils"
@@ -101,6 +101,8 @@ const components: Components = {
 }
 
 function MarkdownPreviewInner({ content, className }: MarkdownPreviewProps) {
+  const processedContent = useMemo(() => processColors(content), [content])
+
   return (
     <div
       className={cn(
@@ -119,11 +121,11 @@ function MarkdownPreviewInner({ content, className }: MarkdownPreviewProps) {
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[
           rehypeHighlight,
-          [rehypeSanitize, sanitizeSchema],
+          rehypeRaw,
         ]}
         components={components}
       >
-        {content}
+        {processedContent}
       </ReactMarkdown>
     </div>
   )
