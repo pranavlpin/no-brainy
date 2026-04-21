@@ -81,7 +81,15 @@ export function InsightsWidget() {
                 className="flex items-start gap-2.5 rounded-md bg-muted/50 p-2.5"
               >
                 <Icon className={cn('mt-0.5 h-4 w-4 shrink-0', iconColor)} />
-                <p className="text-xs text-foreground line-clamp-2">{insight.contentMd}</p>
+                <p
+                  className="text-xs text-foreground line-clamp-2 [&_strong]:font-bold"
+                  dangerouslySetInnerHTML={{
+                    __html: insight.contentMd
+                      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                      .replace(/`(.*?)`/g, '<code class="rounded bg-muted px-1 py-0.5 text-[10px] font-mono">$1</code>'),
+                  }}
+                />
               </div>
             )
           })}
