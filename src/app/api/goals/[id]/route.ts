@@ -72,7 +72,7 @@ export const GET = withAuth(async (req: NextRequest, user) => {
   }
 })
 
-export const PUT = withAuth(async (req: NextRequest, user) => {
+export const PATCH = withAuth(async (req: NextRequest, user) => {
   try {
     const id = extractId(req.url)
     const body = await req.json()
