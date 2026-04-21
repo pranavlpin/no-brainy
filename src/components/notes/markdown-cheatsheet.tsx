@@ -32,6 +32,13 @@ const shortcuts = [
     { action: 'Find Previous', keys: `${mod}+Shift+G` },
     { action: 'Select matching text', keys: 'Select text → all matches highlight' },
   ]},
+  { category: 'Formatting', items: [
+    { action: 'Bold', keys: `${mod}+B` },
+    { action: 'Italic', keys: `${mod}+I` },
+    { action: 'Underline', keys: `${mod}+U` },
+    { action: 'Strikethrough', keys: `${mod}+Shift+X` },
+    { action: 'Inline Code', keys: `${mod}+E` },
+  ]},
   { category: 'Editing', items: [
     { action: 'Undo', keys: `${mod}+Z` },
     { action: 'Redo', keys: `${mod}+Shift+Z` },
