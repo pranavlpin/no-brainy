@@ -1,10 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { Key, Eye, EyeOff, Trash2, Shield, Bell } from 'lucide-react'
+import { Key, Eye, EyeOff, Trash2, Shield, Bell, PanelLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Dialog } from '@/components/ui/dialog'
+import { SidebarOrderSettings } from '@/components/settings/sidebar-order'
 import {
   useApiKeyStatus,
   useSaveApiKey,
@@ -254,6 +255,14 @@ export default function SettingsPage() {
           AI Configuration
         </h2>
         <ApiKeySection />
+      </section>
+
+      {/* Sidebar Order */}
+      <section>
+        <h2 className="font-display mb-4 text-lg font-semibold text-retro-dark">
+          Sidebar
+        </h2>
+        <SidebarOrderSettings />
       </section>
 
       {/* Notification Preferences */}

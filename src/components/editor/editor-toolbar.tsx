@@ -12,6 +12,10 @@ import {
   Table,
   SplitSquareHorizontal,
   Eye,
+  Maximize2,
+  Minimize2,
+  Printer,
+  Download,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -20,6 +24,10 @@ interface EditorToolbarProps {
   viewMode: "split" | "editor" | "preview"
   onViewModeChange: (mode: "split" | "editor" | "preview") => void
   onInsert?: (syntax: string) => void
+  isFullscreen?: boolean
+  onToggleFullscreen?: () => void
+  onPrint?: () => void
+  onExportDoc?: () => void
 }
 
 const formatButtons = [
@@ -49,6 +57,10 @@ export function EditorToolbar({
   viewMode,
   onViewModeChange,
   onInsert,
+  isFullscreen,
+  onToggleFullscreen,
+  onPrint,
+  onExportDoc,
 }: EditorToolbarProps) {
   return (
     <div className="flex items-center gap-1 border-b border-border bg-muted/50 px-2 py-1">
@@ -87,6 +99,53 @@ export function EditorToolbar({
             <span className="hidden sm:inline">{btn.label}</span>
           </Button>
         ))}
+        {onToggleFullscreen && (
+          <>
+            <div className="mx-1 h-6 w-px bg-border" />
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 px-2 text-xs"
+              title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+              onClick={onToggleFullscreen}
+            >
+              {isFullscreen ? (
+                <Minimize2 className="h-4 w-4" />
+              ) : (
+                <Maximize2 className="h-4 w-4" />
+              )}
+            </Button>
+          </>
+        )}
+        {(onPrint || onExportDoc) && (
+          <>
+            <div className="mx-1 h-6 w-px bg-border" />
+            {onPrint && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 px-2 text-xs"
+                title="Print / Save as PDF"
+                onClick={onPrint}
+              >
+                <Printer className="h-4 w-4 mr-1" />
+                <span className="hidden sm:inline">Print</span>
+              </Button>
+            )}
+            {onExportDoc && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 px-2 text-xs"
+                title="Export as .docx"
+                onClick={onExportDoc}
+              >
+                <Download className="h-4 w-4 mr-1" />
+                <span className="hidden sm:inline">Doc</span>
+              </Button>
+            )}
+          </>
+        )}
       </div>
     </div>
   )

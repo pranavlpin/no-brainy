@@ -189,6 +189,25 @@ export default function AnalyticsPage() {
 
       {/* Charts Grid */}
       <div className="grid gap-4 md:grid-cols-2">
+        {/* Notes Created */}
+        <ChartCard title="Notes Created (Last 8 Weeks)">
+          <BarChart
+            data={data.notesCreatedPerWeek.map((w) => ({
+              label: w.week,
+              value: w.count,
+            }))}
+            height={160}
+          />
+          <p className="mt-2 text-xs text-muted-foreground">
+            Total notes: {data.totalNotes}
+          </p>
+        </ChartCard>
+
+        {/* Expense Analytics */}
+        <ChartCard title="Expenses">
+          <ExpenseAnalyticsSection />
+        </ChartCard>
+
         {/* Task Completion Rate */}
         <ChartCard title="Task Completion (Last 30 Days)">
           <CompletionRateChart data={data.taskCompletionRate} />
@@ -209,31 +228,6 @@ export default function AnalyticsPage() {
               total: p.count,
             }))}
           />
-        </ChartCard>
-
-        {/* Productivity by Day */}
-        <ChartCard title="Productivity by Day">
-          <BarChart
-            data={data.tasksByDay.map((d) => ({
-              label: d.day,
-              value: d.count,
-            }))}
-            height={160}
-          />
-        </ChartCard>
-
-        {/* Notes Created */}
-        <ChartCard title="Notes Created (Last 8 Weeks)">
-          <BarChart
-            data={data.notesCreatedPerWeek.map((w) => ({
-              label: w.week,
-              value: w.count,
-            }))}
-            height={160}
-          />
-          <p className="mt-2 text-xs text-muted-foreground">
-            Total notes: {data.totalNotes}
-          </p>
         </ChartCard>
 
         {/* Flashcard Stats */}
@@ -261,14 +255,20 @@ export default function AnalyticsPage() {
           </div>
         </ChartCard>
 
-        {/* Most Active Hours */}
-        <ChartCard title="Most Active Hours" className="md:col-span-2">
-          <ActivityHeatmap data={data.mostActiveHours} />
+        {/* Productivity by Day */}
+        <ChartCard title="Productivity by Day">
+          <BarChart
+            data={data.tasksByDay.map((d) => ({
+              label: d.day,
+              value: d.count,
+            }))}
+            height={160}
+          />
         </ChartCard>
 
-        {/* Expense Analytics */}
-        <ChartCard title="Expenses" className="md:col-span-2">
-          <ExpenseAnalyticsSection />
+        {/* Most Active Hours */}
+        <ChartCard title="Most Active Hours">
+          <ActivityHeatmap data={data.mostActiveHours} />
         </ChartCard>
 
         {/* AI Insights Widget */}

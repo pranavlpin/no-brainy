@@ -1,12 +1,12 @@
 "use client"
 
-import { memo, createElement } from "react"
+import { memo, createElement, useMemo } from "react"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import rehypeHighlight from "rehype-highlight"
-import rehypeSanitize from "rehype-sanitize"
-import { sanitizeSchema } from "@/lib/markdown/sanitize"
+import rehypeRaw from "rehype-raw"
 import { parseWikiLinks } from "@/lib/markdown/plugins"
+import { processColors } from "@/lib/markdown/color-blocks"
 import { WikiLink } from "./wiki-link"
 import { MermaidDiagram } from "./mermaid-diagram"
 import { cn } from "@/lib/utils"
@@ -101,14 +101,19 @@ const components: Components = {
 }
 
 function MarkdownPreviewInner({ content, className }: MarkdownPreviewProps) {
+  const processedContent = useMemo(() => processColors(content), [content])
+
   return (
     <div
       className={cn(
-        "prose prose-sm dark:prose-invert max-w-none p-4",
-        "prose-headings:font-semibold prose-headings:tracking-tight",
+        "prose prose-sm max-w-none p-4 text-retro-dark",
+        "prose-p:text-retro-dark prose-li:text-retro-dark prose-strong:text-retro-dark",
+        "prose-td:text-retro-dark prose-th:text-retro-dark prose-blockquote:text-retro-dark/70",
+        "prose-headings:font-semibold prose-headings:tracking-tight prose-headings:text-retro-dark",
         "prose-a:text-primary prose-a:no-underline hover:prose-a:underline",
-        "prose-code:before:content-none prose-code:after:content-none",
-        "prose-pre:bg-muted prose-pre:border prose-pre:border-border",
+        "prose-code:before:content-none prose-code:after:content-none prose-code:text-retro-dark prose-code:bg-retro-dark/5 prose-code:px-1.5 prose-code:py-0.5 prose-code:text-sm",
+        "prose-pre:bg-retro-dark prose-pre:text-retro-cream prose-pre:border-2 prose-pre:border-retro-dark/20",
+        "[&_pre_code]:bg-transparent [&_pre_code]:text-retro-cream [&_pre_code]:p-0",
         className
       )}
     >
@@ -116,11 +121,11 @@ function MarkdownPreviewInner({ content, className }: MarkdownPreviewProps) {
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[
           rehypeHighlight,
-          [rehypeSanitize, sanitizeSchema],
+          rehypeRaw,
         ]}
         components={components}
       >
-        {content}
+        {processedContent}
       </ReactMarkdown>
     </div>
   )

@@ -13,10 +13,18 @@ set -e
 #   ./scripts/deploy.sh production v1.2  # with custom tag
 # ============================================================
 
+# Load .env file if present (for build args and env vars)
+if [ -f .env ]; then
+  set -a
+  source .env
+  set +a
+fi
+
 ENVIRONMENT="${1:-production}"
 TAG="${2:-$(git rev-parse --short HEAD)}"
 REGION="${GCP_REGION:-asia-south1}"
-PROJECT_ID=$(gcloud config get-value project 2>/dev/null)
+PROJECT_ID="${GCP_PROJECT_ID:-nobrainy-prod}"
+gcloud config set project "$PROJECT_ID" --quiet
 SERVICE_NAME="nobrainy-${ENVIRONMENT}"
 IMAGE="$REGION-docker.pkg.dev/$PROJECT_ID/nobrainy/app:$TAG"
 IMAGE_LATEST="$REGION-docker.pkg.dev/$PROJECT_ID/nobrainy/app:${ENVIRONMENT}-latest"
@@ -91,7 +99,7 @@ gcloud run deploy "$SERVICE_NAME" \
   --cpu="$CPU" \
   --min-instances=0 \
   --max-instances="$MAX_INSTANCES" \
-  --set-env-vars="NODE_ENV=production" \
+  --set-env-vars="NODE_ENV=production,OMDB_API_KEY=${OMDB_API_KEY:-}" \
   --set-secrets="DATABASE_URL=${DB_SECRET}:latest,NEXTAUTH_SECRET=${AUTH_SECRET}:latest,NEXTAUTH_URL=${URL_SECRET}:latest,GOOGLE_CLIENT_ID=nobrainy-google-client-id:latest,GOOGLE_CLIENT_SECRET=nobrainy-google-client-secret:latest" \
   --add-cloudsql-instances="${PROJECT_ID}:${REGION}:nobrainy-db" \
   --cpu-boost \
@@ -139,6 +147,8 @@ echo "Environment: $ENVIRONMENT"
 echo "Image:       $IMAGE"
 echo ""
 
-# Update NEXTAUTH_URL secret if this is first deploy
-echo "If this is the first deploy, update NEXTAUTH_URL:"
-echo "  echo -n '$APP_URL' | gcloud secrets versions add ${URL_SECRET} --data-file=-"
+# Show full GCP status dashboard
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -x "$SCRIPT_DIR/gcp-status.sh" ]; then
+  "$SCRIPT_DIR/gcp-status.sh" "$PROJECT_ID"
+fi

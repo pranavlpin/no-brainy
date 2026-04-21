@@ -1,16 +1,22 @@
 "use client"
 
 import { useEffect, useRef, useCallback } from "react"
-import { EditorView, keymap, placeholder as placeholderExt } from "@codemirror/view"
-import { EditorState } from "@codemirror/state"
+import { EditorView, keymap, placeholder as placeholderExt, highlightSpecialChars, type KeyBinding } from "@codemirror/view"
+import { EditorState, type StateCommand } from "@codemirror/state"
 import { markdown } from "@codemirror/lang-markdown"
 import { defaultHighlightStyle, syntaxHighlighting } from "@codemirror/language"
+import { search, searchKeymap, highlightSelectionMatches } from "@codemirror/search"
+import { defaultKeymap, history, historyKeymap } from "@codemirror/commands"
+import { autocompletion, completionKeymap } from "@codemirror/autocomplete"
+import { slashCommandCompletions } from "@/lib/editor/slash-commands"
+import { linkCommandCompletions } from "@/lib/editor/link-command"
 
 interface CodeMirrorEditorProps {
   value: string
   onChange: (value: string) => void
   placeholder?: string
   readOnly?: boolean
+  noteId?: string
 }
 
 const baseTheme = EditorView.theme({
@@ -34,11 +40,60 @@ const baseTheme = EditorView.theme({
   },
 })
 
+// Wrap selected text with markdown syntax, or insert placeholder if no selection
+function wrapSelection(prefix: string, suffix: string, placeholder: string): StateCommand {
+  return ({ state, dispatch }) => {
+    const { from, to } = state.selection.main
+    const selected = state.sliceDoc(from, to)
+
+    if (selected) {
+      // Check if already wrapped — toggle off
+      const beforePrefix = state.sliceDoc(Math.max(0, from - prefix.length), from)
+      const afterSuffix = state.sliceDoc(to, to + suffix.length)
+      if (beforePrefix === prefix && afterSuffix === suffix) {
+        dispatch(state.update({
+          changes: [
+            { from: from - prefix.length, to: from, insert: '' },
+            { from: to, to: to + suffix.length, insert: '' },
+          ],
+          selection: { anchor: from - prefix.length, head: to - prefix.length },
+        }))
+        return true
+      }
+      // Wrap selection
+      dispatch(state.update({
+        changes: [
+          { from, insert: prefix },
+          { from: to, insert: suffix },
+        ],
+        selection: { anchor: from + prefix.length, head: to + prefix.length },
+      }))
+    } else {
+      // No selection — insert with placeholder
+      const text = `${prefix}${placeholder}${suffix}`
+      dispatch(state.update({
+        changes: { from, insert: text },
+        selection: { anchor: from + prefix.length, head: from + prefix.length + placeholder.length },
+      }))
+    }
+    return true
+  }
+}
+
+const markdownKeymap: KeyBinding[] = [
+  { key: "Mod-b", run: wrapSelection("**", "**", "bold"), preventDefault: true },
+  { key: "Mod-i", run: wrapSelection("*", "*", "italic"), preventDefault: true },
+  { key: "Mod-u", run: wrapSelection("<u>", "</u>", "underline"), preventDefault: true },
+  { key: "Mod-Shift-x", run: wrapSelection("~~", "~~", "strikethrough"), preventDefault: true },
+  { key: "Mod-e", run: wrapSelection("`", "`", "code"), preventDefault: true },
+]
+
 export function CodeMirrorEditor({
   value,
   onChange,
   placeholder,
   readOnly = false,
+  noteId,
 }: CodeMirrorEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const viewRef = useRef<EditorView | null>(null)
@@ -52,6 +107,16 @@ export function CodeMirrorEditor({
       baseTheme,
       markdown(),
       syntaxHighlighting(defaultHighlightStyle),
+      highlightSpecialChars(),
+      history(),
+      search({ top: true }),
+      highlightSelectionMatches(),
+      autocompletion({
+        override: [slashCommandCompletions, linkCommandCompletions(noteId)],
+        activateOnTyping: true,
+        icons: false,
+      }),
+      keymap.of([...markdownKeymap, ...completionKeymap, ...defaultKeymap, ...historyKeymap, ...searchKeymap]),
       EditorView.lineWrapping,
       EditorView.updateListener.of((update) => {
         if (update.docChanged) {
@@ -70,7 +135,7 @@ export function CodeMirrorEditor({
     }
 
     return extensions
-  }, [placeholder, readOnly])
+  }, [placeholder, readOnly, noteId])
 
   // Create editor
   useEffect(() => {
@@ -112,9 +177,27 @@ export function CodeMirrorEditor({
     }
   }, [value])
 
+  // Block browser shortcuts that conflict with CodeMirror when editor is focused
+  const handleKeyDown = useCallback((e: React.KeyboardEvent): void => {
+    const mod = e.metaKey || e.ctrlKey
+    if (!mod) return
+
+    // Block browser defaults for editor shortcuts
+    // Cmd+F: find, Cmd+H: replace, Cmd+G: find next, Cmd+D: bookmark
+    // Cmd+B: bold, Cmd+I: italic, Cmd+U: underline, Cmd+E: inline code
+    if (['f', 'h', 'g', 'd', 'b', 'i', 'u', 'e'].includes(e.key.toLowerCase())) {
+      e.preventDefault()
+    }
+    // Cmd+Shift+X: strikethrough
+    if (e.shiftKey && e.key.toLowerCase() === 'x') {
+      e.preventDefault()
+    }
+  }, [])
+
   return (
     <div
       ref={containerRef}
+      onKeyDown={handleKeyDown}
       className="h-full overflow-auto [&_.cm-editor]:h-full"
     />
   )
