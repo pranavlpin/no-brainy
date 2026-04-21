@@ -3,7 +3,7 @@ import { z } from 'zod'
 export const createTaskSchema = z.object({
   title: z.string().min(1, 'Title is required').max(500),
   descriptionMd: z.string().default(''),
-  priority: z.enum(['critical', 'high', 'medium', 'low']).default('medium'),
+  priority: z.enum(['urgent', 'high', 'medium', 'low']).default('medium'),
   status: z.enum(['pending', 'in_progress', 'completed', 'cancelled']).default('pending'),
   tags: z.array(z.string()).default([]),
   dueDate: z.string().datetime().nullable().optional(),
@@ -20,7 +20,7 @@ export const taskQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(20),
   status: z.enum(['pending', 'in_progress', 'completed', 'cancelled']).optional(),
-  priority: z.enum(['critical', 'high', 'medium', 'low']).optional(),
+  priority: z.enum(['urgent', 'high', 'medium', 'low']).optional(),
   quadrant: z.string().optional(),
   tags: z.string().optional(),
   search: z.string().optional(),
@@ -41,5 +41,5 @@ export const reorderSchema = z.object({
 export const bulkActionSchema = z.object({
   taskIds: z.array(z.string()).min(1),
   action: z.enum(['complete', 'delete', 'setPriority']),
-  priority: z.enum(['critical', 'high', 'medium', 'low']).optional(),
+  priority: z.enum(['urgent', 'high', 'medium', 'low']).optional(),
 })

@@ -14,7 +14,7 @@ interface HorizontalBarProps {
 }
 
 const priorityColors: Record<string, string> = {
-  critical: 'bg-red-500',
+  urgent: 'bg-red-500',
   high: 'bg-orange-500',
   medium: 'bg-blue-500',
   low: 'bg-gray-400',

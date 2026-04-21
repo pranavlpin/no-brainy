@@ -1,0 +1,21 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /notes/
+Disallow: /tasks/
+Disallow: /books/
+Disallow: /flashcards/
+Disallow: /planner/
+Disallow: /reviews/
+Disallow: /goals/
+Disallow: /expenses/
+Disallow: /analytics/
+Disallow: /insights/
+Disallow: /ai/
+Disallow: /search/
+Disallow: /settings/
+Disallow: /notifications/
+Disallow: /bookmarks/
+Disallow: /watchlist/
+
+Sitemap: https://nobrainy.com/sitemap.xml

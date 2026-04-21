@@ -49,7 +49,7 @@ export default function NoteDetailPage() {
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [isExtractingActions, setIsExtractingActions] = useState(false)
-  const [extractedActions, setExtractedActions] = useState<Array<{ title: string; priority: 'critical' | 'high' | 'medium' | 'low'; reason: string }> | null>(null)
+  const [extractedActions, setExtractedActions] = useState<Array<{ title: string; priority: 'urgent' | 'high' | 'medium' | 'low'; reason: string }> | null>(null)
   const [initialized, setInitialized] = useState(false)
 
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -215,7 +215,7 @@ export default function NoteDetailPage() {
             setIsExtractingActions(true)
             setExtractedActions(null)
             try {
-              const res = await apiClient<AIActionResponse<{ tasks: Array<{ title: string; priority: 'critical' | 'high' | 'medium' | 'low'; reason: string }> }>>(`/api/notes/${noteId}/ai/actions`, {
+              const res = await apiClient<AIActionResponse<{ tasks: Array<{ title: string; priority: 'urgent' | 'high' | 'medium' | 'low'; reason: string }> }>>(`/api/notes/${noteId}/ai/actions`, {
                 method: 'POST',
               })
               setExtractedActions(res.data.tasks)

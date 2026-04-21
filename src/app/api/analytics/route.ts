@@ -137,7 +137,7 @@ export const GET = withAuth(async (_req: NextRequest, user) => {
     }
 
     // --- Tasks by Priority ---
-    const priorities = ['critical', 'high', 'medium', 'low']
+    const priorities = ['urgent', 'high', 'medium', 'low']
     const completedMap = new Map(
       completedByPriority.map((r) => [r.priority, r._count.id])
     )

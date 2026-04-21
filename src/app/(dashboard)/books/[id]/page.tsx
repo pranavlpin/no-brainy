@@ -76,7 +76,7 @@ export default function BookDetailPage() {
   const [isDistilling, setIsDistilling] = useState(false)
   const [distillResult, setDistillResult] = useState<{ title: string; contentMd: string; suggestedTags: string[] } | null>(null)
   const [isExtractingActions, setIsExtractingActions] = useState(false)
-  const [extractedActions, setExtractedActions] = useState<Array<{ title: string; priority: 'critical' | 'high' | 'medium' | 'low'; reason: string }> | null>(null)
+  const [extractedActions, setExtractedActions] = useState<Array<{ title: string; priority: 'urgent' | 'high' | 'medium' | 'low'; reason: string }> | null>(null)
 
   const save = useCallback(
     (data: UpdateBookRequest) => {
@@ -353,7 +353,7 @@ export default function BookDetailPage() {
               setIsExtractingActions(true)
               setExtractedActions(null)
               try {
-                const res = await apiClient<AIActionResponse<{ tasks: Array<{ title: string; priority: 'critical' | 'high' | 'medium' | 'low'; reason: string }> }>>(`/api/books/${id}/ai/actions`, {
+                const res = await apiClient<AIActionResponse<{ tasks: Array<{ title: string; priority: 'urgent' | 'high' | 'medium' | 'low'; reason: string }> }>>(`/api/books/${id}/ai/actions`, {
                   method: 'POST',
                 })
                 setExtractedActions(res.data.tasks)

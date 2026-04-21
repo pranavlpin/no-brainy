@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils'
 
 interface ExtractedTask {
   title: string
-  priority: 'critical' | 'high' | 'medium' | 'low'
+  priority: 'urgent' | 'high' | 'medium' | 'low'
   reason: string
 }
 
