@@ -29,6 +29,9 @@ export function MarkdownEditor({
     "split"
   )
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const [splitRatio, setSplitRatio] = useState(50) // percentage for editor
+  const isDragging = useRef(false)
+  const containerRef = useRef<HTMLDivElement>(null)
   const previewRef = useRef<HTMLDivElement>(null)
 
   const handleInsert = useCallback(
@@ -142,6 +145,32 @@ export function MarkdownEditor({
     return () => { document.body.style.overflow = "" }
   }, [isFullscreen])
 
+  // Drag to resize split panels
+  const handleDragStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    isDragging.current = true
+    document.body.style.cursor = 'col-resize'
+    document.body.style.userSelect = 'none'
+
+    const handleMove = (moveEvent: MouseEvent): void => {
+      if (!isDragging.current || !containerRef.current) return
+      const rect = containerRef.current.getBoundingClientRect()
+      const pct = ((moveEvent.clientX - rect.left) / rect.width) * 100
+      setSplitRatio(Math.min(80, Math.max(20, pct)))
+    }
+
+    const handleUp = (): void => {
+      isDragging.current = false
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+      document.removeEventListener('mousemove', handleMove)
+      document.removeEventListener('mouseup', handleUp)
+    }
+
+    document.addEventListener('mousemove', handleMove)
+    document.addEventListener('mouseup', handleUp)
+  }, [])
+
   return (
     <div className={cn(
       "flex flex-col border border-border bg-background",
@@ -160,6 +189,7 @@ export function MarkdownEditor({
       )}
 
       <div
+        ref={containerRef}
         className={cn(
           "flex flex-col md:flex-row overflow-hidden",
           isFullscreen ? "flex-1" : "",
@@ -171,10 +201,11 @@ export function MarkdownEditor({
         {viewMode !== "preview" && (
           <div
             className={cn(
-              "flex-1 overflow-auto",
-              viewMode === "split" && "md:border-r md:border-border",
-              !isFullscreen && viewMode === "split" ? "min-h-[200px] md:min-h-0" : ""
+              "overflow-auto",
+              viewMode === "split" ? "min-h-[200px] md:min-h-0" : "flex-1",
+              !isFullscreen && viewMode !== "split" ? "" : ""
             )}
+            style={viewMode === "split" ? { width: `${splitRatio}%`, flexShrink: 0 } : undefined}
           >
             <CodeMirrorEditor
               value={value}
@@ -186,14 +217,24 @@ export function MarkdownEditor({
           </div>
         )}
 
+        {/* Drag handle (split mode only, desktop) */}
+        {viewMode === "split" && (
+          <div
+            onMouseDown={handleDragStart}
+            className="hidden md:flex w-2 cursor-col-resize items-center justify-center bg-border/50 hover:bg-retro-blue/20 active:bg-retro-blue/30 transition-colors shrink-0"
+            title="Drag to resize"
+          >
+            <div className="h-8 w-0.5 rounded-full bg-retro-dark/20" />
+          </div>
+        )}
+
         {/* Preview Panel */}
         {viewMode !== "editor" && (
           <div
             ref={previewRef}
             className={cn(
-              "flex-1 overflow-auto",
-              viewMode === "split" && "border-t md:border-t-0",
-              !isFullscreen && viewMode === "split" ? "min-h-[200px] md:min-h-0" : ""
+              "overflow-auto",
+              viewMode === "split" ? "border-t md:border-t-0 min-h-[200px] md:min-h-0 flex-1" : "flex-1",
             )}
           >
             <MarkdownPreview content={value} />
