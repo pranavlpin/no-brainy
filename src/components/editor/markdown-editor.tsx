@@ -30,8 +30,11 @@ export function MarkdownEditor({
   )
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [splitRatio, setSplitRatio] = useState(50) // percentage for editor
+  const [scrollSync, setScrollSync] = useState(false)
   const isDragging = useRef(false)
+  const isScrolling = useRef(false)
   const containerRef = useRef<HTMLDivElement>(null)
+  const editorPanelRef = useRef<HTMLDivElement>(null)
   const previewRef = useRef<HTMLDivElement>(null)
 
   const handleInsert = useCallback(
@@ -171,6 +174,39 @@ export function MarkdownEditor({
     document.addEventListener('mouseup', handleUp)
   }, [])
 
+  const toggleScrollSync = useCallback(() => {
+    setScrollSync((prev) => !prev)
+  }, [])
+
+  // Scroll sync: when one panel scrolls, sync the other proportionally
+  useEffect(() => {
+    if (!scrollSync || viewMode !== 'split') return
+
+    const editorEl = editorPanelRef.current?.querySelector('.cm-scroller') as HTMLElement | null
+    const previewEl = previewRef.current
+
+    if (!editorEl || !previewEl) return
+
+    const syncScroll = (source: HTMLElement, target: HTMLElement): void => {
+      if (isScrolling.current) return
+      isScrolling.current = true
+      const sourcePct = source.scrollTop / (source.scrollHeight - source.clientHeight || 1)
+      target.scrollTop = sourcePct * (target.scrollHeight - target.clientHeight || 1)
+      requestAnimationFrame(() => { isScrolling.current = false })
+    }
+
+    const onEditorScroll = (): void => syncScroll(editorEl, previewEl)
+    const onPreviewScroll = (): void => syncScroll(previewEl, editorEl)
+
+    editorEl.addEventListener('scroll', onEditorScroll, { passive: true })
+    previewEl.addEventListener('scroll', onPreviewScroll, { passive: true })
+
+    return () => {
+      editorEl.removeEventListener('scroll', onEditorScroll)
+      previewEl.removeEventListener('scroll', onPreviewScroll)
+    }
+  }, [scrollSync, viewMode])
+
   return (
     <div className={cn(
       "flex flex-col border border-border bg-background",
@@ -185,6 +221,8 @@ export function MarkdownEditor({
           onToggleFullscreen={toggleFullscreen}
           onPrint={handlePrint}
           onExportDoc={handleExportDoc}
+          scrollSync={scrollSync}
+          onToggleScrollSync={toggleScrollSync}
         />
       )}
 
@@ -200,10 +238,10 @@ export function MarkdownEditor({
         {/* Editor Panel */}
         {viewMode !== "preview" && (
           <div
+            ref={editorPanelRef}
             className={cn(
               "overflow-auto",
               viewMode === "split" ? "min-h-[200px] md:min-h-0" : "flex-1",
-              !isFullscreen && viewMode !== "split" ? "" : ""
             )}
             style={viewMode === "split" ? { width: `${splitRatio}%`, flexShrink: 0 } : undefined}
           >

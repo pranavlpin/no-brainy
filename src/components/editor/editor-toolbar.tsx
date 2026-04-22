@@ -16,6 +16,8 @@ import {
   Minimize2,
   Printer,
   Download,
+  LockKeyhole,
+  UnlockKeyhole,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -28,6 +30,8 @@ interface EditorToolbarProps {
   onToggleFullscreen?: () => void
   onPrint?: () => void
   onExportDoc?: () => void
+  scrollSync?: boolean
+  onToggleScrollSync?: () => void
 }
 
 const formatButtons = [
@@ -61,6 +65,8 @@ export function EditorToolbar({
   onToggleFullscreen,
   onPrint,
   onExportDoc,
+  scrollSync,
+  onToggleScrollSync,
 }: EditorToolbarProps) {
   return (
     <div className="flex items-center gap-1 border-b border-border bg-muted/50 px-2 py-1">
@@ -84,6 +90,37 @@ export function EditorToolbar({
       <div className="mx-2 h-6 w-px bg-border" />
 
       <div className="flex items-center gap-0.5 ml-auto">
+        {/* Export & Print */}
+        {onExportDoc && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 px-2 text-xs"
+            title="Export as .docx"
+            onClick={onExportDoc}
+          >
+            <Download className="h-4 w-4 mr-1" />
+            <span className="hidden sm:inline">Doc</span>
+          </Button>
+        )}
+        {onPrint && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 px-2 text-xs"
+            title="Print / Save as PDF"
+            onClick={onPrint}
+          >
+            <Printer className="h-4 w-4 mr-1" />
+            <span className="hidden sm:inline">Print</span>
+          </Button>
+        )}
+
+        {(onPrint || onExportDoc) && (
+          <div className="mx-1 h-6 w-px bg-border" />
+        )}
+
+        {/* View mode buttons */}
         {viewModeButtons.map((btn) => (
           <Button
             key={btn.mode}
@@ -99,52 +136,41 @@ export function EditorToolbar({
             <span className="hidden sm:inline">{btn.label}</span>
           </Button>
         ))}
-        {onToggleFullscreen && (
-          <>
-            <div className="mx-1 h-6 w-px bg-border" />
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 px-2 text-xs"
-              title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
-              onClick={onToggleFullscreen}
-            >
-              {isFullscreen ? (
-                <Minimize2 className="h-4 w-4" />
-              ) : (
-                <Maximize2 className="h-4 w-4" />
-              )}
-            </Button>
-          </>
+
+        <div className="mx-1 h-6 w-px bg-border" />
+
+        {/* Scroll sync toggle */}
+        {onToggleScrollSync && (
+          <Button
+            variant={scrollSync ? "secondary" : "ghost"}
+            size="sm"
+            className="h-8 w-8 p-0"
+            title={scrollSync ? "Scroll sync on (click to disable)" : "Scroll sync off (click to enable)"}
+            onClick={onToggleScrollSync}
+          >
+            {scrollSync ? (
+              <LockKeyhole className="h-4 w-4" />
+            ) : (
+              <UnlockKeyhole className="h-4 w-4" />
+            )}
+          </Button>
         )}
-        {(onPrint || onExportDoc) && (
-          <>
-            <div className="mx-1 h-6 w-px bg-border" />
-            {onPrint && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 px-2 text-xs"
-                title="Print / Save as PDF"
-                onClick={onPrint}
-              >
-                <Printer className="h-4 w-4 mr-1" />
-                <span className="hidden sm:inline">Print</span>
-              </Button>
+
+        {/* Fullscreen toggle (last) */}
+        {onToggleFullscreen && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0"
+            title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+            onClick={onToggleFullscreen}
+          >
+            {isFullscreen ? (
+              <Minimize2 className="h-4 w-4" />
+            ) : (
+              <Maximize2 className="h-4 w-4" />
             )}
-            {onExportDoc && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 px-2 text-xs"
-                title="Export as .docx"
-                onClick={onExportDoc}
-              >
-                <Download className="h-4 w-4 mr-1" />
-                <span className="hidden sm:inline">Doc</span>
-              </Button>
-            )}
-          </>
+          </Button>
         )}
       </div>
     </div>
