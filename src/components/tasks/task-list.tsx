@@ -107,22 +107,22 @@ export function TaskList({ tasks }: TaskListProps) {
               </div>
             )}
 
-            {/* Priority badge */}
-            <PriorityBadge priority={task.priority} />
-
             {/* Due date */}
-            {task.dueDate && (
-              <span
-                className={cn(
-                  "text-xs shrink-0",
-                  overdue
+            <span
+              className={cn(
+                "text-xs shrink-0 w-16 text-right",
+                task.dueDate
+                  ? overdue
                     ? "text-red-600 font-medium"
                     : "text-muted-foreground"
-                )}
-              >
-                {formatDueDate(task.dueDate)}
-              </span>
-            )}
+                  : "text-transparent"
+              )}
+            >
+              {task.dueDate ? formatDueDate(task.dueDate) : "—"}
+            </span>
+
+            {/* Priority badge */}
+            <PriorityBadge priority={task.priority} />
           </div>
         )
       })}

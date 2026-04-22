@@ -12,7 +12,6 @@ import { TaskForm } from "@/components/tasks/task-form"
 import { TaskAIPanel } from "@/components/tasks/task-ai-panel"
 import { useTasks, useCreateTask } from "@/hooks/use-tasks"
 import type {
-  TaskStatus,
   TaskPriority,
   CreateTaskRequest,
 } from "@/lib/types/tasks"
@@ -23,16 +22,19 @@ export default function TasksPage() {
   const router = useRouter()
   const [view, setView] = useState<ViewMode>("list")
   const [search, setSearch] = useState("")
-  const [statusFilter, setStatusFilter] = useState<TaskStatus | "">("")
+  const [showCompleted, setShowCompleted] = useState(false)
   const [priorityFilter, setPriorityFilter] = useState<TaskPriority | "">("")
+  const [sortBy, setSortBy] = useState<string>("orderIndex:asc")
   const [showNewForm, setShowNewForm] = useState(false)
+
+  const [sortField, sortOrder] = sortBy.split(":") as [string, "asc" | "desc"]
 
   const filters = {
     ...(search && { search }),
-    ...(statusFilter && { status: statusFilter as TaskStatus }),
+    ...(!showCompleted && { status: "pending" as const }),
     ...(priorityFilter && { priority: priorityFilter as TaskPriority }),
-    sortBy: "orderIndex" as const,
-    sortOrder: "asc" as const,
+    sortBy: sortField as "createdAt" | "updatedAt" | "dueDate" | "priority" | "orderIndex",
+    sortOrder,
   }
 
   const { data, isLoading } = useTasks(filters)
@@ -65,7 +67,7 @@ export default function TasksPage() {
         </div>
       </div>
 
-      {/* New task form (inline modal) */}
+      {/* New task form */}
       {showNewForm && (
         <div className="rounded-lg border border-border bg-background p-6">
           <div className="mb-4 flex items-center justify-between">
@@ -87,28 +89,17 @@ export default function TasksPage() {
       )}
 
       {/* Filters + view toggle */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 flex-wrap">
         <Input
           placeholder="Search tasks..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full rounded-none sm:w-64"
+          className="w-full sm:w-52"
         />
-        <Select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value as TaskStatus | "")}
-          className="w-full rounded-none sm:w-40"
-        >
-          <option value="">All statuses</option>
-          <option value="pending">Pending</option>
-          <option value="in_progress">In Progress</option>
-          <option value="completed">Completed</option>
-          <option value="cancelled">Cancelled</option>
-        </Select>
         <Select
           value={priorityFilter}
           onChange={(e) => setPriorityFilter(e.target.value as TaskPriority | "")}
-          className="w-full rounded-none sm:w-40"
+          className="w-full sm:w-40"
         >
           <option value="">All priorities</option>
           <option value="urgent">Urgent</option>
@@ -116,6 +107,29 @@ export default function TasksPage() {
           <option value="medium">Medium</option>
           <option value="low">Low</option>
         </Select>
+        <Select
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value)}
+          className="w-full sm:w-44"
+        >
+          <option value="orderIndex:asc">Manual order</option>
+          <option value="priority:desc">Priority (highest)</option>
+          <option value="priority:asc">Priority (lowest)</option>
+          <option value="dueDate:asc">Due date (soonest)</option>
+          <option value="dueDate:desc">Due date (latest)</option>
+          <option value="createdAt:desc">Created (newest)</option>
+          <option value="createdAt:asc">Created (oldest)</option>
+        </Select>
+
+        <label className="flex items-center gap-2 shrink-0 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={showCompleted}
+            onChange={(e) => setShowCompleted(e.target.checked)}
+            className="h-4 w-4 accent-retro-blue cursor-pointer"
+          />
+          <span className="font-mono text-xs text-retro-dark/60">Show completed</span>
+        </label>
 
         <div className="flex gap-1 sm:ml-auto">
           <Button
