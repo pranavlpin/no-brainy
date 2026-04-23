@@ -11,10 +11,19 @@ Designed for developers, product thinkers, and knowledge workers who want one co
 ## Features
 
 ### Notes
-Full Markdown editor with live split-pane preview, syntax-highlighted code blocks, Mermaid.js diagram rendering, GFM support (tables, checkboxes, strikethrough), `[[wiki-links]]` for bi-directional linking, multi-tag filtering, full-text search, pinning, and soft delete with recovery.
+Full Markdown editor with live split-pane preview (resizable divider), syntax-highlighted code blocks, Mermaid.js diagram rendering, GFM support (tables, checkboxes, strikethrough), `[[wiki-links]]` for bi-directional linking with graph view, multi-tag filtering, full-text search, pinning, and soft delete with recovery. Additional features:
+- **Slash commands** — type `/` for 20+ commands: headings, lists, code blocks, tables, links, color blocks, dates
+- **`/link`** — search and link to other notes (creates graph connections)
+- **`/url`** — insert external website links
+- **Color blocks** — `:::blue ... :::` for colored background sections (7 colors)
+- **Inline colors** — `{red}text{/red}` for colored text
+- **Keyboard shortcuts** — Cmd+B/I/U for bold/italic/underline, Cmd+F/H for find/replace
+- **Fullscreen mode** — distraction-free writing
+- **Scroll sync** — lock editor and preview scroll together
+- **Print / Export** — print with optional color toggle, export as .doc
 
 ### Tasks
-Eisenhower Matrix four-quadrant view, nested subtasks, recurring tasks (RRULE-based), priority levels (Critical / High / Medium / Low), status tracking, due dates, tag filtering, bulk actions (complete, delete, reprioritize), drag-and-drop reordering, and goal linking.
+Eisenhower Matrix four-quadrant view, nested subtasks, recurring tasks (RRULE-based), priority levels (Urgent / High / Medium / Low), status tracking, due dates, tag filtering, bulk actions (complete, delete, reprioritize), drag-and-drop reordering, and goal linking. Completed tasks hidden by default with toggle. Sort by priority, due date, or creation date.
 
 ### Books
 Reading tracker with status management (Want to Read / Reading / Completed), structured fields for summaries, key ideas, favourite quotes, personal learnings, and application notes. Star ratings (1-5), page progress tracking, and Markdown formatting throughout.
@@ -39,8 +48,23 @@ Today view with focus task selection (top 3), time blocking, daily task carry-fo
 ### Reviews
 Daily and weekly reflection system with guided prompts. Auto-aggregated statistics for tasks completed, tasks missed, notes created, and cards reviewed. Mood tracking and weekly summary views.
 
-### Goals & Habits
-Goal creation with categories (fitness, learning, work, personal), target dates, and status tracking. Habit tracking with daily check-ins, streak display, and calendar heatmap visualization. Goals link to tasks for progress tracking.
+### Goals
+Goal creation with categories (fitness, learning, work, personal), target dates, and status tracking. Goals link to tasks — progress tracked as completed tasks / total tasks. Auto-completion when all linked tasks are done.
+
+### Bookmarks
+Save and organize web links with tags, descriptions, and favicons. Features include:
+- **Preview panel** — click a bookmark to preview the site in a side panel (iframe)
+- **Search & filter** — by title, tags
+- **Pin** important bookmarks
+- **Edit inline** — update title, URL, description, tags
+
+### Watchlist (Movies & Shows)
+Track movies and TV shows with genre, rating, platform, and status. Features include:
+- **IMDB/Google CSV import** — import your existing watchlist with auto-categorization
+- **OMDB metadata fetch** — auto-fill posters, genres, directors, plots from OMDB API
+- **Star ratings** — 1-5 clickable stars
+- **Tabs** — All / Movies / Shows with genre and status filters
+- **Bulk metadata update** — fetch details for all new items at once
 
 ### Analytics
 Dashboard with completion rate charts, productivity breakdowns, activity heatmap, stat cards, and integrated expense analytics (category donut + monthly spending bars).
@@ -119,6 +143,7 @@ pnpm dev                       # Start dev server at localhost:3000
 | `GOOGLE_CLIENT_ID` | Google OAuth client ID | Optional |
 | `GOOGLE_CLIENT_SECRET` | Google OAuth client secret | Optional |
 | `NEXT_PUBLIC_GA_ID` | Google Analytics measurement ID | Optional |
+| `OMDB_API_KEY` | OMDB API key for movie/show metadata ([free](https://www.omdbapi.com/apikey.aspx)) | Optional |
 
 ## Project Structure
 
@@ -131,14 +156,16 @@ src/
 │   │   ├── books/           # Book list and detail
 │   │   ├── expenses/        # Expense manager (create, list, summary, charts, categories)
 │   │   ├── flashcards/      # Deck list, detail, and review mode
-│   │   ├── goals/           # Goals and habits
+│   │   ├── bookmarks/       # Bookmark manager with preview panel
+│   │   ├── goals/           # Goals with task-driven progress
 │   │   ├── insights/        # AI-powered insights with module selector
 │   │   ├── notes/           # Note list and detail
 │   │   ├── planner/         # Daily planner
 │   │   ├── reviews/         # Daily and weekly reviews
 │   │   ├── search/          # Global search
-│   │   ├── settings/        # User settings (API key, preferences)
-│   │   └── tasks/           # Task list and detail
+│   │   ├── settings/        # User settings (API key, sidebar order, preferences)
+│   │   ├── tasks/           # Task list and detail
+│   │   └── watchlist/       # Movies & shows tracker with IMDB import
 │   └── api/                 # API route handlers
 ├── components/
 │   ├── expenses/            # Expense UI (form, list, matrix, charts, import wizard, AI panel)
@@ -160,15 +187,16 @@ PostgreSQL 16 with Prisma ORM. 18 models total.
 | Model | Description |
 |-------|-------------|
 | `User` | Accounts with email, OAuth, timezone, encrypted preferences |
-| `Note` | Markdown notes with tags, pinning, soft delete, bi-directional links |
-| `Task` | Tasks with priority, Eisenhower quadrant, subtasks, recurrence |
+| `Note` / `NoteLink` | Markdown notes with tags, pinning, bi-directional links, graph view |
+| `Task` / `TaskLink` | Tasks with priority, Eisenhower quadrant, subtasks, recurrence |
 | `Book` | Reading tracker with summaries, quotes, ratings, progress |
 | `Deck` / `Flashcard` | Flashcard decks with SM-2 spaced repetition |
 | `DayPlan` | Daily plans with focus tasks and time blocks |
 | `DailyReview` | Daily reflections with auto-aggregated stats and mood |
-| `Goal` / `Habit` / `HabitLog` | Goal tracking with habit streaks |
-| `ExpenseCategory` | Custom + preset expense categories with icons and colors |
-| `Expense` | Transactions with amount, date, category, tags, import source |
+| `Goal` | Goal tracking with task-driven progress |
+| `Bookmark` | Saved web links with tags, favicon, pin support |
+| `WatchlistItem` | Movies/shows with genre, rating, status, OMDB metadata |
+| `ExpenseCategory` / `Expense` | Expense tracking with categories, import, charts |
 | `Insight` | AI-generated insights with type, severity, expiration |
 | `Notification` / `PushSubscription` | In-app and push notifications |
 
