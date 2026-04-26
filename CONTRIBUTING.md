@@ -30,21 +30,24 @@ By participating in this project, you agree to abide by our [Code of Conduct](CO
 2. **Create a branch** from `main`:
    ```bash
    git checkout -b feature/your-feature-name
+   # or: fix/bug-description
    ```
 3. **Follow the coding standards** (see below)
 4. **Write/update tests** for your changes
-5. **Run checks** before submitting:
+5. **Run all checks** before submitting:
    ```bash
-   pnpm lint
-   npx tsc --noEmit
-   pnpm test
+   npx tsc --noEmit    # Type check (must pass with zero errors)
+   pnpm lint           # ESLint (no new warnings)
+   pnpm test           # Unit tests
    ```
-6. **Commit** with conventional commit messages:
+6. **Commit** with [conventional commits](https://www.conventionalcommits.org/):
    ```
    feat(module): add new feature
    fix(module): fix bug description
    docs: update documentation
+   chore: maintenance task
    ```
+   Module names: `notes`, `tasks`, `expenses`, `books`, `flashcards`, `watchlist`, `bookmarks`, `goals`, `analytics`, `insights`
 7. **Open a Pull Request** against `main` with:
    - Clear description of changes
    - Link to related issue(s)
