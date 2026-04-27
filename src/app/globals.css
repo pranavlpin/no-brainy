@@ -118,6 +118,34 @@
 .animate-float-reverse { animation: float-reverse 5s ease-in-out infinite; }
 .animate-spin-slow { animation: spin-slow 20s linear infinite; }
 
+/* Force prose text color to be dark and readable */
+.prose,
+.prose p,
+.prose li,
+.prose strong,
+.prose em,
+.prose td,
+.prose th,
+.prose ul,
+.prose ol,
+.prose blockquote,
+.prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
+  color: hsl(var(--retro-dark)) !important;
+}
+.prose pre,
+.prose pre code {
+  color: hsl(var(--retro-cream)) !important;
+}
+.prose code:not(pre code) {
+  color: hsl(var(--retro-dark)) !important;
+}
+.prose a {
+  color: hsl(var(--primary)) !important;
+}
+.prose blockquote {
+  color: hsl(var(--retro-dark) / 0.7) !important;
+}
+
 /* Remove focus ring from all Recharts elements */
 .recharts-surface,
 .recharts-wrapper,
