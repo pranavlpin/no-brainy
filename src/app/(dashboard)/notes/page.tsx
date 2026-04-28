@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { NoteCard } from '@/components/notes/note-card'
 import { NoteFiltersBar } from '@/components/notes/note-filters'
-import { useNotes } from '@/hooks/use-notes'
+import { useNotes, useUpdateNote } from '@/hooks/use-notes'
 import { cn } from '@/lib/utils'
 import { MarkdownCheatsheet } from '@/components/notes/markdown-cheatsheet'
 import type { NoteFilters } from '@/lib/types/notes'
@@ -36,8 +36,13 @@ export default function NotesPage() {
   }
 
   const { data, isLoading } = useNotes(activeFilters)
+  const updateNote = useUpdateNote()
 
   const notes = data ?? []
+
+  const handleTogglePin = (noteId: string, isPinned: boolean): void => {
+    updateNote.mutate({ id: noteId, isPinned })
+  }
 
   // Collect unique tags across all notes for filter pills
   const availableTags = useMemo(() => {
@@ -158,6 +163,7 @@ export default function NotesPage() {
               key={note.id}
               note={note}
               onClick={() => router.push(`/notes/${note.id}`)}
+              onTogglePin={handleTogglePin}
             />
           ))}
         </div>

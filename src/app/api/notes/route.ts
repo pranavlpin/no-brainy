@@ -78,7 +78,7 @@ export const GET = withAuth(async (req: NextRequest, user) => {
     const [notes, total] = await Promise.all([
       prisma.note.findMany({
         where,
-        orderBy: { [sortBy]: sortOrder },
+        orderBy: [{ isPinned: 'desc' }, { [sortBy]: sortOrder }],
         skip,
         take: pageSize,
       }),
