@@ -170,6 +170,7 @@ export function RegisterForm() {
         </button>
       </form>
 
+      {/* OAuth section — hidden for now, will add back later
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
           <span className="w-full border-t-2 border-retro-dark/15" />
@@ -180,8 +181,8 @@ export function RegisterForm() {
           </span>
         </div>
       </div>
-
       <GoogleButton />
+      */}
 
       <p className="text-center text-sm text-muted-foreground">
         Already have an account?{' '}

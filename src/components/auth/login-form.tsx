@@ -126,6 +126,7 @@ export function LoginForm() {
         </button>
       </form>
 
+      {/* OAuth section — hidden for now, will add back later
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
           <span className="w-full border-t-2 border-retro-dark/15" />
@@ -136,8 +137,8 @@ export function LoginForm() {
           </span>
         </div>
       </div>
-
       <GoogleButton />
+      */}
 
       <p className="text-center text-sm text-muted-foreground">
         Don&apos;t have an account?{' '}
