@@ -7,6 +7,7 @@ import type { BacklinkItem, NoteGraph } from '@/lib/types/notes'
 
 const BACKLINKS_KEY = 'backlinks' as const
 const NOTE_GRAPH_KEY = 'note-graph' as const
+const TAG_GRAPH_KEY = 'tag-graph' as const
 
 export function useBacklinks(noteId: string) {
   return useQuery({
@@ -27,6 +28,18 @@ export function useNoteGraph() {
     queryFn: async () => {
       const res = await apiClient<ApiResponse<NoteGraph>>(
         `/api/notes/graph`
+      )
+      return res.data
+    },
+  })
+}
+
+export function useTagGraph() {
+  return useQuery({
+    queryKey: [TAG_GRAPH_KEY],
+    queryFn: async () => {
+      const res = await apiClient<ApiResponse<NoteGraph>>(
+        `/api/notes/graph/tags`
       )
       return res.data
     },

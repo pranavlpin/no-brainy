@@ -56,6 +56,7 @@ export interface BacklinkItem {
 export interface GraphNode {
   id: string
   title: string
+  tags?: string[]
 }
 
 export interface GraphEdge {
