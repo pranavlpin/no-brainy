@@ -241,6 +241,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, coding standards, 
 
 ## TODO
 
+- [ ] Forgot password flow (SendGrid integration for password reset emails)
 - [ ] Dark mode support (CSS variables defined, `dark:` classes in components — needs `next-themes` + toggle)
 - [ ] Multi-theme support (retro, modern, business — [assessment](docs/MODULAR_ARCHITECTURE_SPEC.md))
 - [ ] Localisation / i18n (extract strings, Crowdin for community translations)
