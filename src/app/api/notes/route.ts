@@ -18,6 +18,8 @@ function formatNote(note: {
   contentMd: string
   tags: string[]
   isPinned: boolean
+  isPublic: boolean
+  shareId: string | null
   isDeleted: boolean
   deletedAt: Date | null
   wordCount: number
@@ -31,6 +33,8 @@ function formatNote(note: {
     contentMd: note.contentMd,
     tags: note.tags,
     isPinned: note.isPinned,
+    isPublic: note.isPublic,
+    shareId: note.shareId,
     isDeleted: note.isDeleted,
     deletedAt: note.deletedAt?.toISOString() ?? null,
     wordCount: note.wordCount,

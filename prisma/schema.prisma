@@ -60,6 +60,8 @@ model Note {
   contentMd   String    @default("") @db.Text
   tags        String[]  @default([])
   isPinned    Boolean   @default(false)
+  isPublic    Boolean   @default(false)
+  shareId     String?   @unique
   isDeleted   Boolean   @default(false)
   deletedAt   DateTime?
   wordCount   Int       @default(0)

@@ -5,6 +5,8 @@ export interface NoteResponse {
   contentMd: string
   tags: string[]
   isPinned: boolean
+  isPublic: boolean
+  shareId: string | null
   isDeleted: boolean
   deletedAt: string | null
   wordCount: number
@@ -34,6 +36,7 @@ export interface UpdateNoteRequest {
   contentMd?: string
   tags?: string[]
   isPinned?: boolean
+  isPublic?: boolean
   isDeleted?: boolean
 }
 

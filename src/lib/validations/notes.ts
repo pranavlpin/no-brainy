@@ -12,6 +12,7 @@ export const updateNoteSchema = z.object({
   contentMd: z.string().optional(),
   tags: z.array(z.string()).optional(),
   isPinned: z.boolean().optional(),
+  isPublic: z.boolean().optional(),
 })
 
 export const noteQuerySchema = z.object({

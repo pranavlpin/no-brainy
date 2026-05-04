@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { ArrowLeft, Pin, PinOff, Trash2 } from 'lucide-react'
+import { ArrowLeft, Pin, PinOff, Trash2, Share2, Link2, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dialog } from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -118,6 +118,30 @@ export default function NoteDetailPage() {
     saveNote({ title, contentMd: content, tags, isPinned: newPinned })
   }
 
+  const [shareUrl, setShareUrl] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
+
+  useEffect(() => {
+    if (note?.isPublic && note?.shareId) {
+      setShareUrl(`${window.location.origin}/share/${note.shareId}`)
+    } else {
+      setShareUrl(null)
+    }
+  }, [note?.isPublic, note?.shareId])
+
+  const handleShareToggle = () => {
+    const newPublic = !note?.isPublic
+    updateNote.mutate({ id: noteId, isPublic: newPublic })
+  }
+
+  const handleCopyLink = () => {
+    if (shareUrl) {
+      navigator.clipboard.writeText(shareUrl)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
+
   const handleDelete = () => {
     deleteNote.mutate(noteId, {
       onSuccess: () => router.push('/notes'),
@@ -174,6 +198,19 @@ export default function NoteDetailPage() {
           <Button variant="ghost" size="icon" onClick={handlePinToggle} title={isPinned ? 'Unpin' : 'Pin'}>
             {isPinned ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
           </Button>
+          <Button
+            variant={note?.isPublic ? 'secondary' : 'ghost'}
+            size="icon"
+            onClick={handleShareToggle}
+            title={note?.isPublic ? 'Shared (click to unshare)' : 'Share note'}
+          >
+            <Share2 className="h-4 w-4" />
+          </Button>
+          {shareUrl && (
+            <Button variant="ghost" size="icon" onClick={handleCopyLink} title="Copy share link">
+              {copied ? <Check className="h-4 w-4 text-green-500" /> : <Link2 className="h-4 w-4" />}
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="icon"

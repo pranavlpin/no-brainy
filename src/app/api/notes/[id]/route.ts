@@ -17,6 +17,8 @@ type NoteWithLinks = {
   contentMd: string
   tags: string[]
   isPinned: boolean
+  isPublic: boolean
+  shareId: string | null
   isDeleted: boolean
   deletedAt: Date | null
   wordCount: number
@@ -34,6 +36,8 @@ function formatNote(note: NoteWithLinks): NoteResponse {
     contentMd: note.contentMd,
     tags: note.tags,
     isPinned: note.isPinned,
+    isPublic: note.isPublic,
+    shareId: note.shareId,
     isDeleted: note.isDeleted,
     deletedAt: note.deletedAt?.toISOString() ?? null,
     wordCount: note.wordCount,
@@ -162,6 +166,11 @@ export async function PUT(req: NextRequest) {
 
     if (data.contentMd !== undefined) {
       updateData.wordCount = countWords(data.contentMd)
+    }
+
+    // Generate shareId when enabling public sharing for the first time
+    if (data.isPublic === true && !existing.shareId) {
+      updateData.shareId = crypto.randomUUID().replace(/-/g, '').slice(0, 12)
     }
 
     const note = await prisma.note.update({
