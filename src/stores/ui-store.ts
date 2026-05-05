@@ -2,7 +2,7 @@ import { create } from 'zustand'
 
 // Default sidebar nav order
 export const DEFAULT_NAV_ORDER = [
-  '/notes', '/tasks', '/planner', '/expenses', '/reviews',
+  '/notes', '/tasks', '/planner', '/expenses', '/budgets', '/reviews',
   '/books', '/watchlist', '/bookmarks', '/goals',
   '/search', '/analytics', '/insights', '/ai',
 ]

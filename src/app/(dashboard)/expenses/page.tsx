@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import { Plus, Upload, List, TableProperties, BarChart3, Settings2, PenLine, Sheet, Target } from 'lucide-react'
+import { Plus, Upload, List, TableProperties, BarChart3, Settings2, PenLine, Sheet } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ExpenseList } from '@/components/expenses/expense-list'
 import { ExpenseForm } from '@/components/expenses/expense-form'
@@ -12,14 +12,11 @@ import { ExpenseMatrix } from '@/components/expenses/expense-matrix'
 import { ExpenseImportWizard } from '@/components/expenses/expense-import-wizard'
 import { ExpenseCharts } from '@/components/expenses/expense-charts'
 import { ExpenseAIPanel } from '@/components/expenses/expense-ai-panel'
-import { BudgetCard } from '@/components/expenses/budget-card'
-import { BudgetForm } from '@/components/expenses/budget-form'
 import { useExpenses, useCreateExpense, useUpdateExpense, useDeleteExpense } from '@/hooks/use-expenses'
-import { useBudgets, useCreateBudget, useDeleteBudget } from '@/hooks/use-budgets'
 import { formatINR, getCurrentMonth, getMonthDateRange } from '@/lib/expenses/formatters'
 import type { ExpenseFilters, ExpenseResponse, CreateExpenseRequest, UpdateExpenseRequest } from '@/lib/types/expenses'
 
-type Tab = 'create' | 'list' | 'summary' | 'charts' | 'budgets'
+type Tab = 'create' | 'list' | 'summary' | 'charts'
 type CreateMode = 'single' | 'bulk'
 
 export default function ExpensesPage(): React.ReactElement {
@@ -50,11 +47,6 @@ export default function ExpensesPage(): React.ReactElement {
   const updateExpense = useUpdateExpense()
   const deleteExpense = useDeleteExpense()
 
-  const { data: budgets, isLoading: budgetsLoading } = useBudgets()
-  const createBudget = useCreateBudget()
-  const deleteBudget = useDeleteBudget()
-  const [showBudgetForm, setShowBudgetForm] = useState(false)
-
   const expenses = data?.pages.flatMap((page) => page.data.items) ?? []
   const totalCount = data?.pages[0]?.data.total ?? 0
   const total = expenses.reduce((sum, e) => sum + Number(e.amount), 0)
@@ -84,7 +76,6 @@ export default function ExpensesPage(): React.ReactElement {
     { key: 'list', label: 'Expenses', icon: <List className="h-4 w-4" /> },
     { key: 'summary', label: 'Summary', icon: <TableProperties className="h-4 w-4" /> },
     { key: 'charts', label: 'Charts', icon: <BarChart3 className="h-4 w-4" /> },
-    { key: 'budgets', label: 'Budgets', icon: <Target className="h-4 w-4" /> },
   ]
 
   return (
@@ -227,49 +218,6 @@ export default function ExpensesPage(): React.ReactElement {
         <div className="space-y-6">
           <ExpenseAIPanel />
           <ExpenseCharts />
-        </div>
-      )}
-
-      {activeTab === 'budgets' && (
-        <div className="space-y-4">
-          {showBudgetForm ? (
-            <BudgetForm
-              onSubmit={(data) => {
-                createBudget.mutate(data, {
-                  onSuccess: () => setShowBudgetForm(false),
-                })
-              }}
-              onCancel={() => setShowBudgetForm(false)}
-              isPending={createBudget.isPending}
-            />
-          ) : (
-            <button
-              onClick={() => setShowBudgetForm(true)}
-              className="flex items-center gap-2 border-2 border-dashed border-retro-dark/30 px-4 py-2 font-mono text-sm font-bold text-retro-dark/60 hover:border-retro-dark/60 hover:text-retro-dark transition-colors"
-            >
-              <Plus className="h-4 w-4" />
-              Add Budget
-            </button>
-          )}
-
-          {budgetsLoading ? (
-            <div className="py-12 text-center text-muted-foreground">Loading budgets...</div>
-          ) : budgets && budgets.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {budgets.map((budget) => (
-                <BudgetCard
-                  key={budget.id}
-                  budget={budget}
-                  onEdit={() => {/* TODO: edit modal */}}
-                  onDelete={(id) => deleteBudget.mutate(id)}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="py-12 text-center">
-              <p className="font-mono text-sm text-retro-dark/40">No budgets yet. Add one to track your spending limits or savings targets.</p>
-            </div>
-          )}
         </div>
       )}
 
