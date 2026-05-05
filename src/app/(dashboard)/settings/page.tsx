@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Key, Eye, EyeOff, Trash2, Shield, Bell, PanelLeft, Palette } from 'lucide-react'
+import Link from 'next/link'
+import { Key, Eye, EyeOff, Trash2, Shield, Bell, PanelLeft, Palette, Paintbrush } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Dialog } from '@/components/ui/dialog'
@@ -294,7 +295,8 @@ const THEME_COLORS: Record<ThemeName, string[]> = {
 }
 
 function ThemeSection() {
-  const { theme, setTheme } = useThemeStore()
+  const { theme, setTheme, customThemes, activeCustomThemeId } = useThemeStore()
+  const activeCustomTheme = customThemes.find((c) => c.id === activeCustomThemeId)
 
   return (
     <div className="rounded-lg border border-retro-dark/15 bg-white p-6">
@@ -336,6 +338,21 @@ function ThemeSection() {
                 </span>
               </button>
             ))}
+          </div>
+
+          {/* Custom theme indicator + Customize button */}
+          <div className="mt-4 flex items-center gap-3 border-t border-retro-dark/10 pt-4">
+            <Link href="/settings/theme-builder">
+              <Button variant="outline" size="sm" className="gap-1.5">
+                <Paintbrush className="h-4 w-4" />
+                Customize
+              </Button>
+            </Link>
+            {theme === 'custom' && activeCustomTheme && (
+              <span className="text-xs text-retro-dark/60">
+                Active: <span className="font-medium text-retro-dark">{activeCustomTheme.name}</span>
+              </span>
+            )}
           </div>
         </div>
       </div>

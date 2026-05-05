@@ -50,7 +50,18 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: `
           (function() {
             var t = localStorage.getItem('nobrainy-theme');
-            if (t && t !== 'retro') document.documentElement.classList.add('theme-' + t);
+            if (t === 'custom') {
+              var customs = JSON.parse(localStorage.getItem('nobrainy-custom-themes') || '[]');
+              var activeId = localStorage.getItem('nobrainy-active-custom-theme');
+              var active = customs.find(function(c) { return c.id === activeId; });
+              if (active && active.colors) {
+                Object.keys(active.colors).forEach(function(k) {
+                  document.documentElement.style.setProperty(k, active.colors[k]);
+                });
+              }
+            } else if (t && t !== 'retro') {
+              document.documentElement.classList.add('theme-' + t);
+            }
           })()
         `}} />
         {GA_ID && (
