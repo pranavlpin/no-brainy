@@ -84,6 +84,7 @@ export default function ExpensesPage(): React.ReactElement {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-display text-2xl font-bold text-retro-dark">Expenses</h1>
+          <div className="mt-1 h-1 w-12 rounded-full bg-retro-mint" />
           {activeTab === 'list' && totalCount > 0 && (
             <p className="text-sm text-muted-foreground mt-1">
               {totalCount} expense{totalCount !== 1 ? 's' : ''} &middot; {formatINR(total)}

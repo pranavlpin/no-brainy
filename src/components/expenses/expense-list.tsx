@@ -94,7 +94,7 @@ export function ExpenseList({ expenses, onEdit, onDelete, isDeleting }: ExpenseL
             {expenses.map((exp) => (
               <tr
                 key={exp.id}
-                className={`border-b border-border/50 hover:bg-retro-cream/50 ${selectedIds.has(exp.id) ? 'bg-retro-blue/5' : ''}`}
+                className={`border-b border-border/50 hover:bg-retro-cream/50 even:bg-retro-cream/30 dark:even:bg-gray-800/30 ${selectedIds.has(exp.id) ? 'bg-retro-blue/5' : ''}`}
               >
                 <td className="py-3 pr-2">
                   <input

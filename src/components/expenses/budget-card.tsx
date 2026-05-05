@@ -47,7 +47,7 @@ export function BudgetCard({ budget, onEdit, onDelete }: BudgetCardProps): React
   const cappedPercentage = Math.min(budget.percentage, 100)
 
   return (
-    <div className={`group relative border-2 ${borderClass} p-4 transition-colors hover:border-retro-dark/40`}>
+    <div className={`group relative border-2 ${borderClass} p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-retro-dark/40 hover:shadow-md`}>
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-2">

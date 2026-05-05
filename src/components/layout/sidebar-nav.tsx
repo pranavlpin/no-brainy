@@ -26,8 +26,8 @@ export function SidebarNavItem({ item }: { item: NavItem }) {
         'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
         sidebarCollapsed && 'justify-center px-2',
         isActive
-          ? 'bg-primary/10 text-blue-400'
-          : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+          ? 'border-l-3 border-retro-blue bg-primary/10 text-blue-400'
+          : 'border-l-3 border-transparent text-slate-300 hover:bg-slate-800 hover:text-white'
       )}
     >
       <item.icon className="h-5 w-5 shrink-0" />

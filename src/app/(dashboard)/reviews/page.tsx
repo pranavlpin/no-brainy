@@ -31,7 +31,8 @@ export default function ReviewsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-display text-2xl font-bold text-retro-dark">Reviews</h1>
-          <p className="text-sm text-muted-foreground">
+          <div className="mt-1 h-1 w-12 rounded-full bg-retro-blue" />
+          <p className="text-sm text-muted-foreground mt-1">
             Reflect on your progress and track your journey
           </p>
         </div>

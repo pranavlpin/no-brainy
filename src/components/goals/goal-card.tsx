@@ -71,7 +71,7 @@ export function GoalCard({ goal, onClick }: GoalCardProps) {
       onClick={onClick}
       className={cn(
         'group w-full rounded-lg bg-white p-4 text-left shadow-sm',
-        'border border-border transition-shadow hover:shadow-md',
+        'border border-border transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
         'dark:bg-gray-900'
       )}
@@ -111,7 +111,7 @@ export function GoalCard({ goal, onClick }: GoalCardProps) {
             <span>Progress</span>
             <span>{progressPct}%</span>
           </div>
-          <div className="h-2 w-full rounded-full bg-gray-100 dark:bg-gray-800">
+          <div className="h-2 w-full rounded-full border border-retro-dark/20 bg-gray-100 dark:bg-gray-800">
             <div
               className={cn('h-full rounded-full transition-all', getProgressColor(progressPct))}
               style={{ width: `${Math.min(progressPct, 100)}%` }}

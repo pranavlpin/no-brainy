@@ -32,9 +32,12 @@ export default function GoalsPage(): React.ReactElement {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Target className="h-5 w-5 text-primary" />
-          <h1 className="font-display text-2xl font-bold text-retro-dark">Goals</h1>
+        <div>
+          <div className="flex items-center gap-2">
+            <Target className="h-5 w-5 text-primary" />
+            <h1 className="font-display text-2xl font-bold text-retro-dark">Goals</h1>
+          </div>
+          <div className="mt-1 h-1 w-12 rounded-full bg-retro-yellow" />
         </div>
         <Button size="sm" onClick={() => setShowGoalForm(true)}>
           <Plus className="h-4 w-4 mr-1" />

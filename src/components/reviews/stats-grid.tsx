@@ -16,6 +16,7 @@ const stats = [
     icon: CheckCircle2,
     color: 'text-green-600 dark:text-green-400',
     bg: 'bg-green-50 dark:bg-green-950/30',
+    topBorder: 'border-t-retro-blue',
   },
   {
     key: 'tasksMissed' as const,
@@ -23,6 +24,7 @@ const stats = [
     icon: XCircle,
     color: 'text-red-600 dark:text-red-400',
     bg: 'bg-red-50 dark:bg-red-950/30',
+    topBorder: 'border-t-retro-pink',
   },
   {
     key: 'notesCreated' as const,
@@ -30,6 +32,7 @@ const stats = [
     icon: FileText,
     color: 'text-blue-600 dark:text-blue-400',
     bg: 'bg-blue-50 dark:bg-blue-950/30',
+    topBorder: 'border-t-retro-mint',
   },
   {
     key: 'cardsReviewed' as const,
@@ -37,6 +40,7 @@ const stats = [
     icon: Brain,
     color: 'text-purple-600 dark:text-purple-400',
     bg: 'bg-purple-50 dark:bg-purple-950/30',
+    topBorder: 'border-t-retro-yellow',
   },
 ]
 
@@ -48,7 +52,7 @@ export function StatsGrid(props: StatsGridProps) {
         return (
           <div
             key={stat.key}
-            className={`flex flex-col items-center gap-2 rounded-lg border border-border p-4 ${stat.bg}`}
+            className={`flex flex-col items-center gap-2 rounded-lg border border-border border-t-3 p-4 ${stat.bg} ${stat.topBorder}`}
           >
             <Icon className={`h-5 w-5 ${stat.color}`} />
             <span className="text-2xl font-bold tabular-nums">

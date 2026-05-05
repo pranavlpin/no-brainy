@@ -16,7 +16,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50">
+    <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-950">
       <Sidebar />
       <div
         className={cn(
@@ -26,7 +26,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         )}
       >
         <TopBar />
-        <main className="flex-1 overflow-y-auto p-6">{children}</main>
+        <main className="flex-1 overflow-y-auto bg-gradient-to-br from-retro-cream/30 to-transparent p-6 dark:from-gray-900/30">{children}</main>
       </div>
       <QuickCaptureProvider />
       <Toast />

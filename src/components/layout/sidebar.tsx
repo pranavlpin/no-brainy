@@ -42,7 +42,25 @@ const NAV_ITEMS_MAP: Record<string, NavItem> = {
   '/ai': { label: 'AI Coach', href: '/ai', icon: Sparkles },
 }
 
-export { NAV_ITEMS_MAP }
+const NAV_GROUPS: Record<string, string> = {
+  '/notes': 'core',
+  '/tasks': 'core',
+  '/planner': 'core',
+  '/reviews': 'core',
+  '/expenses': 'finance',
+  '/budgets': 'finance',
+  '/books': 'learning',
+  '/flashcards': 'learning',
+  '/goals': 'goals',
+  '/search': 'tools',
+  '/analytics': 'tools',
+  '/insights': 'tools',
+  '/ai': 'tools',
+  '/bookmarks': 'media',
+  '/watchlist': 'media',
+}
+
+export { NAV_ITEMS_MAP, NAV_GROUPS }
 
 export function Sidebar() {
   const { sidebarCollapsed, toggleSidebar, mobileSidebarOpen, setMobileSidebarOpen, navOrder, hiddenNavItems } =
@@ -99,10 +117,22 @@ export function Sidebar() {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 space-y-1 overflow-y-auto px-2 py-4">
-          {navItems.map((item) => (
-            <SidebarNavItem key={item.href} item={item} />
-          ))}
+        <nav className="flex-1 overflow-y-auto px-2 py-4">
+          {navItems.map((item, index) => {
+            const prevItem = index > 0 ? navItems[index - 1] : null
+            const currentGroup = NAV_GROUPS[item.href] ?? ''
+            const prevGroup = prevItem ? (NAV_GROUPS[prevItem.href] ?? '') : currentGroup
+            const showDivider = index > 0 && currentGroup !== prevGroup
+
+            return (
+              <div key={item.href}>
+                {showDivider && (
+                  <div className="my-1 border-t border-slate-700/50" />
+                )}
+                <SidebarNavItem item={item} />
+              </div>
+            )
+          })}
         </nav>
       </aside>
     </>

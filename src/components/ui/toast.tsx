@@ -20,7 +20,7 @@ export function Toast() {
     <div className="fixed bottom-4 right-4 z-[100] animate-in fade-in slide-in-from-bottom-4">
       <div
         className={cn(
-          'flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-medium text-white shadow-lg',
+          'flex items-center gap-2 border-2 border-retro-dark px-4 py-3 text-sm font-medium text-white shadow-hard',
           type === 'success' ? 'bg-green-600' : 'bg-red-600'
         )}
       >
