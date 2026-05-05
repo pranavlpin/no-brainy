@@ -8,10 +8,11 @@ import type { Prisma } from '@prisma/client'
 export const GET = withAuth(async (_req: NextRequest, user: AuthUser) => {
   const prefs = user.preferences as Record<string, unknown> | null
   const hasKey = !!prefs?.openaiApiKey
+  const aiModel = (prefs?.aiModel as string) || null
 
   return NextResponse.json({
     success: true,
-    data: { hasKey },
+    data: { hasKey, aiModel },
   })
 })
 
@@ -75,5 +76,36 @@ export const DELETE = withAuth(async (_req: NextRequest, user: AuthUser) => {
   return NextResponse.json({
     success: true,
     data: { hasKey: false },
+  })
+})
+
+// PATCH: Update AI model preference
+export const PATCH = withAuth(async (req: NextRequest, user: AuthUser) => {
+  const body = await req.json()
+  const { aiModel } = body as { aiModel?: string }
+
+  const validModels = ['gpt-4o-mini', 'gpt-4o']
+  if (aiModel && !validModels.includes(aiModel)) {
+    return NextResponse.json(
+      { success: false, error: { code: 'VALIDATION_ERROR', message: `Invalid model. Choose: ${validModels.join(', ')}` } },
+      { status: 400 }
+    )
+  }
+
+  const currentPrefs = (user.preferences as Record<string, unknown>) || {}
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      preferences: {
+        ...currentPrefs,
+        aiModel: aiModel || null,
+      } as Prisma.InputJsonValue,
+    },
+  })
+
+  return NextResponse.json({
+    success: true,
+    data: { aiModel: aiModel || null },
   })
 })

@@ -167,6 +167,32 @@ function ApiKeySection() {
         variant="destructive"
         onConfirm={handleRemove}
       />
+
+      {/* Model Selection */}
+      {hasKey && (
+        <div className="mt-4 border-t border-retro-dark/10 pt-4">
+          <label className="font-mono text-xs uppercase tracking-wider text-retro-dark/60 mb-2 block">
+            Default AI Model
+          </label>
+          <select
+            value={status?.aiModel || 'gpt-4o'}
+            onChange={async (e) => {
+              await fetch('/api/settings/api-key', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ aiModel: e.target.value }),
+              })
+            }}
+            className="border-2 border-retro-dark/20 bg-background px-3 py-2 text-sm font-mono w-full max-w-xs"
+          >
+            <option value="gpt-4o">GPT-4o (Best quality, higher cost)</option>
+            <option value="gpt-4o-mini">GPT-4o Mini (Faster, cheaper)</option>
+          </select>
+          <p className="mt-1.5 text-xs text-retro-dark/40">
+            Used for insights, budget advice, and coach. Note summarization and flashcards always use Mini.
+          </p>
+        </div>
+      )}
     </div>
   )
 }

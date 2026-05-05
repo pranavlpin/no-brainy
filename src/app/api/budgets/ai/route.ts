@@ -4,7 +4,7 @@ import { withAI } from '@/lib/ai/middleware'
 import { callAI } from '@/lib/ai/call-ai'
 import { AI_MODELS } from '@/lib/ai/openai-client'
 
-export const POST = withAI(async (_req: NextRequest, { user, apiKey }) => {
+export const POST = withAI(async (_req: NextRequest, { user, apiKey, preferredModel }) => {
   try {
     const now = new Date()
     const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 2, 1)
@@ -82,7 +82,7 @@ export const POST = withAI(async (_req: NextRequest, { user, apiKey }) => {
 
     const result = await callAI({
       apiKey,
-      model: AI_MODELS.SMART,
+      model: preferredModel || AI_MODELS.SMART,
       maxTokens: 1500,
       temperature: 0.4,
       systemPrompt: `You are a smart personal finance advisor. Analyze the user's budget goals and spending trends. Provide concise, actionable advice in Markdown.

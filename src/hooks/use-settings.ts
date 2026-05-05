@@ -8,6 +8,7 @@ const API_KEY_QUERY_KEY = ['settings', 'api-key'] as const
 
 interface ApiKeyStatus {
   hasKey: boolean
+  aiModel: string | null
 }
 
 export function useApiKeyStatus() {

@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthUser } from '@/lib/auth/middleware'
 import { getUserApiKey } from '@/lib/ai/get-api-key'
+import { getUserAIModel } from '@/lib/ai/get-api-key'
 import type { AuthUser } from '@/lib/types/auth'
+import type { AIModel } from '@/lib/ai/openai-client'
 
 export interface AIContext {
   user: AuthUser
   apiKey: string
+  preferredModel: AIModel | null
 }
 
 /**
@@ -44,6 +47,7 @@ export function withAI(
       )
     }
 
-    return handler(req, { user, apiKey })
+    const preferredModel = await getUserAIModel(user.id)
+    return handler(req, { user, apiKey, preferredModel })
   }
 }

@@ -17,7 +17,7 @@ interface InsightGenerationResult {
   insights: GeneratedInsight[]
 }
 
-export const POST = withAI(async (req: NextRequest, { user, apiKey }) => {
+export const POST = withAI(async (req: NextRequest, { user, apiKey, preferredModel }) => {
   try {
     // Parse optional modules and date range from request body
     let selectedModules: InsightModule[] | undefined
@@ -45,10 +45,10 @@ export const POST = withAI(async (req: NextRequest, { user, apiKey }) => {
     // Aggregate user data (only selected modules, within date range)
     const data = await aggregateUserData(user.id, selectedModules, dateFrom, dateTo)
 
-    // Call AI
+    // Call AI (use preferred model if set, otherwise prompt default)
     const result = await callAI<InsightGenerationResult>({
       apiKey,
-      model: insightGeneratePrompt.model,
+      model: preferredModel || insightGeneratePrompt.model,
       systemPrompt: insightGeneratePrompt.systemPrompt,
       userPrompt: insightGeneratePrompt.userPrompt(data, { from: dateFrom, to: dateTo }),
       maxTokens: insightGeneratePrompt.maxTokens,
