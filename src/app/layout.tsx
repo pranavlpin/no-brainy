@@ -49,6 +49,12 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: `
           (function() {
+            // Dark mode
+            var dm = localStorage.getItem('nobrainy-dark-mode');
+            if (dm === 'dark' || (dm !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+              document.documentElement.classList.add('dark');
+            }
+            // Theme
             var t = localStorage.getItem('nobrainy-theme');
             if (t === 'custom') {
               var customs = JSON.parse(localStorage.getItem('nobrainy-custom-themes') || '[]');

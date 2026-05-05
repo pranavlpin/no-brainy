@@ -62,6 +62,9 @@ function clearCustomCssVars(): void {
     '--retro-orange',
     '--retro-dark',
     '--retro-cream',
+    '--sidebar-bg',
+    '--sidebar-fg',
+    '--page-bg-subtle',
   ]
   varsToRemove.forEach((v) => style.removeProperty(v))
 }
