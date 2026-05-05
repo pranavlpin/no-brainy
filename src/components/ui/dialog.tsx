@@ -49,7 +49,7 @@ export function Dialog({
         className="fixed inset-0 bg-black/50"
         onClick={onClose}
       />
-      <div className="relative z-50 w-full max-w-md rounded-lg bg-background p-6 shadow-lg">
+      <div className="relative z-50 w-full max-w-md max-h-[90vh] overflow-y-auto rounded-lg bg-background p-6 shadow-lg">
         <h2 className="text-lg font-semibold">{title}</h2>
         {description && (
           <p className="mt-2 text-sm text-muted-foreground">{description}</p>
