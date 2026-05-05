@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Trash2, Pencil, Tags } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Select } from '@/components/ui/select'
+import { SearchableSelect } from '@/components/ui/searchable-select'
 import { CategoryBadge } from './category-badge'
 import { formatINR, formatDate } from '@/lib/expenses/formatters'
 import { useExpenseCategories } from '@/hooks/use-expense-categories'
@@ -173,16 +173,13 @@ export function ExpenseList({ expenses, onEdit, onDelete, isDeleting }: ExpenseL
           </span>
           <div className="flex items-center gap-2">
             <Tags className="h-4 w-4 text-retro-dark/40" />
-            <Select
+            <SearchableSelect
               value={bulkCategoryId}
-              onChange={(e) => setBulkCategoryId(e.target.value)}
-              className="w-44 h-8 text-xs"
-            >
-              <option value="">Move to category...</option>
-              {categories?.map((cat) => (
-                <option key={cat.id} value={cat.id}>{cat.name}</option>
-              ))}
-            </Select>
+              onChange={setBulkCategoryId}
+              placeholder="Move to category..."
+              options={categories?.map((cat) => ({ value: cat.id, label: cat.name })) ?? []}
+              className="w-44"
+            />
             <button
               onClick={handleBulkCategoryChange}
               disabled={!bulkCategoryId || bulkUpdate.isPending}

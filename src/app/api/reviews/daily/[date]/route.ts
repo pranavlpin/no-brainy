@@ -89,9 +89,64 @@ export async function GET(req: NextRequest) {
 
     if (!review) return notFoundResponse()
 
+    // Recalculate stats live so they reflect current task state
+    const dayStart = new Date(dateStr + 'T00:00:00.000Z')
+    const dayEnd = new Date(dateStr + 'T23:59:59.999Z')
+
+    const [tasksCompleted, tasksMissed, notesCreated, reviewSessions] =
+      await Promise.all([
+        prisma.task.count({
+          where: {
+            userId: user.id,
+            completedAt: { gte: dayStart, lte: dayEnd },
+          },
+        }),
+        prisma.task.count({
+          where: {
+            userId: user.id,
+            dueDate: reviewDate,
+            status: { not: 'completed' },
+          },
+        }),
+        prisma.note.count({
+          where: {
+            userId: user.id,
+            createdAt: { gte: dayStart, lte: dayEnd },
+          },
+        }),
+        prisma.reviewSession.aggregate({
+          where: {
+            userId: user.id,
+            startedAt: { gte: dayStart, lte: dayEnd },
+          },
+          _sum: { cardsReviewed: true },
+        }),
+      ])
+
+    const cardsReviewed = reviewSessions._sum.cardsReviewed ?? 0
+
+    // Update stored stats if they've changed
+    if (
+      review.tasksCompleted !== tasksCompleted ||
+      review.tasksMissed !== tasksMissed ||
+      review.notesCreated !== notesCreated ||
+      review.cardsReviewed !== cardsReviewed
+    ) {
+      await prisma.dailyReview.update({
+        where: { id: review.id },
+        data: { tasksCompleted, tasksMissed, notesCreated, cardsReviewed },
+      })
+    }
+
     const response: ApiResponse<DailyReviewResponse> = {
       success: true,
-      data: formatReview(review),
+      data: formatReview({
+        ...review,
+        tasksCompleted,
+        tasksMissed,
+        notesCreated,
+        cardsReviewed,
+      }),
     }
 
     return NextResponse.json(response)

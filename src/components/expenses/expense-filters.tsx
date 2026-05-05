@@ -2,6 +2,7 @@
 
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
+import { SearchableSelect } from '@/components/ui/searchable-select'
 import { useExpenseCategories } from '@/hooks/use-expense-categories'
 import type { ExpenseFilters } from '@/lib/types/expenses'
 
@@ -38,18 +39,13 @@ export function ExpenseFiltersBar({ filters, onFiltersChange }: ExpenseFiltersBa
         onChange={(e) => update({ endDate: e.target.value || undefined })}
         className="w-full sm:w-40"
       />
-      <Select
+      <SearchableSelect
         value={filters.categoryId ?? ''}
-        onChange={(e) => update({ categoryId: e.target.value || undefined })}
+        onChange={(val) => update({ categoryId: val || undefined })}
+        placeholder="All categories"
+        options={categories?.map((cat) => ({ value: cat.id, label: cat.name })) ?? []}
         className="w-full sm:w-44"
-      >
-        <option value="">All categories</option>
-        {categories?.map((cat) => (
-          <option key={cat.id} value={cat.id}>
-            {cat.name}
-          </option>
-        ))}
-      </Select>
+      />
       <Input
         placeholder="Filter by tags..."
         value={filters.tags?.join(', ') ?? ''}

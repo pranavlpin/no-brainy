@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
+import { SearchableSelect } from '@/components/ui/searchable-select'
 import { useExpenseCategories } from '@/hooks/use-expense-categories'
 import type { CreateBudgetRequest, BudgetType, BudgetPeriod } from '@/lib/types/budgets'
 
@@ -93,19 +94,14 @@ export function BudgetForm({ onSubmit, onCancel, isPending }: BudgetFormProps): 
         <label htmlFor="budget-category" className="font-mono text-xs uppercase tracking-wider text-retro-dark/70">
           Category
         </label>
-        <Select
+        <SearchableSelect
           id="budget-category"
           value={categoryId}
-          onChange={(e) => setCategoryId(e.target.value)}
+          onChange={setCategoryId}
+          placeholder="Select category"
+          options={categories?.map((cat) => ({ value: cat.id, label: cat.name })) ?? []}
           required
-        >
-          <option value="">Select category</option>
-          {categories?.map((cat) => (
-            <option key={cat.id} value={cat.id}>
-              {cat.name}
-            </option>
-          ))}
-        </Select>
+        />
       </div>
 
       {/* Amount */}

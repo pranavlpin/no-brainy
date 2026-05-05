@@ -90,9 +90,11 @@ export default function GoalsPage(): React.ReactElement {
       ) : (
         <div className="flex flex-col items-center justify-center border-2 border-dashed border-retro-dark/20 py-16 text-center">
           <Target className="h-12 w-12 text-muted-foreground/40" />
-          <p className="mt-4 font-mono text-sm text-muted-foreground">
-            No goals yet. Create your first goal to get started!
-          </p>
+          <p className="mt-4 font-mono text-sm text-muted-foreground">No goals yet.</p>
+          <p className="mt-1 text-xs text-muted-foreground/70">Set goals to stay focused on what matters most.</p>
+          <Button size="sm" className="mt-4" onClick={() => setShowGoalForm(true)}>
+            <Plus className="h-4 w-4 mr-1" /> Create Your First Goal
+          </Button>
         </div>
       )}
 

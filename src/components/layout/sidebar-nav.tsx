@@ -21,7 +21,7 @@ export function SidebarNavItem({ item }: { item: NavItem }) {
     <Link
       href={item.href}
       onClick={() => setMobileSidebarOpen(false)}
-      title={sidebarCollapsed ? item.label : undefined}
+      title={item.label}
       className={cn(
         'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
         sidebarCollapsed && 'justify-center px-2',

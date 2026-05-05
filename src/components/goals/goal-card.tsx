@@ -46,11 +46,14 @@ export function GoalCard({ goal, onClick }: GoalCardProps) {
 
   const totalTasks = goal.taskCount ?? 0
   const completedTasks = goal.completedTaskCount ?? 0
+  const hasTaskProgress = !isFinancial && totalTasks > 0
   const progressPct = isFinancial
     ? (goal.financialProgress ?? 0)
-    : totalTasks > 0
-      ? Math.round((completedTasks / totalTasks) * 100)
-      : 0
+    : goal.status === 'completed'
+      ? 100
+      : hasTaskProgress
+        ? Math.round((completedTasks / totalTasks) * 100)
+        : null
 
   const isOverdue =
     goal.targetDate &&
@@ -102,18 +105,27 @@ export function GoalCard({ goal, onClick }: GoalCardProps) {
       )}
 
       {/* Progress bar */}
-      <div className="mt-3">
-        <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-          <span>Progress</span>
-          <span>{progressPct}%</span>
+      {progressPct !== null ? (
+        <div className="mt-3">
+          <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+            <span>Progress</span>
+            <span>{progressPct}%</span>
+          </div>
+          <div className="h-2 w-full rounded-full bg-gray-100 dark:bg-gray-800">
+            <div
+              className={cn('h-full rounded-full transition-all', getProgressColor(progressPct))}
+              style={{ width: `${Math.min(progressPct, 100)}%` }}
+            />
+          </div>
+          {isFinancial && progressPct === 0 && (goal.currentAmount ?? 0) === 0 && (
+            <p className="text-xs text-muted-foreground/70 mt-1">Log expenses to see progress</p>
+          )}
         </div>
-        <div className="h-2 w-full rounded-full bg-gray-100 dark:bg-gray-800">
-          <div
-            className={cn('h-full rounded-full transition-all', getProgressColor(progressPct))}
-            style={{ width: `${Math.min(progressPct, 100)}%` }}
-          />
-        </div>
-      </div>
+      ) : (
+        goal.status === 'active' && !isFinancial && (
+          <p className="mt-3 text-xs text-muted-foreground/70">Link tasks to track progress</p>
+        )
+      )}
 
       {/* Footer */}
       <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">

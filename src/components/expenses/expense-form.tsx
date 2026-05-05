@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select } from '@/components/ui/select'
+import { SearchableSelect } from '@/components/ui/searchable-select'
 import { useExpenseCategories } from '@/hooks/use-expense-categories'
 import type { CreateExpenseRequest, UpdateExpenseRequest, ExpenseResponse } from '@/lib/types/expenses'
 
@@ -84,19 +84,14 @@ export function ExpenseForm({ expense, onSubmit, onCancel, isPending }: ExpenseF
 
       <div>
         <label htmlFor="category" className="font-mono text-xs uppercase tracking-wider text-retro-dark/70">Category</label>
-        <Select
+        <SearchableSelect
           id="category"
           value={categoryId}
-          onChange={(e) => setCategoryId(e.target.value)}
+          onChange={setCategoryId}
+          placeholder="Select category"
+          options={categories?.map((cat) => ({ value: cat.id, label: cat.name })) ?? []}
           required
-        >
-          <option value="">Select category</option>
-          {categories?.map((cat) => (
-            <option key={cat.id} value={cat.id}>
-              {cat.name}
-            </option>
-          ))}
-        </Select>
+        />
       </div>
 
       <div>

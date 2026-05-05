@@ -49,25 +49,23 @@ export default function DailyReviewPage() {
     }
   }, [existingReview])
 
-  // Auto-create review if none exists (to fetch stats)
-  useEffect(() => {
-    if (!isLoading && isError && !hasCreated && !createReview.isPending) {
-      createReview.mutate(
-        { reviewDate: today },
-        {
-          onSuccess: (data) => {
-            setStats({
-              tasksCompleted: data.tasksCompleted,
-              tasksMissed: data.tasksMissed,
-              notesCreated: data.notesCreated,
-              cardsReviewed: data.cardsReviewed,
-            })
-            setHasCreated(true)
-          },
-        }
-      )
-    }
-  }, [isLoading, isError, hasCreated, today, createReview])
+  // Start review on user action
+  const handleStartReview = (): void => {
+    createReview.mutate(
+      { reviewDate: today },
+      {
+        onSuccess: (data) => {
+          setStats({
+            tasksCompleted: data.tasksCompleted,
+            tasksMissed: data.tasksMissed,
+            notesCreated: data.notesCreated,
+            cardsReviewed: data.cardsReviewed,
+          })
+          setHasCreated(true)
+        },
+      }
+    )
+  }
 
   const handleGenerateSummary = () => {
     aiSummary.mutate(undefined, {
@@ -98,14 +96,62 @@ export default function DailyReviewPage() {
   const isSaving = updateReview.isPending
   const isReady = hasCreated || !!existingReview
 
-  if (isLoading || createReview.isPending) {
+  if (isLoading) {
     return (
       <div className="mx-auto max-w-3xl p-4 md:p-6">
         <div className="flex items-center justify-center py-20">
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           <span className="ml-2 text-sm text-muted-foreground">
-            Preparing your review...
+            Loading...
           </span>
+        </div>
+      </div>
+    )
+  }
+
+  if (!isReady && !existingReview) {
+    return (
+      <div className="mx-auto max-w-3xl space-y-8 p-4 md:p-6">
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => router.push('/reviews')}
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold">Daily Review</h1>
+            <p className="text-sm text-muted-foreground">
+              {new Date(today + 'T00:00:00').toLocaleDateString('en-US', {
+                weekday: 'long',
+                month: 'long',
+                day: 'numeric',
+                year: 'numeric',
+              })}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-retro-dark/20 py-16 text-center">
+          <p className="font-mono text-lg text-retro-dark">Ready to reflect on your day?</p>
+          <p className="mt-2 text-sm text-muted-foreground/70">
+            Your stats will be gathered once you begin.
+          </p>
+          <Button
+            className="mt-6"
+            onClick={handleStartReview}
+            disabled={createReview.isPending}
+          >
+            {createReview.isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Starting...
+              </>
+            ) : (
+              "Start Tonight's Review"
+            )}
+          </Button>
         </div>
       </div>
     )

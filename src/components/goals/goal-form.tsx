@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select } from '@/components/ui/select'
+import { SearchableSelect } from '@/components/ui/searchable-select'
 import { useExpenseCategories } from '@/hooks/use-expense-categories'
 import type { GoalResponse, GoalStatus } from '@/lib/types/goals'
 
@@ -136,8 +137,8 @@ export function GoalForm({ goal, onSubmit, onCancel, isLoading }: GoalFormProps)
       </div>
 
       {isFinancial && (
-        <div className="space-y-4 rounded-md border-2 border-dashed border-yellow-400/60 p-4 bg-yellow-50/30 dark:bg-yellow-950/10">
-          <p className="font-mono text-xs font-semibold text-yellow-700 dark:text-yellow-400 uppercase tracking-wide">
+        <div className="space-y-4 rounded-md border-2 border-dashed border-retro-dark/20 p-4 bg-primary/5">
+          <p className="font-mono text-xs font-semibold text-retro-dark uppercase tracking-wide">
             Financial Goal Settings
           </p>
 
@@ -216,19 +217,14 @@ export function GoalForm({ goal, onSubmit, onCancel, isLoading }: GoalFormProps)
               <Label htmlFor="goal-expense-category" className="font-mono text-xs">
                 Expense Category
               </Label>
-              <Select
+              <SearchableSelect
                 id="goal-expense-category"
                 value={expenseCategoryId}
-                onChange={(e) => setExpenseCategoryId(e.target.value)}
+                onChange={setExpenseCategoryId}
+                placeholder="Select category..."
+                options={expenseCategories?.map((cat) => ({ value: cat.id, label: cat.name })) ?? []}
                 className="border-2"
-              >
-                <option value="">Select category...</option>
-                {expenseCategories?.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
-                ))}
-              </Select>
+              />
             </div>
           ) : (
             <div className="space-y-2">

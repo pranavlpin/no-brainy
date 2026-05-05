@@ -101,16 +101,19 @@ export default function ReviewsPage() {
           ) : reviews.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border py-12">
               <Calendar className="mb-3 h-10 w-10 text-muted-foreground/50" />
-              <p className="text-sm text-muted-foreground">
-                No reviews yet. Start your first daily review!
+              <p className="font-mono text-sm text-muted-foreground">
+                No reviews yet.
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground/70">
+                Nightly reviews help you reflect on progress and build momentum.
               </p>
               <Button
-                variant="outline"
+                size="sm"
                 className="mt-4"
                 onClick={() => router.push('/reviews/daily')}
               >
                 <Plus className="mr-2 h-4 w-4" />
-                Start Review
+                Start Your First Review
               </Button>
             </div>
           ) : (
