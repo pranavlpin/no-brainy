@@ -197,7 +197,7 @@ export function ColorPicker({ label, description, value, onChange }: ColorPicker
             type="text"
             value={hexInput}
             onChange={(e) => handleHexChange(e.target.value)}
-            className="flex-1 rounded border-2 border-retro-dark/15 bg-white px-2 py-0.5 font-mono text-xs text-retro-dark focus:border-retro-blue focus:outline-none"
+            className="flex-1 rounded border-2 border-retro-dark/15 bg-background px-2 py-0.5 font-mono text-xs text-retro-dark focus:border-retro-blue focus:outline-none"
             maxLength={7}
             placeholder="#000000"
           />

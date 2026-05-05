@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useLayoutEffect } from 'react'
 import { useThemeStore, THEMES, ALL_THEME_VARS } from '@/stores/theme-store'
 import { useDarkModeStore } from '@/stores/dark-mode-store'
 
@@ -11,7 +11,7 @@ export function ThemeInitializer(): null {
   const isDark = useDarkModeStore((s) => s.isDark)
 
   // Sync dark mode class
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (isDark) {
       document.documentElement.classList.add('dark')
     } else {
@@ -19,7 +19,7 @@ export function ThemeInitializer(): null {
     }
   }, [isDark])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const html = document.documentElement
 
     if (theme === 'custom') {

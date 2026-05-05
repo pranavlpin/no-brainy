@@ -60,7 +60,7 @@ function ApiKeySection() {
   }
 
   return (
-    <div className="rounded-lg border border-retro-dark/15 bg-white p-6">
+    <div className="rounded-lg border border-retro-dark/15 bg-card p-6">
       <div className="flex items-start gap-4">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-retro-blue/10">
           <Key className="h-5 w-5 text-retro-blue" />
@@ -218,7 +218,7 @@ function NotificationPreferencesSection() {
   }
 
   return (
-    <div className="rounded-lg border border-retro-dark/15 bg-white p-6">
+    <div className="rounded-lg border border-retro-dark/15 bg-card p-6">
       <div className="flex items-start gap-4">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-retro-blue/10">
           <Bell className="h-5 w-5 text-retro-blue" />
@@ -253,7 +253,7 @@ function NotificationPreferencesSection() {
                     }`}
                   >
                     <span
-                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-card shadow ring-0 transition duration-200 ease-in-out ${
                         prefs?.[item.key] !== false ? 'translate-x-5' : 'translate-x-0'
                       }`}
                     />
@@ -303,7 +303,7 @@ function ThemeSection() {
   const activeCustomTheme = customThemes.find((c) => c.id === activeCustomThemeId)
 
   return (
-    <div className="rounded-lg border border-retro-dark/15 bg-white p-6">
+    <div className="rounded-lg border border-retro-dark/15 bg-card p-6">
       <div className="flex items-start gap-4">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-retro-blue/10">
           <Palette className="h-5 w-5 text-retro-blue" />

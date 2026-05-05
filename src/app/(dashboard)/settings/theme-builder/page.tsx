@@ -10,7 +10,6 @@ import { ThemePreview } from '@/components/settings/theme-preview'
 import { useThemeStore, THEMES, type ThemeName } from '@/stores/theme-store'
 
 const COLOR_KEYS = [
-  { key: '--background', label: 'Background', description: 'Main page and card background' },
   { key: '--page-bg-subtle', label: 'Content Area', description: 'Content area tint behind cards' },
   { key: '--sidebar-bg', label: 'Sidebar', description: 'Sidebar background color' },
   { key: '--retro-blue', label: 'Blue', description: 'Primary actions, buttons, links' },
@@ -24,50 +23,46 @@ const COLOR_KEYS = [
 
 const PRESET_DEFAULTS: Record<ThemeName, Record<string, string>> = {
   retro: {
-    '--background': '0 0% 100%',
-    '--retro-blue': '233 100% 59%',
     '--retro-pink': '336 100% 58%',
     '--retro-yellow': '52 100% 50%',
+    '--retro-blue': '233 100% 59%',
     '--retro-mint': '160 100% 45%',
-    '--retro-orange': '25 100% 55%',
+    '--retro-orange': '18 100% 60%',
     '--retro-dark': '240 20% 13%',
-    '--retro-cream': '48 100% 96%',
+    '--retro-cream': '44 100% 95%',
     '--sidebar-bg': '220 15% 18%',
     '--page-bg-subtle': '44 100% 95%',
   },
   ocean: {
-    '--background': '200 20% 98%',
-    '--retro-blue': '220 90% 50%',
     '--retro-pink': '195 100% 45%',
     '--retro-yellow': '45 90% 55%',
+    '--retro-blue': '220 90% 50%',
     '--retro-mint': '175 70% 45%',
-    '--retro-orange': '15 80% 55%',
+    '--retro-orange': '200 80% 55%',
     '--retro-dark': '220 30% 15%',
-    '--retro-cream': '200 30% 96%',
+    '--retro-cream': '200 30% 95%',
     '--sidebar-bg': '215 35% 20%',
     '--page-bg-subtle': '200 30% 96%',
   },
   forest: {
-    '--background': '120 15% 98%',
-    '--retro-blue': '150 60% 35%',
     '--retro-pink': '340 60% 55%',
     '--retro-yellow': '45 85% 50%',
+    '--retro-blue': '150 60% 35%',
     '--retro-mint': '120 50% 45%',
-    '--retro-orange': '25 75% 50%',
-    '--retro-dark': '150 25% 13%',
-    '--retro-cream': '90 25% 95%',
+    '--retro-orange': '25 80% 50%',
+    '--retro-dark': '150 20% 12%',
+    '--retro-cream': '80 30% 95%',
     '--sidebar-bg': '150 25% 18%',
     '--page-bg-subtle': '80 25% 96%',
   },
   sunset: {
-    '--background': '30 30% 98%',
-    '--retro-blue': '270 70% 55%',
     '--retro-pink': '340 85% 55%',
     '--retro-yellow': '35 100% 55%',
-    '--retro-mint': '180 50% 45%',
-    '--retro-orange': '15 80% 55%',
-    '--retro-dark': '280 20% 15%',
-    '--retro-cream': '30 40% 96%',
+    '--retro-blue': '270 70% 55%',
+    '--retro-mint': '15 80% 55%',
+    '--retro-orange': '25 95% 55%',
+    '--retro-dark': '270 20% 15%',
+    '--retro-cream': '30 50% 95%',
     '--sidebar-bg': '270 25% 20%',
     '--page-bg-subtle': '30 40% 96%',
   },
@@ -76,7 +71,6 @@ const PRESET_DEFAULTS: Record<ThemeName, Record<string, string>> = {
 function generateHarmoniousPalette(): Record<string, string> {
   const baseHue = Math.floor(Math.random() * 360)
   return {
-    '--background': `${(baseHue + 40) % 360} 15% 99%`,
     '--retro-blue': `${baseHue} 80% 55%`,
     '--retro-pink': `${(baseHue + 150) % 360} 75% 55%`,
     '--retro-yellow': `${(baseHue + 60) % 360} 85% 55%`,
@@ -242,7 +236,7 @@ export default function ThemeBuilderPage(): JSX.Element {
           <select
             value={startFrom}
             onChange={(e) => handleStartFrom(e.target.value as ThemeName)}
-            className="rounded border-2 border-retro-dark/15 bg-white px-3 py-2 text-sm font-mono capitalize focus:border-retro-blue focus:outline-none"
+            className="rounded border-2 border-retro-dark/15 bg-card px-3 py-2 text-sm font-mono capitalize focus:border-retro-blue focus:outline-none"
           >
             {THEMES.map((t) => (
               <option key={t} value={t}>
@@ -275,7 +269,7 @@ export default function ThemeBuilderPage(): JSX.Element {
       </div>
 
       {/* Bottom bar: saved themes + actions */}
-      <div className="rounded-lg border-2 border-retro-dark/10 bg-white p-4 space-y-4">
+      <div className="rounded-lg border-2 border-retro-dark/10 bg-card p-4 space-y-4">
         <div className="flex flex-wrap items-center gap-2">
           <Button onClick={handleSave} className="gap-1.5">
             <Save className="h-4 w-4" />

@@ -8,7 +8,7 @@ export function ThemePreview(): JSX.Element {
       </p>
 
       {/* Sample card with border */}
-      <div className="rounded-lg border-2 border-retro-dark bg-white p-4">
+      <div className="rounded-lg border-2 border-retro-dark bg-card p-4">
         <h4 className="font-display text-sm font-bold text-retro-dark">
           Sample Card
         </h4>

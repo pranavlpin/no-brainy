@@ -52,14 +52,6 @@ function loadTheme(): ThemeName | 'custom' {
 }
 
 export const ALL_THEME_VARS = [
-  '--background',
-  '--card',
-  '--popover',
-  '--secondary',
-  '--muted',
-  '--accent',
-  '--border',
-  '--input',
   '--retro-blue',
   '--retro-pink',
   '--retro-yellow',
@@ -92,6 +84,7 @@ function applyCssVars(colors: Record<string, string>): void {
   if (typeof document === 'undefined') return
   const html = document.documentElement
   THEMES.forEach((t) => html.classList.remove(`theme-${t}`))
+  clearCustomCssVars()
   Object.entries(colors).forEach(([key, value]) => {
     html.style.setProperty(key, value)
   })
