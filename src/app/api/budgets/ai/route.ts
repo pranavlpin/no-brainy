@@ -82,8 +82,8 @@ export const POST = withAI(async (_req: NextRequest, { user, apiKey }) => {
 
     const result = await callAI({
       apiKey,
-      model: AI_MODELS.FAST,
-      maxTokens: 1024,
+      model: AI_MODELS.SMART,
+      maxTokens: 1500,
       temperature: 0.4,
       systemPrompt: `You are a smart personal finance advisor. Analyze the user's budget goals and spending trends. Provide concise, actionable advice in Markdown.
 

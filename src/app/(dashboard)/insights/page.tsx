@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import {
-  Lightbulb, Wallet, CheckSquare, FileText, Layers, X,
+  Lightbulb, Wallet, CheckSquare, FileText, Layers, Target, PiggyBank, X,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -13,23 +13,28 @@ import type { LucideIcon } from 'lucide-react'
 
 const MODULES: { key: string; label: string; icon: LucideIcon }[] = [
   { key: 'expenses', label: 'Expenses', icon: Wallet },
+  { key: 'budgets', label: 'Budgets', icon: PiggyBank },
   { key: 'tasks', label: 'Tasks', icon: CheckSquare },
+  { key: 'goals', label: 'Goals', icon: Target },
   { key: 'notes', label: 'Notes', icon: FileText },
   { key: 'flashcards', label: 'Flashcards', icon: Layers },
 ]
 
 const insightTypes = [
   { value: '', label: 'All Types' },
-  { value: 'procrastination', label: 'Procrastination' },
+  { value: 'cross_module', label: 'Cross-Module' },
+  { value: 'spending', label: 'Spending' },
+  { value: 'budget', label: 'Budget' },
+  { value: 'goal_progress', label: 'Goal Progress' },
   { value: 'workload', label: 'Workload' },
   { value: 'priority', label: 'Priority' },
   { value: 'streak', label: 'Streak' },
+  { value: 'procrastination', label: 'Procrastination' },
+  { value: 'learning', label: 'Learning' },
+  { value: 'category_trend', label: 'Category Trend' },
   { value: 'gap', label: 'Knowledge Gap' },
   { value: 'time', label: 'Time Patterns' },
   { value: 'topic', label: 'Topics' },
-  { value: 'spending', label: 'Spending' },
-  { value: 'budget', label: 'Budget' },
-  { value: 'category_trend', label: 'Category Trend' },
 ]
 
 export default function InsightsPage(): React.ReactElement {

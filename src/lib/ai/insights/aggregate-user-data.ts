@@ -30,13 +30,25 @@ export interface UserDataSummary {
     weakTags: Array<{ tag: string; forgotCount: number }>
     reviewStreak: number
   }
+  goals: {
+    activeGoals: Array<{ title: string; category: string | null; taskCount: number; completedTaskCount: number; progressPct: number; targetDate: string | null; isOverdue: boolean }>
+    totalGoals: number
+    completedGoals: number
+  }
+  budgets: {
+    activeBudgets: Array<{ name: string; type: string; category: string; amount: number; spent: number; percentage: number; period: string; status: string }>
+    totalOverBudget: number
+    totalOnTrack: number
+  }
 }
 
-export type InsightModule = 'tasks' | 'notes' | 'flashcards' | 'expenses'
+export type InsightModule = 'tasks' | 'notes' | 'flashcards' | 'expenses' | 'goals' | 'budgets'
 
 export const ALL_INSIGHT_MODULES: { key: InsightModule; label: string; icon: string }[] = [
   { key: 'expenses', label: 'Expenses', icon: 'wallet' },
+  { key: 'budgets', label: 'Budgets', icon: 'piggy-bank' },
   { key: 'tasks', label: 'Tasks', icon: 'check-square' },
+  { key: 'goals', label: 'Goals', icon: 'target' },
   { key: 'notes', label: 'Notes', icon: 'file-text' },
   { key: 'flashcards', label: 'Flashcards', icon: 'layers' },
 ]
@@ -94,6 +106,24 @@ export async function aggregateUserData(userId: string, modules?: InsightModule[
       select: { amount: true },
     }) : emptyArr,
   ])
+
+  // Additional queries for goals and budgets (separate to keep Promise.all clean)
+  let goalsData: Array<{ title: string; category: string | null; status: string; targetDate: Date | null; _count: { tasks: number }; tasks: Array<{ status: string }> }> = []
+  let budgetsData: Array<{ name: string; type: string; amount: unknown; period: string; categoryId: string; category: { name: string } }> = []
+
+  if (selected.includes('goals')) {
+    goalsData = await prisma.goal.findMany({
+      where: { userId },
+      select: { title: true, category: true, status: true, targetDate: true, _count: { select: { tasks: true } }, tasks: { select: { status: true } } },
+    })
+  }
+
+  if (selected.includes('budgets')) {
+    budgetsData = await prisma.budget.findMany({
+      where: { userId, isActive: true },
+      include: { category: { select: { name: true } } },
+    }) as unknown as typeof budgetsData
+  }
 
   // --- Tasks aggregation ---
   const completionByPriority: Record<string, { total: number; completed: number }> = {}
@@ -248,6 +278,75 @@ export async function aggregateUserData(userId: string, modules?: InsightModule[
     }
   }
 
+
+  if (selected.includes('goals') && goalsData.length > 0) {
+    const activeGoals = goalsData
+      .filter((g) => g.status === 'active')
+      .map((g) => {
+        const taskCount = g._count.tasks
+        const completedTaskCount = g.tasks.filter((t) => t.status === 'completed').length
+        const progressPct = taskCount > 0 ? Math.round((completedTaskCount / taskCount) * 100) : 0
+        const isOverdue = g.targetDate ? new Date(g.targetDate) < now && g.status === 'active' : false
+        return {
+          title: g.title,
+          category: g.category,
+          taskCount,
+          completedTaskCount,
+          progressPct,
+          targetDate: g.targetDate?.toISOString().split('T')[0] ?? null,
+          isOverdue,
+        }
+      })
+
+    result.goals = {
+      activeGoals,
+      totalGoals: goalsData.length,
+      completedGoals: goalsData.filter((g) => g.status === 'completed').length,
+    }
+  }
+
+  if (selected.includes('budgets') && budgetsData.length > 0) {
+    // Calculate spend for each budget in current period
+    const budgetResults = await Promise.all(
+      budgetsData.map(async (b) => {
+        const periodStart = b.period === 'monthly'
+          ? new Date(now.getFullYear(), now.getMonth(), 1)
+          : b.period === 'quarterly'
+          ? new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1)
+          : b.period === 'yearly'
+          ? new Date(now.getFullYear(), 0, 1)
+          : thirtyDaysAgo
+
+        const spentResult = await prisma.expense.aggregate({
+          where: { userId, categoryId: b.categoryId, date: { gte: periodStart, lte: now } },
+          _sum: { amount: true },
+        })
+
+        const spent = Number(spentResult._sum.amount ?? 0)
+        const amount = Number(b.amount)
+        const percentage = amount > 0 ? Math.round((spent / amount) * 100) : 0
+
+        return {
+          name: b.name,
+          type: b.type,
+          category: b.category.name,
+          amount,
+          spent: Math.round(spent),
+          percentage,
+          period: b.period,
+          status: b.type === 'limit'
+            ? (spent > amount ? 'OVER BUDGET' : spent > amount * 0.75 ? 'WARNING' : 'ON TRACK')
+            : (spent >= amount ? 'COMPLETED' : 'IN PROGRESS'),
+        }
+      })
+    )
+
+    result.budgets = {
+      activeBudgets: budgetResults,
+      totalOverBudget: budgetResults.filter((b) => b.status === 'OVER BUDGET').length,
+      totalOnTrack: budgetResults.filter((b) => b.status === 'ON TRACK' || b.status === 'IN PROGRESS').length,
+    }
+  }
 
   return result
 }
