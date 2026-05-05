@@ -5,24 +5,25 @@ import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { SearchableSelect } from '@/components/ui/searchable-select'
 import { useExpenseCategories } from '@/hooks/use-expense-categories'
-import type { CreateBudgetRequest, BudgetType, BudgetPeriod } from '@/lib/types/budgets'
+import type { CreateBudgetRequest, BudgetResponse, BudgetType, BudgetPeriod } from '@/lib/types/budgets'
 
 interface BudgetFormProps {
+  budget?: BudgetResponse
   onSubmit: (data: CreateBudgetRequest) => void
   onCancel: () => void
   isPending?: boolean
 }
 
-export function BudgetForm({ onSubmit, onCancel, isPending }: BudgetFormProps): React.ReactElement {
+export function BudgetForm({ budget, onSubmit, onCancel, isPending }: BudgetFormProps): React.ReactElement {
   const { data: categories } = useExpenseCategories()
 
-  const [name, setName] = useState('')
-  const [type, setType] = useState<BudgetType>('limit')
-  const [categoryId, setCategoryId] = useState('')
-  const [amount, setAmount] = useState('')
-  const [period, setPeriod] = useState<BudgetPeriod>('monthly')
-  const [startDate, setStartDate] = useState('')
-  const [endDate, setEndDate] = useState('')
+  const [name, setName] = useState(budget?.name ?? '')
+  const [type, setType] = useState<BudgetType>(budget?.type ?? 'limit')
+  const [categoryId, setCategoryId] = useState(budget?.categoryId ?? '')
+  const [amount, setAmount] = useState(budget?.amount ? String(budget.amount) : '')
+  const [period, setPeriod] = useState<BudgetPeriod>(budget?.period ?? 'monthly')
+  const [startDate, setStartDate] = useState(budget?.startDate ?? '')
+  const [endDate, setEndDate] = useState(budget?.endDate ?? '')
 
   useEffect(() => {
     if (!categoryId && categories?.length) {
@@ -180,7 +181,7 @@ export function BudgetForm({ onSubmit, onCancel, isPending }: BudgetFormProps): 
           disabled={isPending || !name || !amount || !categoryId}
           className="border-2 border-retro-dark bg-retro-blue px-4 py-2 font-mono text-sm font-bold text-white shadow-hard hover-shadow-grow disabled:opacity-50"
         >
-          {isPending ? 'Saving...' : 'Add Budget'}
+          {isPending ? 'Saving...' : budget ? 'Update Budget' : 'Add Budget'}
         </button>
       </div>
     </form>

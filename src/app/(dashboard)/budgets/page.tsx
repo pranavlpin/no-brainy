@@ -5,26 +5,40 @@ import { Plus, Sparkles, Loader2, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { BudgetCard } from '@/components/expenses/budget-card'
 import { BudgetForm } from '@/components/expenses/budget-form'
-import { useBudgets, useCreateBudget, useDeleteBudget } from '@/hooks/use-budgets'
+import { useBudgets, useCreateBudget, useUpdateBudget, useDeleteBudget } from '@/hooks/use-budgets'
 import { useAI } from '@/hooks/use-ai'
 import { apiClient } from '@/lib/api-client'
-import type { CreateBudgetRequest } from '@/lib/types/budgets'
+import type { CreateBudgetRequest, BudgetResponse } from '@/lib/types/budgets'
 
 export default function BudgetsPage(): React.ReactElement {
   const [showForm, setShowForm] = useState(false)
+  const [editingBudget, setEditingBudget] = useState<BudgetResponse | null>(null)
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null)
   const [aiLoading, setAiLoading] = useState(false)
   const [aiError, setAiError] = useState<string | null>(null)
 
   const { data: budgets, isLoading } = useBudgets()
   const createBudget = useCreateBudget()
+  const updateBudget = useUpdateBudget()
   const deleteBudget = useDeleteBudget()
   const { isEnabled: aiEnabled } = useAI()
 
   const handleCreate = (data: CreateBudgetRequest): void => {
-    createBudget.mutate(data, {
-      onSuccess: () => setShowForm(false),
-    })
+    if (editingBudget) {
+      updateBudget.mutate(
+        { id: editingBudget.id, data },
+        { onSuccess: () => { setEditingBudget(null); setShowForm(false) } }
+      )
+    } else {
+      createBudget.mutate(data, {
+        onSuccess: () => setShowForm(false),
+      })
+    }
+  }
+
+  const handleEdit = (budget: BudgetResponse): void => {
+    setEditingBudget(budget)
+    setShowForm(true)
   }
 
   const handleDelete = (id: string): void => {
@@ -117,12 +131,13 @@ export default function BudgetsPage(): React.ReactElement {
         </div>
       )}
 
-      {/* Create form */}
+      {/* Create/Edit form */}
       {showForm && (
         <BudgetForm
+          budget={editingBudget ?? undefined}
           onSubmit={handleCreate}
-          onCancel={() => setShowForm(false)}
-          isPending={createBudget.isPending}
+          onCancel={() => { setShowForm(false); setEditingBudget(null) }}
+          isPending={editingBudget ? updateBudget.isPending : createBudget.isPending}
         />
       )}
 
@@ -135,7 +150,7 @@ export default function BudgetsPage(): React.ReactElement {
             <BudgetCard
               key={budget.id}
               budget={budget}
-              onEdit={() => {}}
+              onEdit={handleEdit}
               onDelete={() => handleDelete(budget.id)}
             />
           ))}

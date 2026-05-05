@@ -2,6 +2,7 @@
 
 import { Pencil, Trash2, CheckCircle2 } from 'lucide-react'
 import { formatINR } from '@/lib/expenses/formatters'
+import { ICON_MAP } from './category-badge'
 import type { BudgetResponse } from '@/lib/types/budgets'
 
 interface BudgetCardProps {
@@ -51,7 +52,14 @@ export function BudgetCard({ budget, onEdit, onDelete }: BudgetCardProps): React
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-2">
-          <span className="text-lg">{budget.categoryIcon}</span>
+          {(() => {
+            const IconComp = ICON_MAP[budget.categoryIcon] || ICON_MAP['tag']
+            return IconComp ? (
+              <span className="flex h-8 w-8 items-center justify-center rounded-full" style={{ backgroundColor: `${budget.categoryColor}20`, color: budget.categoryColor }}>
+                <IconComp className="h-4 w-4" />
+              </span>
+            ) : null
+          })()}
           <div>
             <h3 className="font-mono text-sm font-bold text-retro-dark">{budget.name}</h3>
             <p className="text-xs text-retro-dark/50">{budget.categoryName}</p>
