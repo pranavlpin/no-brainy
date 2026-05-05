@@ -10,24 +10,28 @@ function getPeriodDateRange(period: BudgetPeriod, startDate: Date | null, endDat
 
   switch (period) {
     case 'monthly': {
-      const start = new Date(now.getFullYear(), now.getMonth(), 1)
-      const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999)
+      const start = new Date(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`)
+      const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
+      const end = new Date(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`)
       return { start, end }
     }
     case 'quarterly': {
       const quarter = Math.floor(now.getMonth() / 3)
-      const start = new Date(now.getFullYear(), quarter * 3, 1)
-      const end = new Date(now.getFullYear(), quarter * 3 + 3, 0, 23, 59, 59, 999)
+      const startMonth = quarter * 3
+      const endMonth = startMonth + 2
+      const start = new Date(`${now.getFullYear()}-${String(startMonth + 1).padStart(2, '0')}-01`)
+      const lastDay = new Date(now.getFullYear(), endMonth + 1, 0).getDate()
+      const end = new Date(`${now.getFullYear()}-${String(endMonth + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`)
       return { start, end }
     }
     case 'yearly': {
-      const start = new Date(now.getFullYear(), 0, 1)
-      const end = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999)
+      const start = new Date(`${now.getFullYear()}-01-01`)
+      const end = new Date(`${now.getFullYear()}-12-31`)
       return { start, end }
     }
     case 'total': {
-      const start = startDate ?? new Date(2000, 0, 1)
-      const end = endDate ?? new Date(2100, 11, 31, 23, 59, 59, 999)
+      const start = startDate ?? new Date('2000-01-01')
+      const end = endDate ?? new Date('2100-12-31')
       return { start, end }
     }
   }

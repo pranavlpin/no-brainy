@@ -7,6 +7,13 @@ export interface GoalResponse {
   description: string
   category: string | null
   targetDate: string | null
+  startDate?: string | null
+  expenseCategoryId?: string | null
+  expenseCategoryName?: string | null
+  expenseTag?: string | null
+  targetAmount?: number | null
+  currentAmount?: number | null
+  financialProgress?: number | null
   status: GoalStatus
   createdAt: string
   updatedAt: string
@@ -19,6 +26,10 @@ export interface CreateGoalRequest {
   description?: string
   category?: string
   targetDate?: string
+  startDate?: string
+  expenseCategoryId?: string
+  expenseTag?: string
+  targetAmount?: number
   status?: GoalStatus
 }
 
@@ -27,5 +38,9 @@ export interface UpdateGoalRequest {
   description?: string
   category?: string | null
   targetDate?: string | null
+  startDate?: string | null
+  expenseCategoryId?: string | null
+  expenseTag?: string | null
+  targetAmount?: number | null
   status?: GoalStatus
 }

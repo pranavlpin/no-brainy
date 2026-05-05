@@ -1,15 +1,16 @@
 'use client'
 
-import { Target, Calendar, CheckCircle2 } from 'lucide-react'
+import { Target, Calendar, CheckCircle2, IndianRupee } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import type { GoalResponse, GoalStatus } from '@/lib/types/goals'
 
-const categoryColors: Record<string, 'green' | 'blue' | 'default' | 'orange'> = {
+const categoryColors: Record<string, 'green' | 'blue' | 'default' | 'orange' | 'yellow'> = {
   fitness: 'green',
   learning: 'blue',
   work: 'default',
   personal: 'orange',
+  financial: 'yellow',
 }
 
 const statusConfig: Record<GoalStatus, { label: string; variant: 'green' | 'blue' | 'yellow' | 'gray' }> = {
@@ -26,15 +27,30 @@ function getProgressColor(pct: number): string {
   return 'bg-gray-400'
 }
 
+function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount)
+}
+
 interface GoalCardProps {
   goal: GoalResponse
   onClick: () => void
 }
 
 export function GoalCard({ goal, onClick }: GoalCardProps) {
+  const isFinancial = goal.category === 'financial' && goal.targetAmount
+
   const totalTasks = goal.taskCount ?? 0
   const completedTasks = goal.completedTaskCount ?? 0
-  const progressPct = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
+  const progressPct = isFinancial
+    ? (goal.financialProgress ?? 0)
+    : totalTasks > 0
+      ? Math.round((completedTasks / totalTasks) * 100)
+      : 0
 
   const isOverdue =
     goal.targetDate &&
@@ -68,10 +84,20 @@ export function GoalCard({ goal, onClick }: GoalCardProps) {
       </div>
 
       {categoryVariant && goal.category && (
-        <div className="mt-2">
+        <div className="mt-2 flex items-center gap-2">
           <Badge variant={categoryVariant} className="text-xs">
             {goal.category}
           </Badge>
+          {isFinancial && goal.expenseCategoryName && (
+            <span className="text-xs text-muted-foreground">
+              {goal.expenseCategoryName}
+            </span>
+          )}
+          {isFinancial && goal.expenseTag && !goal.expenseCategoryName && (
+            <span className="text-xs text-muted-foreground">
+              #{goal.expenseTag}
+            </span>
+          )}
         </div>
       )}
 
@@ -84,7 +110,7 @@ export function GoalCard({ goal, onClick }: GoalCardProps) {
         <div className="h-2 w-full rounded-full bg-gray-100 dark:bg-gray-800">
           <div
             className={cn('h-full rounded-full transition-all', getProgressColor(progressPct))}
-            style={{ width: `${progressPct}%` }}
+            style={{ width: `${Math.min(progressPct, 100)}%` }}
           />
         </div>
       </div>
@@ -92,19 +118,31 @@ export function GoalCard({ goal, onClick }: GoalCardProps) {
       {/* Footer */}
       <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
         <div className="flex items-center gap-3">
-          {totalTasks > 0 && (
+          {isFinancial ? (
             <span className="flex items-center gap-1">
-              <CheckCircle2 className="h-3.5 w-3.5" />
-              {completedTasks}/{totalTasks} tasks
+              <IndianRupee className="h-3.5 w-3.5" />
+              {formatCurrency(goal.currentAmount ?? 0)} / {formatCurrency(goal.targetAmount!)}
             </span>
+          ) : (
+            totalTasks > 0 && (
+              <span className="flex items-center gap-1">
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                {completedTasks}/{totalTasks} tasks
+              </span>
+            )
           )}
         </div>
-        {goal.targetDate && (
+        {isFinancial && goal.startDate && goal.targetDate ? (
+          <span className="flex items-center gap-1">
+            <Calendar className="h-3.5 w-3.5" />
+            {new Date(goal.startDate).toLocaleDateString()} - {new Date(goal.targetDate).toLocaleDateString()}
+          </span>
+        ) : goal.targetDate ? (
           <span className={cn('flex items-center gap-1', isOverdue && 'text-red-500 font-medium')}>
             <Calendar className="h-3.5 w-3.5" />
             {isOverdue ? 'Overdue' : new Date(goal.targetDate).toLocaleDateString()}
           </span>
-        )}
+        ) : null}
       </div>
     </button>
   )

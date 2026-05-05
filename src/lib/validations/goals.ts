@@ -5,6 +5,10 @@ export const createGoalSchema = z.object({
   description: z.string().default(''),
   category: z.string().nullable().optional(),
   targetDate: z.string().nullable().optional(),
+  startDate: z.string().nullable().optional(),
+  expenseCategoryId: z.string().nullable().optional(),
+  expenseTag: z.string().nullable().optional(),
+  targetAmount: z.number().positive().nullable().optional(),
   status: z.enum(['active', 'completed', 'paused', 'abandoned']).default('active'),
 })
 

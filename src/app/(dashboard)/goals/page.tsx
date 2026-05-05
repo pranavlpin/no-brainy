@@ -12,7 +12,7 @@ import { GoalForm } from '@/components/goals/goal-form'
 import { useGoals, useCreateGoal, type GoalFilters } from '@/hooks/use-goals'
 import type { GoalStatus } from '@/lib/types/goals'
 
-const CATEGORIES = ['', 'fitness', 'learning', 'work', 'personal']
+const CATEGORIES = ['', 'fitness', 'learning', 'work', 'personal', 'financial']
 const STATUSES: Array<GoalStatus | ''> = ['', 'active', 'completed', 'paused', 'abandoned']
 
 export default function GoalsPage(): React.ReactElement {

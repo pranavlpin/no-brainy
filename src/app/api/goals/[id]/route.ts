@@ -3,11 +3,62 @@ import { prisma } from '@/lib/prisma'
 import { withAuth } from '@/lib/auth/middleware'
 import { updateGoalSchema } from '@/lib/validations/goals'
 import { ZodError } from 'zod'
+import type { Prisma } from '@prisma/client'
 
 function extractId(url: string): string {
   const segments = new URL(url).pathname.split('/')
   // /api/goals/[id] => segments = ['', 'api', 'goals', '<id>']
   return segments[segments.length - 1]
+}
+
+async function computeFinancialProgress(
+  goal: {
+    id: string
+    userId: string
+    category: string | null
+    targetAmount: Prisma.Decimal | null
+    startDate: Date | null
+    targetDate: Date | null
+    expenseCategoryId: string | null
+    expenseTag: string | null
+  }
+): Promise<{ currentAmount: number | null; financialProgress: number | null }> {
+  if (goal.category !== 'financial' || !goal.targetAmount) {
+    return { currentAmount: null, financialProgress: null }
+  }
+
+  const where: Prisma.ExpenseWhereInput = { userId: goal.userId }
+  const conditions: Prisma.ExpenseWhereInput[] = []
+
+  if (goal.expenseCategoryId) {
+    conditions.push({ categoryId: goal.expenseCategoryId })
+  }
+  if (goal.expenseTag) {
+    conditions.push({ tags: { has: goal.expenseTag } })
+  }
+
+  if (conditions.length > 0) {
+    where.OR = conditions
+  } else {
+    return { currentAmount: 0, financialProgress: 0 }
+  }
+
+  if (goal.startDate || goal.targetDate) {
+    where.date = {}
+    if (goal.startDate) where.date.gte = goal.startDate
+    if (goal.targetDate) where.date.lte = goal.targetDate
+  }
+
+  const result = await prisma.expense.aggregate({
+    where,
+    _sum: { amount: true },
+  })
+
+  const currentAmount = result._sum.amount ? Number(result._sum.amount) : 0
+  const target = Number(goal.targetAmount)
+  const financialProgress = target > 0 ? Math.round((currentAmount / target) * 100) : 0
+
+  return { currentAmount, financialProgress }
 }
 
 export const GET = withAuth(async (req: NextRequest, user) => {
@@ -18,6 +69,7 @@ export const GET = withAuth(async (req: NextRequest, user) => {
       where: { id, userId: user.id },
       include: {
         tasks: { select: { id: true, status: true } },
+        expenseCategory: { select: { name: true } },
       },
     })
 
@@ -36,6 +88,8 @@ export const GET = withAuth(async (req: NextRequest, user) => {
       (t) => t.status === 'completed'
     ).length
 
+    const { currentAmount, financialProgress } = await computeFinancialProgress(goal)
+
     return NextResponse.json({
       success: true,
       data: {
@@ -45,6 +99,13 @@ export const GET = withAuth(async (req: NextRequest, user) => {
         description: goal.description,
         category: goal.category,
         targetDate: goal.targetDate?.toISOString() ?? null,
+        startDate: goal.startDate?.toISOString() ?? null,
+        expenseCategoryId: goal.expenseCategoryId ?? null,
+        expenseCategoryName: goal.expenseCategory?.name ?? null,
+        expenseTag: goal.expenseTag ?? null,
+        targetAmount: goal.targetAmount ? Number(goal.targetAmount) : null,
+        currentAmount,
+        financialProgress,
         status: goal.status,
         createdAt: goal.createdAt.toISOString(),
         updatedAt: goal.updatedAt.toISOString(),
@@ -91,6 +152,18 @@ export const PATCH = withAuth(async (req: NextRequest, user) => {
     if (data.targetDate !== undefined) {
       updateData.targetDate = data.targetDate ? new Date(data.targetDate) : null
     }
+    if (data.startDate !== undefined) {
+      updateData.startDate = data.startDate ? new Date(data.startDate) : null
+    }
+    if (data.expenseCategoryId !== undefined) {
+      updateData.expenseCategoryId = data.expenseCategoryId ?? null
+    }
+    if (data.expenseTag !== undefined) {
+      updateData.expenseTag = data.expenseTag ?? null
+    }
+    if (data.targetAmount !== undefined) {
+      updateData.targetAmount = data.targetAmount ?? null
+    }
 
     const goal = await prisma.goal.update({
       where: { id },
@@ -106,6 +179,10 @@ export const PATCH = withAuth(async (req: NextRequest, user) => {
         description: goal.description,
         category: goal.category,
         targetDate: goal.targetDate?.toISOString() ?? null,
+        startDate: goal.startDate?.toISOString() ?? null,
+        expenseCategoryId: goal.expenseCategoryId ?? null,
+        expenseTag: goal.expenseTag ?? null,
+        targetAmount: goal.targetAmount ? Number(goal.targetAmount) : null,
         status: goal.status,
         createdAt: goal.createdAt.toISOString(),
         updatedAt: goal.updatedAt.toISOString(),
