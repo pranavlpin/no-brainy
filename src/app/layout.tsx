@@ -45,31 +45,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: `
-          (function() {
-            // Dark mode
-            var dm = localStorage.getItem('nobrainy-dark-mode');
-            if (dm === 'dark' || (dm !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-              document.documentElement.classList.add('dark');
-            }
-            // Theme
-            var t = localStorage.getItem('nobrainy-theme');
-            if (t === 'custom') {
-              var customs = JSON.parse(localStorage.getItem('nobrainy-custom-themes') || '[]');
-              var activeId = localStorage.getItem('nobrainy-active-custom-theme');
-              var active = customs.find(function(c) { return c.id === activeId; });
-              if (active && active.colors) {
-                Object.keys(active.colors).forEach(function(k) {
-                  document.documentElement.style.setProperty(k, active.colors[k]);
-                });
-              }
-            } else if (t && t !== 'retro') {
-              document.documentElement.classList.add('theme-' + t);
-            }
-          })()
-        `}} />
         {GA_ID && (
           <>
             <Script
@@ -87,7 +64,30 @@ export default function RootLayout({
           </>
         )}
       </head>
-      <body className={inter.className}>
+      <body className={inter.className} suppressHydrationWarning>
+        <script dangerouslySetInnerHTML={{ __html: `
+          (function() {
+            try {
+              var dm = localStorage.getItem('nobrainy-dark-mode');
+              if (dm === 'dark' || (dm !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+              }
+              var t = localStorage.getItem('nobrainy-theme');
+              if (t === 'custom') {
+                var customs = JSON.parse(localStorage.getItem('nobrainy-custom-themes') || '[]');
+                var activeId = localStorage.getItem('nobrainy-active-custom-theme');
+                var active = customs.find(function(c) { return c.id === activeId; });
+                if (active && active.colors) {
+                  Object.keys(active.colors).forEach(function(k) {
+                    document.documentElement.style.setProperty(k, active.colors[k]);
+                  });
+                }
+              } else if (t && t !== 'retro') {
+                document.documentElement.classList.add('theme-' + t);
+              }
+            } catch(e) {}
+          })()
+        `}} />
         <Providers>{children}</Providers>
       </body>
     </html>

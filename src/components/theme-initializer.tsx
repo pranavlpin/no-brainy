@@ -2,11 +2,22 @@
 
 import { useEffect } from 'react'
 import { useThemeStore, THEMES } from '@/stores/theme-store'
+import { useDarkModeStore } from '@/stores/dark-mode-store'
 
 export function ThemeInitializer(): null {
   const theme = useThemeStore((s) => s.theme)
   const customThemes = useThemeStore((s) => s.customThemes)
   const activeCustomThemeId = useThemeStore((s) => s.activeCustomThemeId)
+  const isDark = useDarkModeStore((s) => s.isDark)
+
+  // Sync dark mode class
+  useEffect(() => {
+    if (isDark) {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+  }, [isDark])
 
   useEffect(() => {
     const html = document.documentElement
@@ -22,7 +33,7 @@ export function ThemeInitializer(): null {
         })
       }
     } else {
-      // Clear custom vars
+      // Clear all custom inline vars
       const varsToRemove = [
         '--retro-blue',
         '--retro-pink',
@@ -31,6 +42,9 @@ export function ThemeInitializer(): null {
         '--retro-orange',
         '--retro-dark',
         '--retro-cream',
+        '--sidebar-bg',
+        '--sidebar-fg',
+        '--page-bg-subtle',
       ]
       varsToRemove.forEach((v) => html.style.removeProperty(v))
       // Apply preset
