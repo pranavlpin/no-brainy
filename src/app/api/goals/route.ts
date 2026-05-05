@@ -145,6 +145,7 @@ export const GET = withAuth(async (req: NextRequest, user) => {
       )
     }
 
+    console.error('Goals GET error:', error)
     return NextResponse.json(
       {
         success: false,
