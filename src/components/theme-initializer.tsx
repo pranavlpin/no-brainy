@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useThemeStore, THEMES } from '@/stores/theme-store'
+import { useThemeStore, THEMES, ALL_THEME_VARS } from '@/stores/theme-store'
 import { useDarkModeStore } from '@/stores/dark-mode-store'
 
 export function ThemeInitializer(): null {
@@ -34,19 +34,7 @@ export function ThemeInitializer(): null {
       }
     } else {
       // Clear all custom inline vars
-      const varsToRemove = [
-        '--retro-blue',
-        '--retro-pink',
-        '--retro-yellow',
-        '--retro-mint',
-        '--retro-orange',
-        '--retro-dark',
-        '--retro-cream',
-        '--sidebar-bg',
-        '--sidebar-fg',
-        '--page-bg-subtle',
-      ]
-      varsToRemove.forEach((v) => html.style.removeProperty(v))
+      ALL_THEME_VARS.forEach((v) => html.style.removeProperty(v))
       // Apply preset
       THEMES.forEach((t) => html.classList.remove(`theme-${t}`))
       if (theme !== 'retro') {

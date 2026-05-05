@@ -10,19 +10,21 @@ import { ThemePreview } from '@/components/settings/theme-preview'
 import { useThemeStore, THEMES, type ThemeName } from '@/stores/theme-store'
 
 const COLOR_KEYS = [
+  { key: '--background', label: 'Background', description: 'Main page and card background' },
+  { key: '--page-bg-subtle', label: 'Content Area', description: 'Content area tint behind cards' },
+  { key: '--sidebar-bg', label: 'Sidebar', description: 'Sidebar background color' },
   { key: '--retro-blue', label: 'Blue', description: 'Primary actions, buttons, links' },
   { key: '--retro-pink', label: 'Pink', description: 'Badges, highlights, accents' },
   { key: '--retro-yellow', label: 'Yellow', description: 'Decorative bars, star ratings' },
   { key: '--retro-mint', label: 'Mint', description: 'Success states, progress fills' },
   { key: '--retro-orange', label: 'Orange', description: 'Warnings, alerts, due dates' },
   { key: '--retro-dark', label: 'Dark', description: 'Text, borders, card outlines' },
-  { key: '--retro-cream', label: 'Cream', description: 'Background tint, subtle fills' },
-  { key: '--sidebar-bg', label: 'Sidebar', description: 'Sidebar background color' },
-  { key: '--page-bg-subtle', label: 'Page Background', description: 'Main content area background' },
+  { key: '--retro-cream', label: 'Cream', description: 'Subtle fills and accents' },
 ] as const
 
 const PRESET_DEFAULTS: Record<ThemeName, Record<string, string>> = {
   retro: {
+    '--background': '0 0% 100%',
     '--retro-blue': '233 100% 59%',
     '--retro-pink': '336 100% 58%',
     '--retro-yellow': '52 100% 50%',
@@ -34,6 +36,7 @@ const PRESET_DEFAULTS: Record<ThemeName, Record<string, string>> = {
     '--page-bg-subtle': '44 100% 95%',
   },
   ocean: {
+    '--background': '200 20% 98%',
     '--retro-blue': '220 90% 50%',
     '--retro-pink': '195 100% 45%',
     '--retro-yellow': '45 90% 55%',
@@ -45,6 +48,7 @@ const PRESET_DEFAULTS: Record<ThemeName, Record<string, string>> = {
     '--page-bg-subtle': '200 30% 96%',
   },
   forest: {
+    '--background': '120 15% 98%',
     '--retro-blue': '150 60% 35%',
     '--retro-pink': '340 60% 55%',
     '--retro-yellow': '45 85% 50%',
@@ -56,6 +60,7 @@ const PRESET_DEFAULTS: Record<ThemeName, Record<string, string>> = {
     '--page-bg-subtle': '80 25% 96%',
   },
   sunset: {
+    '--background': '30 30% 98%',
     '--retro-blue': '270 70% 55%',
     '--retro-pink': '340 85% 55%',
     '--retro-yellow': '35 100% 55%',
@@ -71,6 +76,7 @@ const PRESET_DEFAULTS: Record<ThemeName, Record<string, string>> = {
 function generateHarmoniousPalette(): Record<string, string> {
   const baseHue = Math.floor(Math.random() * 360)
   return {
+    '--background': `${(baseHue + 40) % 360} 15% 99%`,
     '--retro-blue': `${baseHue} 80% 55%`,
     '--retro-pink': `${(baseHue + 150) % 360} 75% 55%`,
     '--retro-yellow': `${(baseHue + 60) % 360} 85% 55%`,

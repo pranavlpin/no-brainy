@@ -51,22 +51,31 @@ function loadTheme(): ThemeName | 'custom' {
   return 'retro'
 }
 
+export const ALL_THEME_VARS = [
+  '--background',
+  '--card',
+  '--popover',
+  '--secondary',
+  '--muted',
+  '--accent',
+  '--border',
+  '--input',
+  '--retro-blue',
+  '--retro-pink',
+  '--retro-yellow',
+  '--retro-mint',
+  '--retro-orange',
+  '--retro-dark',
+  '--retro-cream',
+  '--sidebar-bg',
+  '--sidebar-fg',
+  '--page-bg-subtle',
+]
+
 function clearCustomCssVars(): void {
   if (typeof document === 'undefined') return
   const style = document.documentElement.style
-  const varsToRemove = [
-    '--retro-blue',
-    '--retro-pink',
-    '--retro-yellow',
-    '--retro-mint',
-    '--retro-orange',
-    '--retro-dark',
-    '--retro-cream',
-    '--sidebar-bg',
-    '--sidebar-fg',
-    '--page-bg-subtle',
-  ]
-  varsToRemove.forEach((v) => style.removeProperty(v))
+  ALL_THEME_VARS.forEach((v) => style.removeProperty(v))
 }
 
 function applyPresetTheme(theme: ThemeName): void {

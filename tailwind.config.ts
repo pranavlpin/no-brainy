@@ -63,7 +63,7 @@ const config: Config = {
           fg: "hsl(var(--sidebar-fg))",
         },
         page: {
-          bg: "hsl(var(--page-bg))",
+          bg: "hsl(var(--background))",
           "bg-subtle": "hsl(var(--page-bg-subtle))",
         },
       },

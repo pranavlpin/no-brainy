@@ -38,7 +38,6 @@
     /* Layout colors */
     --sidebar-bg: 220 15% 18%;
     --sidebar-fg: 210 40% 90%;
-    --page-bg: 0 0% 100%;
     --page-bg-subtle: 44 100% 95%;
   }
 
@@ -62,7 +61,6 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 224.3 76.3% 48%;
-    --page-bg: 222.2 84% 4.9%;
     --page-bg-subtle: 220 20% 8%;
   }
 
@@ -112,6 +110,14 @@
 
   /* Dark mode variants */
   .dark.theme-ocean {
+    --background: 210 30% 7%;
+    --card: 210 30% 7%;
+    --popover: 210 30% 7%;
+    --secondary: 210 25% 15%;
+    --muted: 210 25% 15%;
+    --accent: 210 25% 15%;
+    --border: 210 25% 15%;
+    --input: 210 25% 15%;
     --retro-pink: 195 80% 55%;
     --retro-yellow: 45 80% 60%;
     --retro-blue: 210 85% 60%;
@@ -119,11 +125,19 @@
     --retro-orange: 200 70% 60%;
     --retro-dark: 210 25% 85%;
     --retro-cream: 200 20% 12%;
-    --sidebar-bg: 215 30% 14%;
-    --page-bg-subtle: 210 25% 8%;
+    --sidebar-bg: 215 30% 12%;
+    --page-bg-subtle: 210 25% 9%;
   }
 
   .dark.theme-forest {
+    --background: 140 20% 7%;
+    --card: 140 20% 7%;
+    --popover: 140 20% 7%;
+    --secondary: 140 15% 14%;
+    --muted: 140 15% 14%;
+    --accent: 140 15% 14%;
+    --border: 140 15% 14%;
+    --input: 140 15% 14%;
     --retro-pink: 340 50% 60%;
     --retro-yellow: 45 75% 60%;
     --retro-blue: 150 50% 50%;
@@ -131,11 +145,19 @@
     --retro-orange: 25 70% 55%;
     --retro-dark: 150 15% 85%;
     --retro-cream: 120 15% 10%;
-    --sidebar-bg: 150 20% 13%;
-    --page-bg-subtle: 140 15% 8%;
+    --sidebar-bg: 150 20% 11%;
+    --page-bg-subtle: 140 15% 9%;
   }
 
   .dark.theme-sunset {
+    --background: 270 20% 7%;
+    --card: 270 20% 7%;
+    --popover: 270 20% 7%;
+    --secondary: 270 15% 14%;
+    --muted: 270 15% 14%;
+    --accent: 270 15% 14%;
+    --border: 270 15% 14%;
+    --input: 270 15% 14%;
     --retro-pink: 340 75% 60%;
     --retro-yellow: 35 90% 60%;
     --retro-blue: 270 60% 60%;
@@ -143,8 +165,8 @@
     --retro-orange: 25 85% 60%;
     --retro-dark: 270 15% 85%;
     --retro-cream: 20 20% 10%;
-    --sidebar-bg: 270 20% 14%;
-    --page-bg-subtle: 260 15% 8%;
+    --sidebar-bg: 270 20% 11%;
+    --page-bg-subtle: 260 15% 9%;
   }
 }
 

@@ -16,7 +16,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-page-bg">
+    <div className="flex h-screen overflow-hidden bg-background">
       <Sidebar />
       <div
         className={cn(
@@ -26,7 +26,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         )}
       >
         <TopBar />
-        <main className="flex-1 overflow-y-auto bg-gradient-to-br from-page-bg-subtle to-page-bg bg-dot-pattern p-6">{children}</main>
+        <main className="flex-1 overflow-y-auto bg-gradient-to-br from-page-bg-subtle to-background bg-dot-pattern p-6">{children}</main>
       </div>
       <QuickCaptureProvider />
       <Toast />
