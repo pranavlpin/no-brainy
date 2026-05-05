@@ -45,10 +45,11 @@ const NAV_ITEMS_MAP: Record<string, NavItem> = {
 export { NAV_ITEMS_MAP }
 
 export function Sidebar() {
-  const { sidebarCollapsed, toggleSidebar, mobileSidebarOpen, setMobileSidebarOpen, navOrder } =
+  const { sidebarCollapsed, toggleSidebar, mobileSidebarOpen, setMobileSidebarOpen, navOrder, hiddenNavItems } =
     useUIStore()
 
   const navItems = navOrder
+    .filter((href) => !hiddenNavItems.includes(href))
     .map((href) => NAV_ITEMS_MAP[href])
     .filter(Boolean) as NavItem[]
 

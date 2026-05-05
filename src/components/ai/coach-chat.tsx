@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { Sparkles } from 'lucide-react'
 import { ChatMessage } from './chat-message'
-import { ChatInput } from './chat-input'
+import { ChatInput, type ContextAttachment } from './chat-input'
 import { streamAIResponse } from '@/lib/ai/stream-client'
 import type { CoachMessage } from '@/lib/ai/types'
 
@@ -34,7 +34,7 @@ export function CoachChat() {
   }, [messages])
 
   const sendMessage = useCallback(
-    async (content: string) => {
+    async (content: string, context?: ContextAttachment) => {
       if (!content.trim() || isStreaming) return
 
       const userMsg: MessageWithMeta = {
@@ -61,6 +61,7 @@ export function CoachChat() {
 
         for await (const chunk of streamAIResponse('/api/ai/coach', {
           messages: chatMessages,
+          ...(context ? { context } : {}),
         })) {
           accumulated += chunk
           setMessages((prev) => {
@@ -101,8 +102,8 @@ export function CoachChat() {
     [messages, isStreaming]
   )
 
-  const handleSend = useCallback(() => {
-    sendMessage(input)
+  const handleSend = useCallback((context?: ContextAttachment) => {
+    sendMessage(input, context)
   }, [input, sendMessage])
 
   const handleSuggestion = useCallback(

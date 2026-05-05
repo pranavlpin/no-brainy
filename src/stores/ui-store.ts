@@ -35,6 +35,9 @@ interface UIState {
   navOrder: string[]
   setNavOrder: (order: string[]) => void
   resetNavOrder: () => void
+  hiddenNavItems: string[]
+  setHiddenNavItems: (items: string[]) => void
+  toggleNavItem: (href: string) => void
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -57,7 +60,26 @@ export const useUIStore = create<UIState>((set) => ({
   resetNavOrder: () => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('nobrainy-nav-order')
+      localStorage.removeItem('nobrainy-hidden-nav')
     }
-    set({ navOrder: DEFAULT_NAV_ORDER })
+    set({ navOrder: DEFAULT_NAV_ORDER, hiddenNavItems: [] })
   },
+  hiddenNavItems: typeof window !== 'undefined'
+    ? JSON.parse(localStorage.getItem('nobrainy-hidden-nav') || '[]')
+    : [],
+  setHiddenNavItems: (items) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('nobrainy-hidden-nav', JSON.stringify(items))
+    }
+    set({ hiddenNavItems: items })
+  },
+  toggleNavItem: (href) => set((s) => {
+    const hidden = s.hiddenNavItems.includes(href)
+      ? s.hiddenNavItems.filter((h) => h !== href)
+      : [...s.hiddenNavItems, href]
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('nobrainy-hidden-nav', JSON.stringify(hidden))
+    }
+    return { hiddenNavItems: hidden }
+  }),
 }))

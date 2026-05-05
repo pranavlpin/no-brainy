@@ -1,13 +1,13 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { GripVertical, RotateCcw } from 'lucide-react'
+import { GripVertical, RotateCcw, Eye, EyeOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useUIStore, DEFAULT_NAV_ORDER } from '@/stores/ui-store'
 import { NAV_ITEMS_MAP } from '@/components/layout/sidebar'
 
 export function SidebarOrderSettings(): React.ReactElement {
-  const { navOrder, setNavOrder, resetNavOrder } = useUIStore()
+  const { navOrder, setNavOrder, resetNavOrder, hiddenNavItems, toggleNavItem } = useUIStore()
   const [draggedIdx, setDraggedIdx] = useState<number | null>(null)
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null)
 
@@ -88,9 +88,16 @@ export function SidebarOrderSettings(): React.ReactElement {
               }`}
             >
               <GripVertical className="h-4 w-4 text-retro-dark/30 shrink-0" />
-              <Icon className="h-4 w-4 text-retro-dark/50 shrink-0" />
-              <span className="font-mono text-sm text-retro-dark flex-1">{item.label}</span>
-              <div className="flex gap-1">
+              <Icon className={`h-4 w-4 shrink-0 ${hiddenNavItems.includes(href) ? 'text-retro-dark/20' : 'text-retro-dark/50'}`} />
+              <span className={`font-mono text-sm flex-1 ${hiddenNavItems.includes(href) ? 'text-retro-dark/30 line-through' : 'text-retro-dark'}`}>{item.label}</span>
+              <div className="flex gap-1 items-center">
+                <button
+                  onClick={() => toggleNavItem(href)}
+                  className={`p-1 ${hiddenNavItems.includes(href) ? 'text-retro-dark/20 hover:text-retro-dark/50' : 'text-retro-dark/40 hover:text-retro-dark'}`}
+                  title={hiddenNavItems.includes(href) ? 'Show in sidebar' : 'Hide from sidebar'}
+                >
+                  {hiddenNavItems.includes(href) ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                </button>
                 <button
                   onClick={() => moveItem(idx, idx - 1)}
                   disabled={idx === 0}

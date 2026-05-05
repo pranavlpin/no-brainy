@@ -4,6 +4,7 @@ import { getUserApiKey } from '@/lib/ai/get-api-key'
 import { createOpenAIClient } from '@/lib/ai/openai-client'
 import { coachPrompt } from '@/lib/ai/prompts/coach'
 import { prisma } from '@/lib/prisma'
+import { aggregateUserData, type InsightModule } from '@/lib/ai/insights/aggregate-user-data'
 import type { CoachMessage } from '@/lib/ai/types'
 
 export async function POST(req: NextRequest) {
@@ -31,8 +32,11 @@ export async function POST(req: NextRequest) {
   }
 
   // Parse body
-  const body = await req.json() as { messages: CoachMessage[]; context?: string }
-  const { messages } = body
+  const body = await req.json() as {
+    messages: CoachMessage[]
+    context?: { modules: string[]; dateFrom: string; dateTo: string }
+  }
+  const { messages, context } = body
 
   if (!Array.isArray(messages) || messages.length === 0) {
     return NextResponse.json(
@@ -63,7 +67,19 @@ export async function POST(req: NextRequest) {
     }),
   ])
 
-  // 3. Build system prompt
+  // 3. Aggregate attached context data if provided
+  let contextData = ''
+  if (context && context.modules.length > 0) {
+    const aggregated = await aggregateUserData(
+      user.id,
+      context.modules as InsightModule[],
+      context.dateFrom,
+      context.dateTo
+    )
+    contextData = `\n\n--- USER DATA CONTEXT (${context.dateFrom} to ${context.dateTo}) ---\n${JSON.stringify(aggregated, null, 2)}\n--- END CONTEXT ---`
+  }
+
+  // 4. Build system prompt
   const systemPrompt =
     coachPrompt.systemPrompt({
       userName: user.name || 'there',
@@ -80,7 +96,7 @@ export async function POST(req: NextRequest) {
       })),
       habits: [],
       timezone: user.timezone || 'UTC',
-    }) + `\n\nAdditional context: User completed ${completedThisWeek} task(s) this week.`
+    }) + `\n\nAdditional context: User completed ${completedThisWeek} task(s) this week.` + contextData
 
   // 4. Create OpenAI client and stream
   const client = createOpenAIClient(apiKey)
