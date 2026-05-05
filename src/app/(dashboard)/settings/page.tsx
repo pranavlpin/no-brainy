@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Key, Eye, EyeOff, Trash2, Shield, Bell, PanelLeft } from 'lucide-react'
+import { Key, Eye, EyeOff, Trash2, Shield, Bell, PanelLeft, Palette } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Dialog } from '@/components/ui/dialog'
@@ -14,6 +14,7 @@ import {
   useUpdateNotificationPreferences,
   type NotificationPreferences,
 } from '@/hooks/use-settings'
+import { useThemeStore, THEMES, type ThemeName } from '@/stores/theme-store'
 
 function ApiKeySection() {
   const { data: status, isLoading } = useApiKeyStatus()
@@ -265,6 +266,83 @@ function NotificationPreferencesSection() {
   )
 }
 
+const THEME_COLORS: Record<ThemeName, string[]> = {
+  retro: [
+    'hsl(336 100% 58%)',
+    'hsl(52 100% 50%)',
+    'hsl(233 100% 59%)',
+    'hsl(160 100% 45%)',
+  ],
+  ocean: [
+    'hsl(195 100% 45%)',
+    'hsl(45 90% 55%)',
+    'hsl(220 90% 50%)',
+    'hsl(175 70% 45%)',
+  ],
+  forest: [
+    'hsl(340 60% 55%)',
+    'hsl(45 85% 50%)',
+    'hsl(150 60% 35%)',
+    'hsl(120 50% 45%)',
+  ],
+  sunset: [
+    'hsl(340 85% 55%)',
+    'hsl(35 100% 55%)',
+    'hsl(270 70% 55%)',
+    'hsl(15 80% 55%)',
+  ],
+}
+
+function ThemeSection() {
+  const { theme, setTheme } = useThemeStore()
+
+  return (
+    <div className="rounded-lg border border-retro-dark/15 bg-white p-6">
+      <div className="flex items-start gap-4">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-retro-blue/10">
+          <Palette className="h-5 w-5 text-retro-blue" />
+        </div>
+        <div className="flex-1">
+          <h3 className="text-lg font-semibold text-retro-dark">
+            Color Theme
+          </h3>
+          <p className="mt-1 text-sm text-retro-dark/60">
+            Choose a color palette for the app interface.
+          </p>
+
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {THEMES.map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => setTheme(t)}
+                className={`flex flex-col items-center gap-2 rounded-lg border-2 p-3 transition-all ${
+                  theme === t
+                    ? 'border-retro-blue ring-2 ring-retro-blue/30'
+                    : 'border-retro-dark/10 hover:border-retro-dark/25'
+                }`}
+              >
+                <div className="flex gap-1.5">
+                  {THEME_COLORS[t].map((color, i) => (
+                    <span
+                      key={i}
+                      className="h-5 w-5 rounded-full border border-black/10"
+                      style={{ backgroundColor: color }}
+                    />
+                  ))}
+                </div>
+                <span className="text-xs font-medium capitalize text-retro-dark">
+                  {t}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function SettingsPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-8 py-8">
@@ -289,6 +367,14 @@ export default function SettingsPage() {
           Sidebar
         </h2>
         <SidebarOrderSettings />
+      </section>
+
+      {/* Theme */}
+      <section>
+        <h2 className="font-display mb-4 text-lg font-semibold text-retro-dark">
+          Theme
+        </h2>
+        <ThemeSection />
       </section>
 
       {/* Notification Preferences */}

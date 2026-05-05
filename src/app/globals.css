@@ -57,6 +57,41 @@
     --input: 217.2 32.6% 17.5%;
     --ring: 224.3 76.3% 48%;
   }
+
+  /* Theme: Retro (default) - already defined in :root */
+
+  /* Theme: Ocean */
+  .theme-ocean {
+    --retro-pink: 195 100% 45%;
+    --retro-yellow: 45 90% 55%;
+    --retro-blue: 220 90% 50%;
+    --retro-mint: 175 70% 45%;
+    --retro-orange: 200 80% 55%;
+    --retro-dark: 220 30% 15%;
+    --retro-cream: 200 30% 95%;
+  }
+
+  /* Theme: Forest */
+  .theme-forest {
+    --retro-pink: 340 60% 55%;
+    --retro-yellow: 45 85% 50%;
+    --retro-blue: 150 60% 35%;
+    --retro-mint: 120 50% 45%;
+    --retro-orange: 25 80% 50%;
+    --retro-dark: 150 20% 12%;
+    --retro-cream: 80 30% 95%;
+  }
+
+  /* Theme: Sunset */
+  .theme-sunset {
+    --retro-pink: 340 85% 55%;
+    --retro-yellow: 35 100% 55%;
+    --retro-blue: 270 70% 55%;
+    --retro-mint: 15 80% 55%;
+    --retro-orange: 25 95% 55%;
+    --retro-dark: 270 20% 15%;
+    --retro-cream: 30 50% 95%;
+  }
 }
 
 @layer base {
@@ -71,25 +106,25 @@
 
 /* Hard shadow utilities */
 .shadow-hard {
-  box-shadow: 4px 4px 0px hsl(240 20% 13%);
+  box-shadow: 4px 4px 0px hsl(var(--retro-dark));
 }
 .shadow-hard-lg {
-  box-shadow: 8px 8px 0px hsl(240 20% 13%);
+  box-shadow: 8px 8px 0px hsl(var(--retro-dark));
 }
 .shadow-hard-pink {
-  box-shadow: 4px 4px 0px hsl(336 100% 58%);
+  box-shadow: 4px 4px 0px hsl(var(--retro-pink));
 }
 .shadow-hard-blue {
-  box-shadow: 4px 4px 0px hsl(233 100% 59%);
+  box-shadow: 4px 4px 0px hsl(var(--retro-blue));
 }
 .shadow-hard-yellow {
-  box-shadow: 4px 4px 0px hsl(52 100% 50%);
+  box-shadow: 4px 4px 0px hsl(var(--retro-yellow));
 }
 .shadow-hard-mint {
-  box-shadow: 4px 4px 0px hsl(160 100% 45%);
+  box-shadow: 4px 4px 0px hsl(var(--retro-mint));
 }
 .shadow-hard-orange {
-  box-shadow: 4px 4px 0px hsl(18 100% 60%);
+  box-shadow: 4px 4px 0px hsl(var(--retro-orange));
 }
 
 /* Hover shadow animation */
@@ -97,7 +132,7 @@
   transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 .hover-shadow-grow:hover {
-  box-shadow: 8px 8px 0px hsl(240 20% 13%);
+  box-shadow: 8px 8px 0px hsl(var(--retro-dark));
   transform: translate(-2px, -2px);
 }
 
