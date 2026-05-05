@@ -34,6 +34,12 @@
     --retro-orange: 18 100% 60%;
     --retro-dark: 240 20% 13%;
     --retro-cream: 44 100% 95%;
+
+    /* Layout colors */
+    --sidebar-bg: 220 15% 18%;
+    --sidebar-fg: 210 40% 90%;
+    --page-bg: 0 0% 100%;
+    --page-bg-subtle: 44 100% 95%;
   }
 
   .dark {
@@ -56,6 +62,8 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 224.3 76.3% 48%;
+    --page-bg: 222.2 84% 4.9%;
+    --page-bg-subtle: 220 20% 8%;
   }
 
   /* Theme: Retro (default) - already defined in :root */
@@ -69,6 +77,9 @@
     --retro-orange: 200 80% 55%;
     --retro-dark: 220 30% 15%;
     --retro-cream: 200 30% 95%;
+    --sidebar-bg: 215 35% 20%;
+    --sidebar-fg: 200 30% 92%;
+    --page-bg-subtle: 200 30% 96%;
   }
 
   /* Theme: Forest */
@@ -80,6 +91,9 @@
     --retro-orange: 25 80% 50%;
     --retro-dark: 150 20% 12%;
     --retro-cream: 80 30% 95%;
+    --sidebar-bg: 150 25% 18%;
+    --sidebar-fg: 120 20% 92%;
+    --page-bg-subtle: 80 25% 96%;
   }
 
   /* Theme: Sunset */
@@ -91,6 +105,46 @@
     --retro-orange: 25 95% 55%;
     --retro-dark: 270 20% 15%;
     --retro-cream: 30 50% 95%;
+    --sidebar-bg: 270 25% 20%;
+    --sidebar-fg: 30 30% 92%;
+    --page-bg-subtle: 30 40% 96%;
+  }
+
+  /* Dark mode variants */
+  .dark.theme-ocean {
+    --retro-pink: 195 80% 55%;
+    --retro-yellow: 45 80% 60%;
+    --retro-blue: 210 85% 60%;
+    --retro-mint: 175 60% 55%;
+    --retro-orange: 200 70% 60%;
+    --retro-dark: 210 25% 85%;
+    --retro-cream: 200 20% 12%;
+    --sidebar-bg: 215 30% 14%;
+    --page-bg-subtle: 210 25% 8%;
+  }
+
+  .dark.theme-forest {
+    --retro-pink: 340 50% 60%;
+    --retro-yellow: 45 75% 60%;
+    --retro-blue: 150 50% 50%;
+    --retro-mint: 120 40% 55%;
+    --retro-orange: 25 70% 55%;
+    --retro-dark: 150 15% 85%;
+    --retro-cream: 120 15% 10%;
+    --sidebar-bg: 150 20% 13%;
+    --page-bg-subtle: 140 15% 8%;
+  }
+
+  .dark.theme-sunset {
+    --retro-pink: 340 75% 60%;
+    --retro-yellow: 35 90% 60%;
+    --retro-blue: 270 60% 60%;
+    --retro-mint: 15 70% 60%;
+    --retro-orange: 25 85% 60%;
+    --retro-dark: 270 15% 85%;
+    --retro-cream: 20 20% 10%;
+    --sidebar-bg: 270 20% 14%;
+    --page-bg-subtle: 260 15% 8%;
   }
 }
 
@@ -102,6 +156,15 @@
     @apply bg-background text-foreground;
     font-family: 'Inter', sans-serif;
   }
+}
+
+/* Subtle dot pattern background */
+.bg-dot-pattern {
+  background-image: radial-gradient(circle, hsl(var(--retro-dark) / 0.05) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+.dark .bg-dot-pattern {
+  background-image: radial-gradient(circle, hsl(var(--retro-cream) / 0.03) 1px, transparent 1px);
 }
 
 /* Hard shadow utilities */

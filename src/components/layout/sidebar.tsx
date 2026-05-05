@@ -84,7 +84,7 @@ export function Sidebar() {
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 flex flex-col bg-slate-900 transition-all duration-300',
+          'fixed inset-y-0 left-0 z-50 flex flex-col bg-sidebar-bg transition-all duration-300',
           sidebarCollapsed ? 'w-16' : 'w-64',
           // Mobile: hidden by default, shown when open
           mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full',
@@ -92,21 +92,21 @@ export function Sidebar() {
         )}
       >
         {/* Header */}
-        <div className="flex h-14 items-center justify-between border-b border-slate-800 px-4">
+        <div className="flex h-14 items-center justify-between border-b border-white/10 px-4">
           {!sidebarCollapsed && (
-            <span className="text-lg font-bold text-white">NoBrainy</span>
+            <span className="text-lg font-bold text-sidebar-fg">NoBrainy</span>
           )}
           {/* Mobile close button */}
           <button
             onClick={() => setMobileSidebarOpen(false)}
-            className="text-slate-400 hover:text-white lg:hidden"
+            className="text-sidebar-fg/60 hover:text-sidebar-fg lg:hidden"
           >
             <X className="h-5 w-5" />
           </button>
           {/* Desktop collapse toggle */}
           <button
             onClick={toggleSidebar}
-            className="hidden text-slate-400 hover:text-white lg:block"
+            className="hidden text-sidebar-fg/60 hover:text-sidebar-fg lg:block"
           >
             {sidebarCollapsed ? (
               <PanelLeftOpen className="h-5 w-5" />
@@ -127,7 +127,7 @@ export function Sidebar() {
             return (
               <div key={item.href}>
                 {showDivider && (
-                  <div className="my-1 border-t border-slate-700/50" />
+                  <div className="my-1 border-t border-white/10" />
                 )}
                 <SidebarNavItem item={item} />
               </div>

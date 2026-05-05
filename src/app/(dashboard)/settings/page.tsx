@@ -16,6 +16,7 @@ import {
   type NotificationPreferences,
 } from '@/hooks/use-settings'
 import { useThemeStore, THEMES, type ThemeName } from '@/stores/theme-store'
+import { useToast } from '@/hooks/use-toast'
 
 function ApiKeySection() {
   const { data: status, isLoading } = useApiKeyStatus()
@@ -267,35 +268,38 @@ function NotificationPreferencesSection() {
   )
 }
 
-const THEME_COLORS: Record<ThemeName, string[]> = {
-  retro: [
-    'hsl(336 100% 58%)',
-    'hsl(52 100% 50%)',
-    'hsl(233 100% 59%)',
-    'hsl(160 100% 45%)',
-  ],
-  ocean: [
-    'hsl(195 100% 45%)',
-    'hsl(45 90% 55%)',
-    'hsl(220 90% 50%)',
-    'hsl(175 70% 45%)',
-  ],
-  forest: [
-    'hsl(340 60% 55%)',
-    'hsl(45 85% 50%)',
-    'hsl(150 60% 35%)',
-    'hsl(120 50% 45%)',
-  ],
-  sunset: [
-    'hsl(340 85% 55%)',
-    'hsl(35 100% 55%)',
-    'hsl(270 70% 55%)',
-    'hsl(15 80% 55%)',
-  ],
+interface ThemePreviewColors {
+  accents: string[]
+  sidebar: string
+  pageBg: string
+}
+
+const THEME_COLORS: Record<ThemeName, ThemePreviewColors> = {
+  retro: {
+    accents: ['hsl(336 100% 58%)', 'hsl(52 100% 50%)', 'hsl(233 100% 59%)', 'hsl(160 100% 45%)'],
+    sidebar: 'hsl(220 15% 18%)',
+    pageBg: 'hsl(44 100% 95%)',
+  },
+  ocean: {
+    accents: ['hsl(195 100% 45%)', 'hsl(45 90% 55%)', 'hsl(220 90% 50%)', 'hsl(175 70% 45%)'],
+    sidebar: 'hsl(215 35% 20%)',
+    pageBg: 'hsl(200 30% 96%)',
+  },
+  forest: {
+    accents: ['hsl(340 60% 55%)', 'hsl(45 85% 50%)', 'hsl(150 60% 35%)', 'hsl(120 50% 45%)'],
+    sidebar: 'hsl(150 25% 18%)',
+    pageBg: 'hsl(80 25% 96%)',
+  },
+  sunset: {
+    accents: ['hsl(340 85% 55%)', 'hsl(35 100% 55%)', 'hsl(270 70% 55%)', 'hsl(15 80% 55%)'],
+    sidebar: 'hsl(270 25% 20%)',
+    pageBg: 'hsl(30 40% 96%)',
+  },
 }
 
 function ThemeSection() {
   const { theme, setTheme, customThemes, activeCustomThemeId } = useThemeStore()
+  const toast = useToast()
   const activeCustomTheme = customThemes.find((c) => c.id === activeCustomThemeId)
 
   return (
@@ -317,21 +321,38 @@ function ThemeSection() {
               <button
                 key={t}
                 type="button"
-                onClick={() => setTheme(t)}
+                onClick={() => {
+                  setTheme(t)
+                  toast.show(`Theme "${t}" applied`)
+                }}
                 className={`flex flex-col items-center gap-2 rounded-lg border-2 p-3 transition-all ${
                   theme === t
                     ? 'border-retro-blue ring-2 ring-retro-blue/30'
                     : 'border-retro-dark/10 hover:border-retro-dark/25'
                 }`}
               >
-                <div className="flex gap-1.5">
-                  {THEME_COLORS[t].map((color, i) => (
-                    <span
-                      key={i}
-                      className="h-5 w-5 rounded-full border border-black/10"
-                      style={{ backgroundColor: color }}
-                    />
-                  ))}
+                {/* Mini layout preview */}
+                <div
+                  className="flex h-10 w-full overflow-hidden rounded border border-black/10"
+                >
+                  {/* Sidebar slice */}
+                  <div
+                    className="w-1/4 h-full"
+                    style={{ backgroundColor: THEME_COLORS[t].sidebar }}
+                  />
+                  {/* Page background */}
+                  <div
+                    className="flex-1 h-full flex items-center justify-center gap-1 px-1"
+                    style={{ backgroundColor: THEME_COLORS[t].pageBg }}
+                  >
+                    {THEME_COLORS[t].accents.map((color, i) => (
+                      <span
+                        key={i}
+                        className="h-3 w-3 rounded-full border border-black/10"
+                        style={{ backgroundColor: color }}
+                      />
+                    ))}
+                  </div>
                 </div>
                 <span className="text-xs font-medium capitalize text-retro-dark">
                   {t}

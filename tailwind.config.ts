@@ -57,6 +57,14 @@ const config: Config = {
           dark: "hsl(var(--retro-dark))",
           cream: "hsl(var(--retro-cream))",
         },
+        sidebar: {
+          bg: "hsl(var(--sidebar-bg))",
+          fg: "hsl(var(--sidebar-fg))",
+        },
+        page: {
+          bg: "hsl(var(--page-bg))",
+          "bg-subtle": "hsl(var(--page-bg-subtle))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

@@ -17,6 +17,8 @@ const COLOR_KEYS = [
   { key: '--retro-orange', label: 'Orange', description: 'Warnings, alerts, due dates' },
   { key: '--retro-dark', label: 'Dark', description: 'Text, borders, card outlines' },
   { key: '--retro-cream', label: 'Cream', description: 'Background tint, subtle fills' },
+  { key: '--sidebar-bg', label: 'Sidebar', description: 'Sidebar background color' },
+  { key: '--page-bg-subtle', label: 'Page Background', description: 'Main content area background' },
 ] as const
 
 const PRESET_DEFAULTS: Record<ThemeName, Record<string, string>> = {
@@ -28,6 +30,8 @@ const PRESET_DEFAULTS: Record<ThemeName, Record<string, string>> = {
     '--retro-orange': '25 100% 55%',
     '--retro-dark': '240 20% 13%',
     '--retro-cream': '48 100% 96%',
+    '--sidebar-bg': '220 15% 18%',
+    '--page-bg-subtle': '44 100% 95%',
   },
   ocean: {
     '--retro-blue': '220 90% 50%',
@@ -37,6 +41,8 @@ const PRESET_DEFAULTS: Record<ThemeName, Record<string, string>> = {
     '--retro-orange': '15 80% 55%',
     '--retro-dark': '220 30% 15%',
     '--retro-cream': '200 30% 96%',
+    '--sidebar-bg': '215 35% 20%',
+    '--page-bg-subtle': '200 30% 96%',
   },
   forest: {
     '--retro-blue': '150 60% 35%',
@@ -46,6 +52,8 @@ const PRESET_DEFAULTS: Record<ThemeName, Record<string, string>> = {
     '--retro-orange': '25 75% 50%',
     '--retro-dark': '150 25% 13%',
     '--retro-cream': '90 25% 95%',
+    '--sidebar-bg': '150 25% 18%',
+    '--page-bg-subtle': '80 25% 96%',
   },
   sunset: {
     '--retro-blue': '270 70% 55%',
@@ -55,6 +63,8 @@ const PRESET_DEFAULTS: Record<ThemeName, Record<string, string>> = {
     '--retro-orange': '15 80% 55%',
     '--retro-dark': '280 20% 15%',
     '--retro-cream': '30 40% 96%',
+    '--sidebar-bg': '270 25% 20%',
+    '--page-bg-subtle': '30 40% 96%',
   },
 }
 
@@ -68,6 +78,8 @@ function generateHarmoniousPalette(): Record<string, string> {
     '--retro-orange': `${(baseHue + 30) % 360} 80% 55%`,
     '--retro-dark': `${baseHue} 20% 13%`,
     '--retro-cream': `${(baseHue + 40) % 360} 30% 95%`,
+    '--sidebar-bg': `${baseHue} 20% 18%`,
+    '--page-bg-subtle': `${(baseHue + 40) % 360} 25% 95%`,
   }
 }
 
