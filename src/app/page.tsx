@@ -636,10 +636,12 @@ function PageFooter(): React.ReactElement {
         <span className="font-mono font-bold text-lg text-retro-cream">
           NoBrainy<span className="text-retro-pink">.</span>
         </span>
-        <div className="flex gap-6">
+        <div className="flex gap-6 flex-wrap justify-center">
           {[
             { label: 'GitHub', href: 'https://github.com/pranavlpin/no-brainy' },
             { label: 'Sign In', href: '/login' },
+            { label: 'Pranav', href: 'https://pranavlpin.com' },
+            { label: 'MyLifeGraph', href: 'https://mylifegraph.com' },
           ].map((link) => (
             <Link key={link.label} href={link.href} className="font-mono text-xs text-retro-cream/50 underline underline-offset-4 hover:text-retro-yellow transition-colors">
               {link.label}
