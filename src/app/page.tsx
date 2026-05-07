@@ -91,7 +91,7 @@ function Hero(): React.ReactElement {
           your life.
         </h1>
         <p className="font-body text-base sm:text-lg text-retro-dark/70 max-w-2xl mx-auto mb-10 leading-relaxed">
-          The ultimate operating system for your personal growth. Bring your notes, tasks, finances,
+          Your second brain and daily companion. Bring your notes, tasks, finances, goals,
           and learning into one frictionless workspace powered by AI.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -140,26 +140,26 @@ function Hero(): React.ReactElement {
                   })}
                 </div>
               </div>
-              {/* Pomodoro */}
-              <div className="bg-retro-dark p-4 flex flex-col items-center justify-center">
-                <div className="font-mono text-xs text-retro-cream/40 mb-3">Pomodoro</div>
-                <div className="relative w-20 h-20 sm:w-24 sm:h-24">
-                  <svg viewBox="0 0 100 100" className="w-full h-full">
-                    <circle cx="50" cy="50" r="42" fill="none" stroke="hsl(44 100% 95% / 0.1)" strokeWidth="6" />
-                    <circle
-                      cx="50" cy="50" r="42" fill="none"
-                      stroke="hsl(336 100% 58%)"
-                      strokeWidth="6"
-                      strokeDasharray={`${2 * Math.PI * 42 * 0.65} ${2 * Math.PI * 42 * 0.35}`}
-                      strokeLinecap="butt"
-                      transform="rotate(-90 50 50)"
-                    />
-                  </svg>
-                  <div className="absolute inset-0 flex items-center justify-center font-mono text-lg sm:text-xl font-bold text-retro-cream">
-                    16:20
-                  </div>
+              {/* Budget */}
+              <div className="bg-retro-dark p-4 flex flex-col justify-center">
+                <div className="font-mono text-xs text-retro-cream/40 mb-3">Budget</div>
+                <div className="space-y-2.5">
+                  {[
+                    { name: 'Food', spent: 8200, limit: 15000, color: 'bg-retro-yellow' },
+                    { name: 'Shopping', spent: 12400, limit: 20000, color: 'bg-retro-pink' },
+                    { name: 'Transport', spent: 2100, limit: 5000, color: 'bg-retro-mint' },
+                  ].map((b) => (
+                    <div key={b.name}>
+                      <div className="flex justify-between font-mono text-[10px] mb-0.5">
+                        <span className="text-retro-cream/60">{b.name}</span>
+                        <span className="text-retro-cream/40">{'\u20B9'}{(b.spent/1000).toFixed(1)}K / {(b.limit/1000).toFixed(0)}K</span>
+                      </div>
+                      <div className="h-1.5 bg-retro-cream/10">
+                        <div className={`h-full ${b.color}`} style={{ width: `${(b.spent/b.limit)*100}%` }} />
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <span className="font-mono text-xs text-retro-pink mt-2">FOCUS</span>
               </div>
             </div>
           </div>
@@ -257,18 +257,30 @@ function DailyPlannerMiniUI(): React.ReactElement {
   )
 }
 
-function HabitHeatmapMiniUI(): React.ReactElement {
+function GoalsMiniUI(): React.ReactElement {
+  const goals = [
+    { title: 'Invest in MFs', current: 45000, target: 100000, color: 'bg-retro-mint' },
+    { title: 'Read 12 Books', current: 8, target: 12, color: 'bg-retro-blue' },
+  ]
   return (
-    <div>
-      <div className="grid grid-cols-10 gap-0.5">
-        {Array.from({ length: 40 }).map((_, i) => {
-          const levels = ['bg-retro-cream/5', 'bg-retro-mint/20', 'bg-retro-mint/40', 'bg-retro-mint/60', 'bg-retro-mint']
-          return <div key={i} className={`w-3 h-3 ${levels[i % 5]}`} />
-        })}
-      </div>
-      <div className="flex justify-between mt-1 font-mono text-[9px] text-retro-cream/30">
-        <span>Jan</span><span>Mar</span><span>Jun</span><span>Sep</span>
-      </div>
+    <div className="space-y-2.5 font-mono text-xs text-retro-cream">
+      {goals.map((g) => {
+        const pct = Math.round((g.current / g.target) * 100)
+        return (
+          <div key={g.title}>
+            <div className="flex justify-between mb-0.5">
+              <span className="text-retro-cream/70">{g.title}</span>
+              <span>{pct}%</span>
+            </div>
+            <div className="h-2 bg-retro-cream/10 border border-retro-cream/20">
+              <div className={`h-full ${g.color}`} style={{ width: `${pct}%` }} />
+            </div>
+            <div className="text-[10px] text-retro-cream/40 mt-0.5">
+              {g.title.includes('Invest') ? `₹${(g.current/1000).toFixed(0)}K / ₹${(g.target/1000).toFixed(0)}K` : `${g.current} / ${g.target}`}
+            </div>
+          </div>
+        )
+      })}
     </div>
   )
 }
@@ -314,7 +326,7 @@ function FeaturesTimeline(): React.ReactElement {
     { title: 'Book Tracker', desc: 'Track every book. Log progress, capture highlights, never lose a reading insight.', ui: <BookTrackerMiniUI />, accent: 'retro-yellow' },
     { title: 'Flashcards', desc: 'Spaced repetition built in. Create, review, and master any subject.', ui: <FlashcardMiniUI />, accent: 'retro-mint' },
     { title: 'Daily Planner', desc: 'Time-block your day. Drag, drop, and own every hour.', ui: <DailyPlannerMiniUI />, accent: 'retro-orange' },
-    { title: 'Goals', desc: 'Set goals, link tasks, track progress. Auto-complete when all tasks are done.', ui: <HabitHeatmapMiniUI />, accent: 'retro-pink' },
+    { title: 'Goals', desc: 'Set goals with task-based or financial tracking. Link expenses to financial goals and watch progress update automatically.', ui: <GoalsMiniUI />, accent: 'retro-pink' },
   ]
   return (
     <section id="features" className="bg-retro-dark py-16 sm:py-24 px-4 sm:px-6 relative overflow-hidden">
@@ -383,10 +395,11 @@ function ExpenseSection(): React.ReactElement {
           <div className="space-y-4 font-body text-retro-dark/70 text-sm leading-relaxed">
             <p>Track every rupee across 23+ categories. From daily chai to long-term investments.</p>
             <p>Import bank CSVs in one click. Auto-categorization means less time logging, more time living.</p>
+            <p>Set spending limits or savings targets with monthly, quarterly, or yearly budgets.</p>
             <p>Monthly breakdowns, trend analysis, and category charts. Your wallet will thank you.</p>
           </div>
           <div className="mt-6 flex gap-3 flex-wrap">
-            {['23+ Categories', 'CSV Import', 'Bulk Entry'].map((tag) => (
+            {['23+ Categories', 'CSV Import', 'Bulk Entry', 'Budgets'].map((tag) => (
               <span key={tag} className="font-mono text-xs px-3 py-1 border-2 border-retro-dark bg-retro-yellow text-retro-dark shadow-hard">
                 {tag}
               </span>
@@ -444,8 +457,8 @@ function AISection(): React.ReactElement {
     { label: 'Flashcard Generation', desc: 'Turn any note or book into study-ready flashcards instantly.', color: 'border-l-retro-mint' },
     { label: 'Smart Summaries', desc: 'Condense long notes into key takeaways with one click.', color: 'border-l-retro-pink' },
     { label: 'Task Prioritization', desc: 'AI ranks your tasks by urgency and impact. Focus on what matters.', color: 'border-l-retro-blue' },
-    { label: 'Daily Briefs', desc: 'Start each day with an AI-generated overview of your plan.', color: 'border-l-retro-yellow' },
-    { label: 'Insight Extraction', desc: 'Surface hidden patterns from your notes, goals, and reviews.', color: 'border-l-retro-orange' },
+    { label: 'AI Coach', desc: 'Ask questions about your data with full context. Get personalized productivity advice.', color: 'border-l-retro-yellow' },
+    { label: 'Strategic Insights', desc: 'Cross-module analysis of your tasks, expenses, goals, and reviews. Powered by GPT-4o.', color: 'border-l-retro-orange' },
     { label: 'Auto-Categorization', desc: 'Imported expenses get tagged to the right category automatically.', color: 'border-l-retro-mint' },
   ]
 
@@ -469,7 +482,7 @@ function AISection(): React.ReactElement {
             daily insights — all without leaving your workspace.
           </p>
           <div className="flex gap-3 flex-wrap">
-            {['BYOK Model', 'GPT-4o', 'Your Key, Your Data'].map((tag) => (
+            {['BYOK Model', 'GPT-4o / GPT-4o-mini', 'Your Key, Your Data'].map((tag) => (
               <span key={tag} className="font-mono text-xs px-3 py-1 border-2 border-retro-cream text-retro-cream">
                 {tag}
               </span>
@@ -512,7 +525,7 @@ function HowItWorks(): React.ReactElement {
   const steps = [
     { num: '01', title: 'Capture', desc: 'Dump everything into NoBrainy. Notes, tasks, expenses, ideas — just get it out of your head.' },
     { num: '02', title: 'Organize', desc: 'Let modules auto-sort your chaos. Tasks get prioritized. Notes get linked. Expenses get categorized.' },
-    { num: '03', title: 'Reflect', desc: 'Weekly reviews, goal progress, expense trends. See how far you\'ve come and where to go next.' },
+    { num: '03', title: 'Reflect', desc: 'Nightly reviews, goal progress, expense trends, and budget health. See how far you\'ve come and where to go next.' },
   ]
   return (
     <section className="bg-retro-cream py-16 sm:py-24 px-4 sm:px-6 relative overflow-hidden">
