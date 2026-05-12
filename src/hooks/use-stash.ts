@@ -5,6 +5,7 @@ import { apiClient } from '@/lib/api-client'
 import type {
   StashChannelResponse,
   StashMessageResponse,
+  StashSearchResult,
   CreateChannelRequest,
   UpdateChannelRequest,
   CreateMessageRequest,
@@ -134,5 +135,20 @@ export function useDeleteMessage(channelId: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: [...STASH_KEY, 'messages', channelId] })
     },
+  })
+}
+
+export function useStashSearch(query: string, channelId?: string) {
+  return useQuery({
+    queryKey: [...STASH_KEY, 'search', query, channelId ?? null],
+    queryFn: async () => {
+      const params = new URLSearchParams({ q: query })
+      if (channelId) params.set('channelId', channelId)
+      const res = await apiClient<ApiResponse<StashSearchResult[]>>(
+        `/api/stash/search?${params.toString()}`
+      )
+      return res.data
+    },
+    enabled: query.trim().length > 0,
   })
 }

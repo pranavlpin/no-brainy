@@ -72,3 +72,14 @@ export interface MessagesPage {
   items: StashMessageResponse[]
   nextCursor: string | null
 }
+
+export interface StashSearchResult extends StashMessageResponse {
+  channel: {
+    id: string
+    name: string
+    isSensitive: boolean
+    icon: string | null
+    color: string | null
+  }
+  score: number
+}

@@ -46,9 +46,16 @@ export const uploadUrlSchema = z.object({
   sizeBytes: z.number().int().positive().max(10 * 1024 * 1024),
 })
 
+export const searchSchema = z.object({
+  q: z.string().min(1).max(200),
+  channelId: z.string().max(40).optional(),
+  type: z.enum(['TEXT', 'LINK', 'FILE']).optional(),
+})
+
 export type CreateChannelInput = z.infer<typeof createChannelSchema>
 export type UpdateChannelInput = z.infer<typeof updateChannelSchema>
 export type CreateMessageInput = z.infer<typeof createMessageSchema>
 export type UpdateMessageInput = z.infer<typeof updateMessageSchema>
 export type MessageQueryInput = z.infer<typeof messageQuerySchema>
 export type UploadUrlInput = z.infer<typeof uploadUrlSchema>
+export type SearchInput = z.infer<typeof searchSchema>
