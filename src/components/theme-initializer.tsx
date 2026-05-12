@@ -12,10 +12,13 @@ export function ThemeInitializer(): null {
 
   // Sync dark mode class
   useLayoutEffect(() => {
+    const html = document.documentElement
     if (isDark) {
-      document.documentElement.classList.add('dark')
+      html.classList.add('dark')
+      html.classList.remove('light')
     } else {
-      document.documentElement.classList.remove('dark')
+      html.classList.add('light')
+      html.classList.remove('dark')
     }
   }, [isDark])
 

@@ -23,12 +23,15 @@ function getIsDark(pref: DarkModePreference): boolean {
   return window.matchMedia('(prefers-color-scheme: dark)').matches
 }
 
-function applyDarkClass(isDark: boolean): void {
+function applyColorModeClass(isDark: boolean): void {
   if (typeof document === 'undefined') return
+  const html = document.documentElement
   if (isDark) {
-    document.documentElement.classList.add('dark')
+    html.classList.add('dark')
+    html.classList.remove('light')
   } else {
-    document.documentElement.classList.remove('dark')
+    html.classList.add('light')
+    html.classList.remove('dark')
   }
 }
 
@@ -37,14 +40,14 @@ export const useDarkModeStore = create<DarkModeState>((set, get) => {
   const isDark = getIsDark(preference)
 
   if (typeof window !== 'undefined') {
-    applyDarkClass(isDark)
+    applyColorModeClass(isDark)
 
     // Listen for system preference changes
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
       const { preference } = get()
       if (preference === 'system') {
         const newIsDark = e.matches
-        applyDarkClass(newIsDark)
+        applyColorModeClass(newIsDark)
         set({ isDark: newIsDark })
       }
     })
@@ -56,14 +59,14 @@ export const useDarkModeStore = create<DarkModeState>((set, get) => {
     setPreference: (pref: DarkModePreference) => {
       localStorage.setItem('nobrainy-dark-mode', pref)
       const newIsDark = getIsDark(pref)
-      applyDarkClass(newIsDark)
+      applyColorModeClass(newIsDark)
       set({ preference: pref, isDark: newIsDark })
     },
     toggle: () => {
       const { isDark } = get()
       const newPref: DarkModePreference = isDark ? 'light' : 'dark'
       localStorage.setItem('nobrainy-dark-mode', newPref)
-      applyDarkClass(!isDark)
+      applyColorModeClass(!isDark)
       set({ preference: newPref, isDark: !isDark })
     },
   }

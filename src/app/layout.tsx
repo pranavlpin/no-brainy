@@ -69,8 +69,13 @@ export default function RootLayout({
           (function() {
             try {
               var dm = localStorage.getItem('nobrainy-dark-mode');
-              if (dm === 'dark' || (dm !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+              var isDark = dm === 'dark' || (dm !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+              if (isDark) {
                 document.documentElement.classList.add('dark');
+                document.documentElement.classList.remove('light');
+              } else {
+                document.documentElement.classList.add('light');
+                document.documentElement.classList.remove('dark');
               }
               var t = localStorage.getItem('nobrainy-theme');
               if (t === 'custom') {
