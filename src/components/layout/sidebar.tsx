@@ -16,6 +16,7 @@ import {
   PiggyBank,
   Bookmark,
   Film,
+  Archive,
   PanelLeftClose,
   PanelLeftOpen,
   X,
@@ -26,6 +27,7 @@ import { SidebarNavItem, type NavItem } from './sidebar-nav'
 
 const NAV_ITEMS_MAP: Record<string, NavItem> = {
   '/notes': { label: 'Notes', href: '/notes', icon: FileText },
+  '/stash': { label: 'Stash', href: '/stash', icon: Archive },
   '/tasks': { label: 'Tasks', href: '/tasks', icon: CheckSquare },
   '/books': { label: 'Books', href: '/books', icon: BookOpen },
   '/flashcards': { label: 'Flashcards', href: '/flashcards', icon: Layers },
@@ -44,6 +46,7 @@ const NAV_ITEMS_MAP: Record<string, NavItem> = {
 
 const NAV_GROUPS: Record<string, string> = {
   '/notes': 'core',
+  '/stash': 'core',
   '/tasks': 'core',
   '/planner': 'core',
   '/reviews': 'core',

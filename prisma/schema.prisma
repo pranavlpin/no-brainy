@@ -41,6 +41,8 @@ model User {
   budgets           Budget[]
   bookmarks         Bookmark[]
   watchlistItems    WatchlistItem[]
+  stashChannels     StashChannel[]
+  stashMessages     StashMessage[]
   @@map("users")
 }
 
@@ -421,6 +423,60 @@ model Bookmark {
   @@index([userId])
   @@index([tags], type: Gin)
   @@map("bookmarks")
+}
+
+enum StashMessageType {
+  TEXT
+  LINK
+  FILE
+}
+
+model StashChannel {
+  id            String    @id @default(cuid())
+  userId        String
+  name          String
+  icon          String?
+  color         String?
+  isSensitive   Boolean   @default(false)
+  isPinned      Boolean   @default(false)
+  isDeleted     Boolean   @default(false)
+  deletedAt     DateTime?
+  lastMessageAt DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages StashMessage[]
+  @@index([userId, isDeleted])
+  @@index([userId, isPinned, lastMessageAt(sort: Desc)])
+  @@map("stash_channels")
+}
+
+model StashMessage {
+  id              String           @id @default(cuid())
+  channelId       String
+  userId          String
+  type            StashMessageType @default(TEXT)
+  label           String?
+  content         String           @default("") @db.Text
+  isEncrypted     Boolean          @default(false)
+  linkUrl         String?
+  linkTitle       String?
+  linkDescription String?          @db.Text
+  linkImageUrl    String?
+  fileName        String?
+  fileSize        Int?
+  fileMimeType    String?
+  fileGcsObject   String?
+  isPinned        Boolean          @default(false)
+  isDeleted       Boolean          @default(false)
+  deletedAt       DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  channel StashChannel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  user    User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([channelId, isDeleted, createdAt(sort: Desc)])
+  @@index([userId, isDeleted, createdAt(sort: Desc)])
+  @@map("stash_messages")
 }
 
 model WatchlistItem {
