@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
-import { Send } from 'lucide-react'
+import { useState, useRef, useEffect, useMemo } from 'react'
+import { Send, Link as LinkIcon } from 'lucide-react'
 import { useSendMessage } from '@/hooks/use-stash'
+import { isHttpUrl, getHostname } from '@/lib/stash/url'
 
 interface StashComposerProps {
   channelId: string
@@ -14,6 +15,8 @@ export function StashComposer({ channelId }: StashComposerProps) {
   const [showLabel, setShowLabel] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const send = useSendMessage(channelId)
+
+  const linkDetected = useMemo(() => isHttpUrl(content), [content])
 
   // Reset state when switching channels
   useEffect(() => {
@@ -27,11 +30,19 @@ export function StashComposer({ channelId }: StashComposerProps) {
     const trimmedLabel = label.trim()
     if (trimmed.length === 0 && trimmedLabel.length === 0) return
     try {
-      await send.mutateAsync({
-        type: 'TEXT',
-        content: trimmed,
-        label: trimmedLabel || undefined,
-      })
+      if (linkDetected) {
+        await send.mutateAsync({
+          type: 'LINK',
+          linkUrl: trimmed,
+          label: trimmedLabel || undefined,
+        })
+      } else {
+        await send.mutateAsync({
+          type: 'TEXT',
+          content: trimmed,
+          label: trimmedLabel || undefined,
+        })
+      }
       setContent('')
       setLabel('')
       setShowLabel(false)
@@ -60,6 +71,12 @@ export function StashComposer({ channelId }: StashComposerProps) {
           className="mb-2 w-full border-2 border-retro-dark/20 bg-background px-3 py-1.5 text-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-retro-blue"
         />
       )}
+      {linkDetected && (
+        <div className="mb-2 flex items-center gap-1.5 text-xs text-retro-blue">
+          <LinkIcon className="h-3 w-3" />
+          <span>Will save as link · {getHostname(content)}</span>
+        </div>
+      )}
       <div className="flex items-end gap-2">
         <button
           type="button"
@@ -74,7 +91,7 @@ export function StashComposer({ channelId }: StashComposerProps) {
           value={content}
           onChange={(e) => setContent(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Type a message… (Cmd/Ctrl+Enter to send)"
+          placeholder="Type a message or paste a URL… (Cmd/Ctrl+Enter to send)"
           rows={1}
           maxLength={50_000}
           className="flex max-h-40 min-h-10 w-full resize-none border-2 border-retro-dark/20 bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-retro-blue"

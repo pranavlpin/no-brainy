@@ -113,6 +113,13 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    if (data.type === 'LINK' && !data.linkUrl) {
+      return NextResponse.json(
+        { success: false, error: { code: 'VALIDATION_ERROR', message: 'linkUrl is required for LINK messages' } },
+        { status: 400 }
+      )
+    }
+
     const { content: storedContent, isEncrypted } = encryptContent(data.content, channel.isSensitive)
 
     const now = new Date()
