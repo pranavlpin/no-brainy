@@ -39,8 +39,16 @@ export const messageQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(2000).default(50),
 })
 
+export const uploadUrlSchema = z.object({
+  channelId: z.string().min(1).max(40),
+  filename: z.string().min(1).max(255),
+  mimeType: z.string().min(1).max(127),
+  sizeBytes: z.number().int().positive().max(10 * 1024 * 1024),
+})
+
 export type CreateChannelInput = z.infer<typeof createChannelSchema>
 export type UpdateChannelInput = z.infer<typeof updateChannelSchema>
 export type CreateMessageInput = z.infer<typeof createMessageSchema>
 export type UpdateMessageInput = z.infer<typeof updateMessageSchema>
 export type MessageQueryInput = z.infer<typeof messageQuerySchema>
+export type UploadUrlInput = z.infer<typeof uploadUrlSchema>

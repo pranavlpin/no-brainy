@@ -27,6 +27,7 @@
     "@codemirror/search": "^6.6.0",
     "@codemirror/state": "^6.5.2",
     "@codemirror/view": "^6.36.5",
+    "@google-cloud/storage": "^7.19.0",
     "@prisma/client": "^5.22.0",
     "@tailwindcss/typography": "^0.5.19",
     "@tanstack/react-query": "^5.62.0",

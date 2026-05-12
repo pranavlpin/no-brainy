@@ -120,6 +120,13 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    if (data.type === 'FILE' && (!data.fileGcsObject || !data.fileName)) {
+      return NextResponse.json(
+        { success: false, error: { code: 'VALIDATION_ERROR', message: 'fileGcsObject and fileName are required for FILE messages' } },
+        { status: 400 }
+      )
+    }
+
     const { content: storedContent, isEncrypted } = encryptContent(data.content, channel.isSensitive)
 
     const now = new Date()
