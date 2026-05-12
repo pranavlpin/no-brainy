@@ -69,13 +69,19 @@ export function useDeleteChannel() {
   })
 }
 
-export function useChannelMessages(channelId: string | null) {
+interface ChannelMessagesOptions {
+  pageSize?: number
+}
+
+export function useChannelMessages(channelId: string | null, options?: ChannelMessagesOptions) {
+  const pageSize = options?.pageSize
   return useInfiniteQuery({
-    queryKey: [...STASH_KEY, 'messages', channelId],
+    queryKey: [...STASH_KEY, 'messages', channelId, pageSize ?? null],
     initialPageParam: undefined as string | undefined,
     queryFn: async ({ pageParam }) => {
       const params = new URLSearchParams()
       if (pageParam) params.set('cursor', pageParam)
+      if (pageSize) params.set('limit', String(pageSize))
       const qs = params.toString()
       const url = `/api/stash/channels/${channelId}/messages${qs ? `?${qs}` : ''}`
       const res = await apiClient<ApiResponse<MessagesPage>>(url)

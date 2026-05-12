@@ -4,6 +4,7 @@ import { getAuthUser } from '@/lib/auth/middleware'
 import { updateMessageSchema } from '@/lib/validations/stash'
 import { ZodError } from 'zod'
 import { formatMessage } from '@/lib/stash/format'
+import { encryptContent, decryptContent } from '@/lib/stash/encrypt-message'
 import type { StashMessageResponse } from '@/types/stash'
 import type { ApiResponse } from '@/lib/types/api'
 
@@ -48,14 +49,29 @@ export async function PATCH(req: NextRequest) {
     const body = await req.json()
     const data = updateMessageSchema.parse(body)
 
+    const updatePayload: Record<string, unknown> = { ...data }
+    let plaintextContent: string | undefined
+    if (data.content !== undefined) {
+      const { content: storedContent, isEncrypted } = encryptContent(
+        data.content,
+        existing.isEncrypted
+      )
+      updatePayload.content = storedContent
+      updatePayload.isEncrypted = isEncrypted
+      plaintextContent = data.content
+    }
+
     const message = await prisma.stashMessage.update({
       where: { id: messageId },
-      data,
+      data: updatePayload,
     })
 
     const response: ApiResponse<StashMessageResponse> = {
       success: true,
-      data: formatMessage(message),
+      data: formatMessage({
+        ...message,
+        content: plaintextContent ?? decryptContent(message.content, message.isEncrypted),
+      }),
     }
     return NextResponse.json(response)
   } catch (error) {

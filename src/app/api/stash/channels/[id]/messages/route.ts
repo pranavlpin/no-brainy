@@ -4,6 +4,7 @@ import { getAuthUser } from '@/lib/auth/middleware'
 import { createMessageSchema, messageQuerySchema } from '@/lib/validations/stash'
 import { ZodError } from 'zod'
 import { formatMessage } from '@/lib/stash/format'
+import { encryptContent, decryptContent } from '@/lib/stash/encrypt-message'
 import type { StashMessageResponse, MessagesPage } from '@/types/stash'
 import type { ApiResponse } from '@/lib/types/api'
 
@@ -75,9 +76,14 @@ export async function GET(req: NextRequest) {
     const items = hasMore ? messages.slice(0, limit) : messages
     const nextCursor = hasMore ? items[items.length - 1].id : null
 
+    const decrypted = items.map((m) => ({
+      ...m,
+      content: decryptContent(m.content, m.isEncrypted),
+    }))
+
     const response: ApiResponse<MessagesPage> = {
       success: true,
-      data: { items: items.map(formatMessage), nextCursor },
+      data: { items: decrypted.map(formatMessage), nextCursor },
     }
     return NextResponse.json(response)
   } catch (error) {
@@ -107,6 +113,8 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    const { content: storedContent, isEncrypted } = encryptContent(data.content, channel.isSensitive)
+
     const now = new Date()
     const [message] = await prisma.$transaction([
       prisma.stashMessage.create({
@@ -115,8 +123,8 @@ export async function POST(req: NextRequest) {
           userId: user.id,
           type: data.type,
           label: data.label,
-          content: data.content,
-          isEncrypted: false,
+          content: storedContent,
+          isEncrypted,
           linkUrl: data.linkUrl,
           linkTitle: data.linkTitle,
           linkDescription: data.linkDescription,
@@ -135,7 +143,7 @@ export async function POST(req: NextRequest) {
 
     const response: ApiResponse<StashMessageResponse> = {
       success: true,
-      data: formatMessage(message),
+      data: formatMessage({ ...message, content: data.content }),
     }
     return NextResponse.json(response, { status: 201 })
   } catch (error) {
