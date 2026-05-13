@@ -83,3 +83,8 @@ export interface StashSearchResult extends StashMessageResponse {
   }
   score: number
 }
+
+export interface StashStats {
+  channelCount: number
+  messageCount: number
+}

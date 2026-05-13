@@ -6,6 +6,7 @@ import type {
   StashChannelResponse,
   StashMessageResponse,
   StashSearchResult,
+  StashStats,
   CreateChannelRequest,
   UpdateChannelRequest,
   CreateMessageRequest,
@@ -38,6 +39,7 @@ export function useCreateChannel() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: [...STASH_KEY, 'channels'] })
+      qc.invalidateQueries({ queryKey: [...STASH_KEY, 'stats'] })
     },
   })
 }
@@ -106,6 +108,7 @@ export function useSendMessage(channelId: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: [...STASH_KEY, 'messages', channelId] })
       qc.invalidateQueries({ queryKey: [...STASH_KEY, 'channels'] })
+      qc.invalidateQueries({ queryKey: [...STASH_KEY, 'stats'] })
     },
   })
 }
@@ -134,6 +137,17 @@ export function useDeleteMessage(channelId: string) {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: [...STASH_KEY, 'messages', channelId] })
+      qc.invalidateQueries({ queryKey: [...STASH_KEY, 'stats'] })
+    },
+  })
+}
+
+export function useStashStats() {
+  return useQuery({
+    queryKey: [...STASH_KEY, 'stats'],
+    queryFn: async () => {
+      const res = await apiClient<ApiResponse<StashStats>>('/api/stash/stats')
+      return res.data
     },
   })
 }

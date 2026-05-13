@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { Lock, Pin, Trash2, Search, X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useUpdateChannel, useDeleteChannel } from '@/hooks/use-stash'
@@ -82,6 +83,14 @@ export function StashChannelHeader({
           >
             <Trash2 className="h-4 w-4" />
           </button>
+          <Link
+            href="/stash?home=1"
+            className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-retro-blue/10 hover:text-retro-blue"
+            aria-label="Close chat"
+            title="Close chat (Esc)"
+          >
+            <X className="h-4 w-4" />
+          </Link>
         </div>
       </header>
       {channel.isSensitive && searchOpen && (
