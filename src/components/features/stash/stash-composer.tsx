@@ -1,11 +1,12 @@
 'use client'
 
 import { useState, useRef, useEffect, useMemo } from 'react'
-import { Send, Link as LinkIcon, Paperclip, X } from 'lucide-react'
+import { Send, Link as LinkIcon, Paperclip, Tag, X } from 'lucide-react'
 import { useSendMessage } from '@/hooks/use-stash'
 import { isHttpUrl, getHostname } from '@/lib/stash/url'
 import { isAllowedMime, STASH_MAX_FILE_SIZE } from '@/lib/stash/file-validation'
 import { apiClient } from '@/lib/api-client'
+import { cn } from '@/lib/utils'
 import type { ApiResponse } from '@/lib/types/api'
 
 interface StashComposerProps {
@@ -170,10 +171,16 @@ export function StashComposer({ channelId }: StashComposerProps) {
         <button
           type="button"
           onClick={() => setShowLabel((s) => !s)}
-          className="h-10 shrink-0 px-2 text-xs text-muted-foreground hover:text-retro-blue"
-          title="Toggle label"
+          className={cn(
+            'flex h-10 w-10 shrink-0 items-center justify-center rounded-md transition-colors',
+            showLabel
+              ? 'bg-retro-blue/10 text-retro-blue'
+              : 'text-muted-foreground hover:text-retro-blue'
+          )}
+          aria-label={showLabel ? 'Hide label' : 'Add label'}
+          title={showLabel ? 'Hide label' : 'Add label'}
         >
-          {showLabel ? '−label' : '+label'}
+          <Tag className="h-4 w-4" />
         </button>
         <button
           type="button"
