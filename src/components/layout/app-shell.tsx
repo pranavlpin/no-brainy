@@ -2,6 +2,7 @@
 
 import { Sidebar } from './sidebar'
 import { TopBar } from './top-bar'
+import { BottomNav } from './bottom-nav'
 import { AppBackground } from './app-background'
 import { useUIStore } from '@/stores/ui-store'
 import { cn } from '@/lib/utils'
@@ -35,8 +36,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         )}
       >
         <TopBar />
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">{children}</main>
+        <main className="flex-1 overflow-y-auto p-4 pb-28 md:p-6 lg:pb-6">{children}</main>
       </div>
+      <BottomNav />
       <CommandLayer />
       <TimezoneSync />
       <Toast />

@@ -10,6 +10,8 @@ import { TaskCheck } from './task-check'
 import { Badge } from '@/components/ui/badge'
 import { useUpdateTask } from '@/hooks/use-tasks'
 import { usePrefersReducedMotion } from '@/components/motion/use-prefers-reduced-motion'
+import { useCoarsePointer } from '@/components/motion/use-coarse-pointer'
+import { Check } from 'lucide-react'
 import type { TaskResponse, TaskStatus } from '@/lib/types/tasks'
 
 interface TaskListItem extends TaskResponse {
@@ -51,6 +53,8 @@ export function TaskList({
   const router = useRouter()
   const updateTask = useUpdateTask()
   const reducedMotion = usePrefersReducedMotion()
+  const coarsePointer = useCoarsePointer()
+  const SWIPE_THRESHOLD = 96
 
   // Local status overrides give an instant flip even before the cache updates;
   // they are dropped as soon as the incoming prop agrees.
@@ -174,10 +178,29 @@ export function TaskList({
               {...rowMotion}
               onClick={() => router.push(`/tasks/${task.id}`)}
               className={cn(
-                'group flex cursor-pointer items-center gap-3 px-4 py-3 transition-colors hover:bg-retro-blue/5',
+                'group relative flex cursor-pointer items-center gap-3 px-4 py-3 transition-colors hover:bg-retro-blue/5',
                 completed && 'bg-retro-mint/5'
               )}
+              {...(coarsePointer && !completed
+                ? {
+                    drag: 'x' as const,
+                    dragConstraints: { left: 0, right: SWIPE_THRESHOLD + 24 },
+                    dragElastic: 0.08,
+                    dragSnapToOrigin: true,
+                    onDragEnd: (_e: unknown, info: { offset: { x: number } }) => {
+                      if (info.offset.x >= SWIPE_THRESHOLD) handleToggle(task)
+                    },
+                  }
+                : {})}
             >
+              {coarsePointer && !completed && (
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute inset-y-0 left-0 flex w-24 items-center justify-start pl-4 text-retro-mint opacity-0 group-active:opacity-100"
+                >
+                  <Check className="h-5 w-5" />
+                </span>
+              )}
               <TaskCheck
                 checked={completed}
                 onChange={() => handleToggle(task)}
