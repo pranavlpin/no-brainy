@@ -41,3 +41,13 @@ Capacity card with inputs, progress bar (amber when over), warnings for unknown 
 ## Risks and open questions
 
 - Existing tasks have no `plannedDate`; "due today" tasks still appear on Today under Deadlines so nothing disappears. **Ruling applied.**
+
+## Refinements (while the branch was open)
+
+- The today payload fetches the day's tasks in one query (planned for today OR due today) and splits them, so existing route tests that count `findMany` calls still hold.
+- Leftovers for triage are open tasks planned for any earlier day plus deadlines passed yesterday; a task planned but never decided keeps asking until it is decided.
+- "Make a smaller day" moves the lowest-priority estimated tasks to tomorrow, never the three focus tasks and never tasks without an estimate; the user sees a toast with the count.
+- The capacity controls live behind an Adjust toggle so the card reads as a summary first.
+- The progress bar's accessible name is "Day load" so it does not collide with the "Available minutes" field label.
+- The new-block button reads "Add block"; the edit form reads "Save block".
+- The matrix of planner routes (`today`, `[date]`) returns the capacity fields with defaults 180 / 15 so older plans need no backfill.

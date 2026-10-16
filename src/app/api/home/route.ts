@@ -13,6 +13,7 @@ import {
 import { dayPhase } from '@/lib/home/phase'
 import { computeReviewStreak } from '@/lib/home/streak'
 import { buildTodayPayload, getOrCreatePlan } from '@/lib/planner/today'
+import { planCapacity } from '@/lib/planner/capacity'
 import { localDayBounds } from '@/lib/dates'
 import type { HomeData, HomeGoal } from '@/lib/types/home'
 
@@ -33,6 +34,27 @@ export const GET = withAuth(async (_req: NextRequest, user) => {
 
     const dayPlan = await getOrCreatePlan(user, key)
     const plan = await buildTodayPayload(user, key, dayPlan)
+
+    // Capacity over everything that counts toward today, each task once.
+    const dayTaskMap = new Map(
+      [...plan.focusTasks, ...plan.plannedTasks, ...plan.tasksDueToday]
+        .filter((t) => t.status !== 'completed' && t.status !== 'cancelled')
+        .map((t) => [t.id, t])
+    )
+    const load = planCapacity({
+      tasks: [...dayTaskMap.values()],
+      blocks: plan.timeBlocks.filter((b) => !b.isCompleted),
+      availableMinutes: plan.availableMinutes,
+      bufferMinutes: plan.bufferMinutes,
+      workStart: plan.workStart,
+      workEnd: plan.workEnd,
+    })
+    const capacity = {
+      plannedMinutes: load.plannedMinutes,
+      availableMinutes: load.availableMinutes,
+      unknownCount: load.unknownTaskIds.length,
+      overBy: load.overBy,
+    }
 
     const localDay = localDayBounds(key, tz)
     const [todayReview, recentReviews, overdueCount, goals, dueByDeck, readingBooks, focusAgg] =
@@ -143,9 +165,11 @@ export const GET = withAuth(async (_req: NextRequest, user) => {
       plan: {
         focusTaskIds: plan.focusTaskIds,
         focusTasks: plan.focusTasks,
+        plannedTasks: plan.plannedTasks,
         tasksDueToday: plan.tasksDueToday,
         intentMd: plan.intentMd,
         carryForwardCount: plan.carryForward.length,
+        capacity,
       },
       review: {
         todayDone: reviewDone,

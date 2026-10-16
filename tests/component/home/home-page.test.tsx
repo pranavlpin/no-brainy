@@ -27,9 +27,11 @@ const base: HomeData = {
   plan: {
     focusTaskIds: [],
     focusTasks: [],
+    plannedTasks: [],
     tasksDueToday: [],
     intentMd: 'Ship Home',
     carryForwardCount: 2,
+    capacity: { plannedMinutes: 15, availableMinutes: 180, unknownCount: 0, overBy: 0 },
   },
   review: {
     todayDone: false,

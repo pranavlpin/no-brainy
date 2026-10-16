@@ -20,13 +20,12 @@ export const POST = withAuth(async (_req: NextRequest, user) => {
       },
     })
 
-    // Get tasks due yesterday that are not completed
-    const yesterdayEnd = new Date(today)
+    // Open tasks planned for an earlier day, or due yesterday
     const incompleteDueTasks = await prisma.task.findMany({
       where: {
         userId: user.id,
-        dueDate: { gte: yesterday, lt: yesterdayEnd },
         status: { notIn: ['completed', 'cancelled'] },
+        OR: [{ plannedDate: { lt: today } }, { dueDate: { gte: yesterday, lt: today } }],
       },
       orderBy: { orderIndex: 'asc' },
     })

@@ -187,6 +187,13 @@ model DayPlan {
   timeBlocks   Json     @default("[]")
   aiBriefMd    String?  @db.Text
   intentMd     String?  @db.Text
+  /// Minutes you can realistically give to planned work today.
+  availableMinutes Int     @default(180)
+  /// Slack reserved for the unexpected; counted as planned.
+  bufferMinutes    Int     @default(15)
+  /// Optional working window as local HH:mm labels.
+  workStart        String?
+  workEnd          String?
   createdAt    DateTime @default(now())
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   @@unique([userId, planDate])

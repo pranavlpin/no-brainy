@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api-client'
-import { dateFromKey } from '@/lib/dates'
 import type { ApiResponse } from '@/lib/types/api'
 import type {
   DayPlanResponse,
@@ -12,6 +11,8 @@ import type { TaskResponse } from '@/lib/types/tasks'
 
 export interface TodayPlanData extends DayPlanResponse {
   focusTasks: TaskResponse[]
+  /** Tasks planned for today, regardless of deadline. */
+  plannedTasks: TaskResponse[]
   tasksDueToday: TaskResponse[]
   /** Yesterday's open tasks awaiting a keep / move / drop decision. */
   carryForward: TaskResponse[]
@@ -99,6 +100,10 @@ export function useUpdatePlan() {
             ...(data.timeBlocks !== undefined && { timeBlocks: data.timeBlocks }),
             ...(data.aiBriefMd !== undefined && { aiBriefMd: data.aiBriefMd }),
             ...(data.intentMd !== undefined && { intentMd: data.intentMd }),
+            ...(data.availableMinutes !== undefined && { availableMinutes: data.availableMinutes }),
+            ...(data.bufferMinutes !== undefined && { bufferMinutes: data.bufferMinutes }),
+            ...(data.workStart !== undefined && { workStart: data.workStart }),
+            ...(data.workEnd !== undefined && { workEnd: data.workEnd }),
             focusTaskIds,
             focusTasks,
             carryForward: previous.data.carryForward.filter((t) => !focusTaskIds.includes(t.id)),
@@ -129,14 +134,16 @@ export function useTriageTask() {
       if (previous?.data) {
         const moving = previous.data.carryForward.find((t) => t.id === body.taskId)
         const carryForward = previous.data.carryForward.filter((t) => t.id !== body.taskId)
-        let tasksDueToday = previous.data.tasksDueToday
-        if (body.action === 'keep' && moving) {
-          const todayIso = dateFromKey(previous.data.planDate.slice(0, 10)).toISOString()
-          tasksDueToday = [...tasksDueToday, { ...moving, dueDate: todayIso }]
+        let plannedTasks = previous.data.plannedTasks ?? []
+        if (body.action === 'keep' && moving && !plannedTasks.some((t) => t.id === moving.id)) {
+          plannedTasks = [
+            ...plannedTasks,
+            { ...moving, plannedDate: previous.data.planDate.slice(0, 10) },
+          ]
         }
         queryClient.setQueryData<ApiResponse<TodayPlanData>>(TODAY_PLAN_KEY, {
           ...previous,
-          data: { ...previous.data, carryForward, tasksDueToday },
+          data: { ...previous.data, carryForward, plannedTasks },
         })
       }
       return { previous }

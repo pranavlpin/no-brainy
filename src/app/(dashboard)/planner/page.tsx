@@ -1,13 +1,15 @@
 'use client'
 
 import { useCallback, useState } from 'react'
-import { CalendarDays, ListTodo, Loader2, Sparkles } from 'lucide-react'
+import { CalendarCheck, CalendarDays, Flag, Loader2, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { FocusTasks } from '@/components/planner/focus-tasks'
 import { TaskSchedule } from '@/components/planner/task-schedule'
 import { TriageCard } from '@/components/planner/triage-card'
 import { IntentCard } from '@/components/planner/intent-card'
+import { CapacityCard } from '@/components/planner/capacity-card'
+import { TimeBlocks } from '@/components/planner/time-blocks'
 import { AISuggestPanel } from '@/components/planner/ai-suggest-panel'
 import { StaggerBlock, StaggerGroup, AnimatedNumber } from '@/components/motion'
 import { useTodayPlan, useTriageTask, useUpdatePlan } from '@/hooks/use-planner'
@@ -15,8 +17,9 @@ import { useCreateTask, useUpdateTask } from '@/hooks/use-tasks'
 import { usePlannerAISuggest } from '@/hooks/use-planner-ai'
 import { useAI } from '@/hooks/use-ai'
 import { useToast } from '@/hooks/use-toast'
-import { formatDateKey } from '@/lib/dates'
+import { addDays, formatDateKey } from '@/lib/dates'
 import type { TaskResponse } from '@/lib/types/tasks'
+import type { CapacitySettings, TimeBlock } from '@/lib/types/planner'
 import type { DailyPlanSuggestion } from '@/lib/ai/types'
 
 function ProgressBar({ completed, total }: { completed: number; total: number }) {
@@ -78,12 +81,35 @@ export default function PlannerPage() {
     [updatePlan]
   )
 
+  const handleCapacityChange = useCallback(
+    (patch: Partial<CapacitySettings>) => updatePlan.mutate(patch),
+    [updatePlan]
+  )
+
+  const handleBlocksChange = useCallback(
+    (timeBlocks: TimeBlock[]) => updatePlan.mutate({ timeBlocks }),
+    [updatePlan]
+  )
+
+  const handleMoveToTomorrow = useCallback(
+    (taskIds: string[]) => {
+      if (!plan || taskIds.length === 0) return
+      const tomorrow = addDays(plan.planDate.slice(0, 10), 1)
+      for (const id of taskIds) updateTask.mutate({ id, data: { plannedDate: tomorrow } })
+      toast.show(
+        `Moved ${taskIds.length} task${taskIds.length === 1 ? '' : 's'} to tomorrow`,
+        'success'
+      )
+    },
+    [plan, updateTask, toast]
+  )
+
   const handleMakeIntentTask = useCallback(
     (intent: string) => {
       if (!plan) return
       const today = plan.planDate.slice(0, 10)
       createTask.mutate(
-        { title: intent, priority: 'high', dueDate: today, tags: ['intent'] },
+        { title: intent, priority: 'high', plannedDate: today, tags: ['intent'] },
         {
           onSuccess: (res) => {
             const nextIds = [res.data.id, ...plan.focusTaskIds].slice(0, 3)
@@ -116,17 +142,24 @@ export default function PlannerPage() {
     month: 'long',
   })
 
+  const plannedTasks = plan.plannedTasks ?? []
   const seen = new Set<string>()
   const allDayTasks: TaskResponse[] = []
-  for (const task of [...plan.focusTasks, ...plan.tasksDueToday]) {
+  for (const task of [...plan.focusTasks, ...plannedTasks, ...plan.tasksDueToday]) {
     if (!seen.has(task.id)) {
       seen.add(task.id)
       allDayTasks.push(task)
     }
   }
   const completedCount = allDayTasks.filter((t) => t.status === 'completed').length
-  const scheduleTasks = plan.tasksDueToday.filter((t) => !plan.focusTaskIds.includes(t.id))
+  const plannedList = plannedTasks.filter((t) => !plan.focusTaskIds.includes(t.id))
+  const deadlineList = plan.tasksDueToday.filter(
+    (t) => !plan.focusTaskIds.includes(t.id) && !plannedList.some((p) => p.id === t.id)
+  )
   const intentIsTask = !!plan.intentMd && allDayTasks.some((t) => t.title === plan.intentMd)
+  const linkableTasks = allDayTasks
+    .filter((t) => t.status !== 'completed' && t.status !== 'cancelled')
+    .map((t) => ({ id: t.id, title: t.title }))
 
   return (
     <StaggerGroup className="mx-auto max-w-3xl space-y-5">
@@ -186,6 +219,20 @@ export default function PlannerPage() {
         />
       </StaggerBlock>
 
+      <StaggerBlock>
+        <CapacityCard
+          tasks={allDayTasks}
+          blocks={plan.timeBlocks}
+          availableMinutes={plan.availableMinutes}
+          bufferMinutes={plan.bufferMinutes}
+          workStart={plan.workStart}
+          workEnd={plan.workEnd}
+          protectedIds={plan.focusTaskIds}
+          onChange={handleCapacityChange}
+          onMoveTasks={handleMoveToTomorrow}
+        />
+      </StaggerBlock>
+
       {suggestion && (
         <StaggerBlock>
           <AISuggestPanel
@@ -201,7 +248,7 @@ export default function PlannerPage() {
         <FocusTasks
           focusTasks={plan.focusTasks}
           focusTaskIds={plan.focusTaskIds}
-          allTasks={[...plan.tasksDueToday, ...plan.carryForward]}
+          allTasks={[...plannedTasks, ...plan.tasksDueToday, ...plan.carryForward]}
           goals={plan.goals}
           onUpdate={handleUpdateFocus}
           onToggleComplete={handleToggleComplete}
@@ -209,14 +256,35 @@ export default function PlannerPage() {
       </StaggerBlock>
 
       <StaggerBlock>
+        <TimeBlocks blocks={plan.timeBlocks} tasks={linkableTasks} onChange={handleBlocksChange} />
+      </StaggerBlock>
+
+      <StaggerBlock>
         <div className="mb-3 flex items-center gap-2 px-1">
-          <ListTodo className="h-4 w-4 text-retro-blue" />
-          <h2 className="font-display text-base font-semibold text-retro-dark">Also due today</h2>
+          <CalendarCheck className="h-4 w-4 text-retro-blue" />
+          <h2 className="font-display text-base font-semibold text-retro-dark">
+            Planned for today
+          </h2>
         </div>
         <TaskSchedule
-          tasks={scheduleTasks}
+          tasks={plannedList}
           goals={plan.goals}
           onToggleComplete={handleToggleComplete}
+          emptyMessage="Nothing else planned. Give a task a planned day and it shows up here."
+          testId="planned-today-list"
+        />
+      </StaggerBlock>
+
+      <StaggerBlock>
+        <div className="mb-3 flex items-center gap-2 px-1">
+          <Flag className="h-4 w-4 text-retro-pink" />
+          <h2 className="font-display text-base font-semibold text-retro-dark">Deadlines today</h2>
+        </div>
+        <TaskSchedule
+          tasks={deadlineList}
+          goals={plan.goals}
+          onToggleComplete={handleToggleComplete}
+          emptyMessage="No deadlines land today."
         />
       </StaggerBlock>
     </StaggerGroup>

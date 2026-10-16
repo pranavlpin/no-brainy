@@ -55,6 +55,10 @@ export const PUT = withAuth(async (req: NextRequest, user) => {
         }),
         ...(data.aiBriefMd !== undefined && { aiBriefMd: data.aiBriefMd }),
         ...(data.intentMd !== undefined && { intentMd: data.intentMd }),
+        ...(data.availableMinutes !== undefined && { availableMinutes: data.availableMinutes }),
+        ...(data.bufferMinutes !== undefined && { bufferMinutes: data.bufferMinutes }),
+        ...(data.workStart !== undefined && { workStart: data.workStart }),
+        ...(data.workEnd !== undefined && { workEnd: data.workEnd }),
       },
       create: {
         userId: user.id,
@@ -63,6 +67,10 @@ export const PUT = withAuth(async (req: NextRequest, user) => {
         timeBlocks: (data.timeBlocks ?? []) as unknown as Prisma.InputJsonValue,
         aiBriefMd: data.aiBriefMd ?? null,
         intentMd: data.intentMd ?? null,
+        ...(data.availableMinutes !== undefined && { availableMinutes: data.availableMinutes }),
+        ...(data.bufferMinutes !== undefined && { bufferMinutes: data.bufferMinutes }),
+        workStart: data.workStart ?? null,
+        workEnd: data.workEnd ?? null,
       },
     })
 

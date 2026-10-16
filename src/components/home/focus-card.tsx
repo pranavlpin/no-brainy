@@ -2,29 +2,43 @@
 
 import Link from 'next/link'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowRight, Target } from 'lucide-react'
+import { ArrowRight, Gauge, Target } from 'lucide-react'
 import { Card, CardLabel } from '@/components/ui/card'
 import { TaskCheck } from '@/components/tasks/task-check'
 import { PriorityBadge } from '@/components/tasks/priority-badge'
 import { GoalChip } from '@/components/planner/focus-tasks'
 import { useUpdateTask } from '@/hooks/use-tasks'
+import { formatMinutes } from '@/lib/planner/capacity'
 import { cn } from '@/lib/utils'
 import type { TaskResponse } from '@/lib/types/tasks'
-import type { HomeGoal } from '@/lib/types/home'
+import type { HomeData, HomeGoal } from '@/lib/types/home'
 
 interface FocusCardProps {
   focusTasks: TaskResponse[]
+  /** Planned for today, regardless of deadline. */
+  plannedToday?: TaskResponse[]
   dueToday: TaskResponse[]
   goals: HomeGoal[]
   carryForwardCount: number
+  capacity?: HomeData['plan']['capacity']
 }
 
-/** Today's three focus tasks plus anything else due, with instant toggles. */
-export function FocusCard({ focusTasks, dueToday, goals, carryForwardCount }: FocusCardProps) {
+/** Today's three focus tasks plus what else is planned or due, with instant toggles. */
+export function FocusCard({
+  focusTasks,
+  plannedToday = [],
+  dueToday,
+  goals,
+  carryForwardCount,
+  capacity,
+}: FocusCardProps) {
   const updateTask = useUpdateTask()
   const goalsById = new Map(goals.map((g) => [g.id, g]))
-  const others = dueToday.filter((t) => !focusTasks.some((f) => f.id === t.id))
+  const isFocus = (t: TaskResponse) => focusTasks.some((f) => f.id === t.id)
+  const planned = plannedToday.filter((t) => !isFocus(t))
+  const others = dueToday.filter((t) => !isFocus(t) && !planned.some((p) => p.id === t.id))
   const done = focusTasks.filter((t) => t.status === 'completed').length
+  const over = (capacity?.overBy ?? 0) > 0
 
   const toggle = (task: TaskResponse, next: boolean) =>
     updateTask.mutate({ id: task.id, data: { status: next ? 'completed' : 'pending' } })
@@ -93,6 +107,22 @@ export function FocusCard({ focusTasks, dueToday, goals, carryForwardCount }: Fo
         </Link>
       </div>
 
+      {capacity && (focusTasks.length > 0 || planned.length > 0 || others.length > 0) && (
+        <p
+          data-testid="home-capacity"
+          className={cn(
+            'mb-3 flex items-center gap-1.5 font-mono text-[11px]',
+            over ? 'text-retro-orange' : 'text-retro-dark/60'
+          )}
+        >
+          <Gauge className="h-3 w-3" />
+          {formatMinutes(capacity.plannedMinutes)} planned of{' '}
+          {formatMinutes(capacity.availableMinutes)}
+          {over && <> · over by {formatMinutes(capacity.overBy)}</>}
+          {capacity.unknownCount > 0 && <> · {capacity.unknownCount} unestimated</>}
+        </p>
+      )}
+
       {focusTasks.length === 0 ? (
         <Link
           href="/planner"
@@ -113,9 +143,18 @@ export function FocusCard({ focusTasks, dueToday, goals, carryForwardCount }: Fo
         </ul>
       )}
 
+      {planned.length > 0 && (
+        <div className="mt-4 border-t border-border/60 pt-3">
+          <CardLabel className="mb-1 px-1">Planned for today</CardLabel>
+          <ul data-testid="home-planned" className="space-y-0.5">
+            <AnimatePresence initial={false}>{planned.map((t) => renderRow(t))}</AnimatePresence>
+          </ul>
+        </div>
+      )}
+
       {others.length > 0 && (
         <div className="mt-4 border-t border-border/60 pt-3">
-          <CardLabel className="mb-1 px-1">Also due today</CardLabel>
+          <CardLabel className="mb-1 px-1">Deadlines today</CardLabel>
           <ul data-testid="home-due" className="space-y-0.5">
             <AnimatePresence initial={false}>{others.map((t) => renderRow(t))}</AnimatePresence>
           </ul>

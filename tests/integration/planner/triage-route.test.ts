@@ -51,21 +51,22 @@ describe('POST /api/planner/triage', () => {
   })
   afterEach(() => vi.useRealTimers())
 
-  it('keep moves the due date to today', async () => {
+  it('keep plans the task for today and leaves the deadline alone', async () => {
     const { POST } = await import('@/app/api/planner/triage/route')
     const res = await POST(post({ taskId: 't1', action: 'keep' }))
     expect(res.status).toBe(200)
     const data = task.update.mock.calls[0][0].data
-    expect((data.dueDate as Date).toISOString()).toBe('2026-10-17T00:00:00.000Z')
+    expect((data.plannedDate as Date).toISOString()).toBe('2026-10-17T00:00:00.000Z')
+    expect(data.dueDate).toBeUndefined()
   })
 
-  it('move sets the chosen future date and rejects past dates', async () => {
+  it('move plans the chosen future day, keeps the deadline, and rejects past dates', async () => {
     const { POST } = await import('@/app/api/planner/triage/route')
     const ok = await POST(post({ taskId: 't1', action: 'move', date: '2026-10-20' }))
     expect(ok.status).toBe(200)
-    expect((task.update.mock.calls[0][0].data.dueDate as Date).toISOString()).toBe(
-      '2026-10-20T00:00:00.000Z'
-    )
+    const data = task.update.mock.calls[0][0].data
+    expect((data.plannedDate as Date).toISOString()).toBe('2026-10-20T00:00:00.000Z')
+    expect(data.dueDate).toBeUndefined()
     const bad = await POST(post({ taskId: 't1', action: 'move', date: '2026-10-17' }))
     expect(bad.status).toBe(400)
   })

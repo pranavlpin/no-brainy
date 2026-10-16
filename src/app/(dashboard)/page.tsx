@@ -119,9 +119,11 @@ export default function TodayPage() {
         <StaggerBlock className="lg:col-span-2">
           <FocusCard
             focusTasks={data.plan.focusTasks}
+            plannedToday={data.plan.plannedTasks}
             dueToday={data.plan.tasksDueToday}
             goals={data.goals.active}
             carryForwardCount={data.plan.carryForwardCount}
+            capacity={data.plan.capacity}
           />
         </StaggerBlock>
         <StaggerBlock>

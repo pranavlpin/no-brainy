@@ -22,9 +22,18 @@ export interface HomeData {
   plan: {
     focusTaskIds: string[]
     focusTasks: TaskResponse[]
+    /** Planned for today, regardless of deadline. */
+    plannedTasks: TaskResponse[]
     tasksDueToday: TaskResponse[]
     intentMd: string | null
     carryForwardCount: number
+    /** Planned versus available minutes for the day; unknown estimates are counted, not zeroed. */
+    capacity: {
+      plannedMinutes: number
+      availableMinutes: number
+      unknownCount: number
+      overBy: number
+    }
   }
   review: {
     todayDone: boolean

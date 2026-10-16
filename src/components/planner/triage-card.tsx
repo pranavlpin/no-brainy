@@ -82,8 +82,9 @@ function MoveOptions({
 }
 
 /**
- * Yesterday's leftovers with a decision per task: keep it today, move it to
- * a later date, or drop it. Renders nothing when there is nothing to decide.
+ * Carried-over tasks with a decision per task: plan it for today, pick a
+ * later day, or drop it. Decisions move the planned day, never the deadline.
+ * Renders nothing when there is nothing to decide.
  */
 export function TriageCard({ tasks, today, onTriage }: TriageCardProps) {
   const [moving, setMoving] = useState<string | null>(null)
@@ -99,8 +100,8 @@ export function TriageCard({ tasks, today, onTriage }: TriageCardProps) {
         <div>
           <CardLabel>Morning triage</CardLabel>
           <p className="text-sm font-medium text-retro-dark">
-            Yesterday left {tasks.length} task{tasks.length === 1 ? '' : 's'} behind. Decide each
-            one.
+            {tasks.length} task{tasks.length === 1 ? '' : 's'} carried over. Plan today, choose a
+            day, or drop it. Deadlines stay put.
           </p>
         </div>
       </div>
@@ -130,17 +131,17 @@ export function TriageCard({ tasks, today, onTriage }: TriageCardProps) {
                     <button
                       type="button"
                       data-testid={`triage-keep-${task.id}`}
-                      aria-label={`Keep "${task.title}" for today`}
+                      aria-label={`Plan "${task.title}" for today`}
                       onClick={() => onTriage({ taskId: task.id, action: 'keep' })}
                       className="flex h-8 items-center gap-1 rounded-full bg-retro-mint/20 px-3 font-mono text-xs font-bold text-retro-dark transition-colors hover:bg-retro-mint/40"
                     >
                       <Check className="h-3.5 w-3.5" />
-                      Keep
+                      Today
                     </button>
                     <button
                       type="button"
                       data-testid={`triage-move-${task.id}`}
-                      aria-label={`Move "${task.title}" to a later date`}
+                      aria-label={`Choose a day for "${task.title}"`}
                       aria-expanded={isMoving}
                       onClick={() => setMoving(isMoving ? null : task.id)}
                       className={cn(
@@ -149,7 +150,7 @@ export function TriageCard({ tasks, today, onTriage }: TriageCardProps) {
                       )}
                     >
                       <ArrowRight className="h-3.5 w-3.5" />
-                      Move
+                      Pick day
                     </button>
                     <button
                       type="button"
