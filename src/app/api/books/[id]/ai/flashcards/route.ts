@@ -1,3 +1,4 @@
+import { validateAIOutput } from '@/lib/ai/validation'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withAI } from '@/lib/ai/middleware'
@@ -82,7 +83,8 @@ export const POST = withAI(async (req: NextRequest, ctx) => {
           success: false,
           error: {
             code: 'CONTENT_TOO_SHORT',
-            message: 'Book content is too short to generate flashcards. Add a summary, key ideas, or quotes first.',
+            message:
+              'Book content is too short to generate flashcards. Add a summary, key ideas, or quotes first.',
           },
         },
         { status: 400 }
@@ -104,7 +106,7 @@ export const POST = withAI(async (req: NextRequest, ctx) => {
     })
 
     const response: FlashcardGenerationResult = {
-      cards: result.data.cards,
+      cards: validateAIOutput('cards', result.data).cards,
       sourceType: 'book',
       sourceId: bookId,
     }

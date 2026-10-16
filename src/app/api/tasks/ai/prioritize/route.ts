@@ -1,3 +1,7 @@
+import { validateAIOutput } from '@/lib/ai/validation'
+import { AIError } from '@/lib/ai/call-ai'
+import { handleAIError } from '@/lib/ai/error-handler'
+import { todayInTimezone } from '@/lib/dates/calendar'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withAI } from '@/lib/ai/middleware'
@@ -12,6 +16,8 @@ export const POST = withAI(async (_req: NextRequest, ctx) => {
       where: {
         userId: ctx.user.id,
         status: { in: ['pending', 'in_progress'] },
+        routinePaused: false,
+        OR: [{ goalId: null }, { goal: { status: 'active' } }],
       },
       orderBy: { orderIndex: 'asc' },
       take: 50,
@@ -46,7 +52,7 @@ export const POST = withAI(async (_req: NextRequest, ctx) => {
       dueDate: t.dueDate?.toISOString().split('T')[0] ?? null,
     }))
 
-    const today = new Date().toISOString().split('T')[0]
+    const today = todayInTimezone(ctx.user.timezone)
 
     const result = await callAI<TaskPrioritizationResult>({
       apiKey: ctx.apiKey,
@@ -58,23 +64,26 @@ export const POST = withAI(async (_req: NextRequest, ctx) => {
       responseFormat: 'json',
     })
 
+    result.data = validateAIOutput('priorities', result.data)
+    if (
+      new Set(result.data.suggestions.map((s) => s.taskId)).size !==
+        result.data.suggestions.length ||
+      result.data.suggestions.some((s) => !tasks.some((t) => t.id === s.taskId))
+    )
+      throw new AIError(
+        'Some suggested tasks are unavailable. Regenerate when ready.',
+        'AI_INVALID_RESPONSE'
+      )
     // Enrich suggestions with task titles for display
     const titleMap = new Map(taskList.map((t) => [t.id, t.title]))
     result.data.suggestions = result.data.suggestions.map((s) => ({
       ...s,
-      taskTitle: titleMap.get(s.taskId) ?? s.taskId,
+      taskTitle: titleMap.get(s.taskId)!,
+      currentPriority: tasks.find((t) => t.id === s.taskId)!.priority,
     }))
 
     return NextResponse.json(result)
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'An unexpected error occurred'
-    return NextResponse.json(
-      {
-        success: false,
-        error: { code: 'AI_ERROR', message },
-      },
-      { status: 500 }
-    )
+    return handleAIError(error)
   }
 })

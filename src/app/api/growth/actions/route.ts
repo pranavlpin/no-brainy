@@ -33,6 +33,7 @@ export const POST = withAuth(async (req: NextRequest, user) => {
           id,
           userId: user.id,
           title: input.title,
+          priority: input.priority,
           goalId: input.goalId,
           context: 'personal',
           plannedDate: input.plannedDate ? new Date(`${input.plannedDate}T00:00:00Z`) : null,

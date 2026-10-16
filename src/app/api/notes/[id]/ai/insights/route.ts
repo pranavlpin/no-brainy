@@ -1,3 +1,4 @@
+import { validateAIOutput } from '@/lib/ai/validation'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withAI } from '@/lib/ai/middleware'
@@ -47,7 +48,7 @@ export const POST = withAI(async (req: NextRequest, { user, apiKey }) => {
       responseFormat: 'json',
     })
 
-    return NextResponse.json(result)
+    return NextResponse.json({ ...result, data: validateAIOutput('noteInsights', result.data) })
   } catch (error) {
     return handleAIError(error)
   }

@@ -49,6 +49,7 @@ export interface GrowthOverview {
   dueLearning: number
 }
 export interface GrowthActionInput {
+  priority?: 'urgent' | 'high' | 'medium' | 'low'
   clientRequestId: string
   title: string
   goalId?: string | null

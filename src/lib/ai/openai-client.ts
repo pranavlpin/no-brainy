@@ -5,12 +5,12 @@ import OpenAI from 'openai'
  * Never cache this -- a new instance per request ensures key isolation.
  */
 export function createOpenAIClient(apiKey: string): OpenAI {
-  return new OpenAI({ apiKey })
+  return new OpenAI({ apiKey, timeout: 30000, maxRetries: 0 })
 }
 
 export type AIModel = 'gpt-4o-mini' | 'gpt-4o'
 
 export const AI_MODELS = {
-  FAST: 'gpt-4o-mini' as const,   // summarization, generation, tags, flashcards
-  SMART: 'gpt-4o' as const,        // coach, insights, budget analysis, complex reasoning
+  FAST: 'gpt-4o-mini' as const, // summarization, generation, tags, flashcards
+  SMART: 'gpt-4o' as const, // coach, insights, budget analysis, complex reasoning
 }

@@ -1,3 +1,4 @@
+import { validateAIOutput } from '@/lib/ai/validation'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withAI } from '@/lib/ai/middleware'
@@ -44,7 +45,8 @@ export const POST = withAI(async (req: NextRequest, { user, apiKey }) => {
         success: false,
         error: {
           code: 'CONTENT_TOO_SHORT',
-          message: 'This book has no content to extract actions from. Add a summary, key ideas, or learnings first.',
+          message:
+            'This book has no content to extract actions from. Add a summary, key ideas, or learnings first.',
         },
       },
       { status: 400 }
@@ -64,7 +66,7 @@ export const POST = withAI(async (req: NextRequest, { user, apiKey }) => {
       responseFormat: 'json',
     })
 
-    return NextResponse.json(result)
+    return NextResponse.json({ ...result, data: validateAIOutput('actions', result.data) })
   } catch (error) {
     return handleAIError(error)
   }

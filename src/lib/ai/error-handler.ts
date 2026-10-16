@@ -1,11 +1,38 @@
 import { NextResponse } from 'next/server'
 import OpenAI from 'openai'
+import { AIError } from './call-ai'
+import { ZodError } from 'zod'
 
 /**
  * Catches OpenAI SDK errors and returns appropriate HTTP responses.
  * Use in catch blocks of AI route handlers.
  */
 export function handleAIError(error: unknown): NextResponse {
+  if (error instanceof ZodError)
+    return NextResponse.json(
+      {
+        success: false,
+        error: { code: 'VALIDATION_ERROR', message: 'Check the selected date range and message.' },
+      },
+      { status: 400 }
+    )
+  if (error instanceof AIError)
+    return NextResponse.json(
+      { success: false, error: { code: error.code, message: error.message } },
+      { status: 502 }
+    )
+  if (error instanceof OpenAI.APIConnectionTimeoutError)
+    return NextResponse.json(
+      {
+        success: false,
+        error: {
+          code: 'AI_TIMEOUT',
+          message: 'The provider took too long. Retry or continue manually; nothing was changed.',
+        },
+      },
+      { status: 504 }
+    )
+
   if (error instanceof OpenAI.AuthenticationError) {
     return NextResponse.json(
       {
@@ -38,7 +65,8 @@ export function handleAIError(error: unknown): NextResponse {
         success: false,
         error: {
           code: 'AI_BAD_REQUEST',
-          message: 'The content could not be processed. It may be too long or contain unsupported content.',
+          message:
+            'The content could not be processed. It may be too long or contain unsupported content.',
         },
       },
       { status: 400 }

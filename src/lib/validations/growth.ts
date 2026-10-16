@@ -30,6 +30,7 @@ export const growthActionSchema = z
     clientRequestId: z.string().uuid(),
     goalId: z.string().min(1).nullable().optional(),
     title: z.string().trim().min(1).max(500),
+    priority: z.enum(['urgent', 'high', 'medium', 'low']).optional(),
     description: z.string().max(10000).default(''),
     plannedDate: date.nullable().optional(),
     estimatedMinutes: z.number().int().min(1).max(1440).nullable().optional(),
