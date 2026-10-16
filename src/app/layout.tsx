@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from 'next'
-import Script from 'next/script'
 import { Inter } from 'next/font/google'
 import { Providers } from '@/components/providers'
+import { GoogleAnalytics } from '@/components/analytics-scripts'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -52,6 +52,7 @@ export const metadata: Metadata = {
       { url: '/icons/icon-192.png', sizes: '192x192' },
     ],
     apple: '/icons/apple-touch-icon.png',
+    shortcut: '/favicon.ico',
   },
   appleWebApp: {
     capable: true,
@@ -73,24 +74,6 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        {GA_ID && (
-          <>
-            <Script
-              src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
-              strategy="afterInteractive"
-            />
-            <Script id="google-analytics" strategy="afterInteractive">
-              {`
-                window.dataLayer = window.dataLayer || [];
-                function gtag(){dataLayer.push(arguments);}
-                gtag('js', new Date());
-                gtag('config', '${GA_ID}');
-              `}
-            </Script>
-          </>
-        )}
-      </head>
       <body className={inter.className} suppressHydrationWarning>
         <script
           dangerouslySetInnerHTML={{
@@ -124,6 +107,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         `,
           }}
         />
+        <GoogleAnalytics gaId={GA_ID} />
         <Providers>{children}</Providers>
       </body>
     </html>

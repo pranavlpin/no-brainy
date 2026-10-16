@@ -1,7 +1,7 @@
 // Generates PWA icons from public/icon.svg.
 // Run once: NODE_PATH=node_modules/.pnpm/node_modules node scripts/generate-icons.cjs
 const sharp = require('sharp')
-const { mkdir } = require('node:fs/promises')
+const { mkdir, writeFile } = require('node:fs/promises')
 
 const sizes = [
   { file: 'public/icons/icon-192.png', size: 192 },
@@ -28,6 +28,24 @@ async function main() {
       .toFile(file)
     console.log('wrote', file)
   }
+
+  // favicon.ico: a 32 px PNG wrapped in an ICO container (supported by every modern browser).
+  const png32 = await sharp('public/icon.svg').resize(32, 32).png().toBuffer()
+  const header = Buffer.alloc(6)
+  header.writeUInt16LE(0, 0) // reserved
+  header.writeUInt16LE(1, 2) // type: icon
+  header.writeUInt16LE(1, 4) // image count
+  const entry = Buffer.alloc(16)
+  entry.writeUInt8(32, 0) // width
+  entry.writeUInt8(32, 1) // height
+  entry.writeUInt8(0, 2) // palette
+  entry.writeUInt8(0, 3) // reserved
+  entry.writeUInt16LE(1, 4) // planes
+  entry.writeUInt16LE(32, 6) // bits per pixel
+  entry.writeUInt32LE(png32.length, 8) // image size
+  entry.writeUInt32LE(6 + 16, 12) // image offset
+  await writeFile('public/favicon.ico', Buffer.concat([header, entry, png32]))
+  console.log('wrote public/favicon.ico')
 }
 
 main().catch((err) => {

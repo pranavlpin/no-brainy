@@ -20,3 +20,9 @@ Section-wise test plan for the `platform` module. Append new sections per task; 
 - Scope: unit + integration.
 - Unit: `todayKey('Asia/Kolkata')` at 2026-10-16T23:00Z returns `2026-10-17`; `todayKey('UTC')` returns `2026-10-16`; `addDays`, `dayBoundsUtc`, `weekBounds` (Monday start), `isValidDateKey`, `userTimezone` fallback to `Asia/Kolkata` for `UTC`/empty.
 - Integration: planner today route called with a user in `Asia/Kolkata` at 23:30Z creates the plan for the next local day (mocked Prisma); timezone PATCH rejects an invalid zone with 400.
+
+## T13 — Head hydration failure, favicon, client-state hydration (bug fix)
+
+- Scope: unit + component (regression tests written first, failing).
+- Component: `GoogleAnalytics` renders no DOM for `""` or `undefined` and renders scripts for a real id.
+- Unit: `src/app/layout.tsx` contains no manual `<head>` element; `public/favicon.ico` exists and starts with the ICO header bytes `00 00 01 00`; the UI store and focus store start from server defaults even when `localStorage` holds values, and `hydrate()` loads them.

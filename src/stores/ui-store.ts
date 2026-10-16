@@ -41,19 +41,34 @@ interface UIState {
   toggleGroup: (key: NavGroupKey) => void
   /** Show every item and expand every group. */
   resetNav: () => void
+  /** True once persisted values have been loaded on the client. */
+  hydrated: boolean
+  /**
+   * Load persisted values from localStorage. Called after mount so the first
+   * client render matches the server HTML (no hydration mismatch).
+   */
+  hydrate: () => void
+  /** Test helper: back to server defaults. */
+  resetForTests: () => void
+}
+
+const SERVER_DEFAULTS = {
+  sidebarCollapsed: false,
+  mobileSidebarOpen: false,
+  focusMode: false,
+  focusTaskId: null as string | null,
+  hiddenNavItems: [] as string[],
+  collapsedGroups: [] as NavGroupKey[],
+  hydrated: false,
 }
 
 export const useUIStore = create<UIState>((set) => ({
-  sidebarCollapsed: false,
+  ...SERVER_DEFAULTS,
   toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
   setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
-  mobileSidebarOpen: false,
   setMobileSidebarOpen: (open) => set({ mobileSidebarOpen: open }),
-  focusMode: false,
-  focusTaskId: null,
   enterFocusMode: (taskId) => set({ focusMode: true, focusTaskId: taskId }),
   exitFocusMode: () => set({ focusMode: false, focusTaskId: null }),
-  hiddenNavItems: readJson<string[]>(HIDDEN_KEY, []),
   toggleNavItem: (href) =>
     set((s) => {
       const hidden = s.hiddenNavItems.includes(href)
@@ -62,7 +77,6 @@ export const useUIStore = create<UIState>((set) => ({
       writeJson(HIDDEN_KEY, hidden)
       return { hiddenNavItems: hidden }
     }),
-  collapsedGroups: readJson<NavGroupKey[]>(COLLAPSED_KEY, []),
   toggleGroup: (key) =>
     set((s) => {
       const collapsed = s.collapsedGroups.includes(key)
@@ -77,4 +91,11 @@ export const useUIStore = create<UIState>((set) => ({
     if (typeof window !== 'undefined') localStorage.removeItem('nobrainy-nav-order')
     set({ hiddenNavItems: [], collapsedGroups: [] })
   },
+  hydrate: () =>
+    set({
+      hiddenNavItems: readJson<string[]>(HIDDEN_KEY, []),
+      collapsedGroups: readJson<NavGroupKey[]>(COLLAPSED_KEY, []),
+      hydrated: true,
+    }),
+  resetForTests: () => set({ ...SERVER_DEFAULTS }),
 }))

@@ -10,9 +10,22 @@ import { CommandLayer } from '@/components/command-palette/command-layer'
 import { Toast } from '@/components/ui/toast'
 import { FocusModeView } from '@/components/focus/focus-mode-view'
 import { TimezoneSync } from '@/components/timezone-sync'
+import { useEffect } from 'react'
+import { useFocusStore } from '@/stores/focus-store'
+
+/** Loads localStorage-backed UI and timer state after mount, keeping SSR and client HTML identical. */
+function useHydrateClientState() {
+  const hydrateUI = useUIStore((s) => s.hydrate)
+  const hydrateFocus = useFocusStore((s) => s.hydrate)
+  useEffect(() => {
+    hydrateUI()
+    hydrateFocus()
+  }, [hydrateUI, hydrateFocus])
+}
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { sidebarCollapsed, focusMode } = useUIStore()
+  useHydrateClientState()
 
   if (focusMode) {
     return (

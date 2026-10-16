@@ -16,6 +16,10 @@ Ruling recorded for the batch T01–T12 only:
 - **Push and PR creation** are authorized once the batch is complete. No merge.
 - Any task outside this batch returns to the strict per-task approval flow in `CLAUDE.md` §7.
 
+### 2026-10-16 — Acceptance-testing defects
+
+While testing the batch the owner reported browser console errors ("These errors are coming."). Defects found in the batch's own unlanded work are treated as pre-approved bug-fix tasks on the same branch, registered and planned like any other task. This extends the batch ruling to T13 and to further defects the owner reports before the branch lands; it does not cover new features.
+
 ## Tasks
 
 | ID  | Task                                      | Date       | Branch                               | Plan                                                     | Status                                                                                                             |

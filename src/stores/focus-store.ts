@@ -39,6 +39,8 @@ interface FocusState extends PersistedFocus {
   completePomodoro: () => void
   nextBreakSec: () => number
   setSessionId: (id: string | null) => void
+  /** Load the persisted timer after mount so SSR and the first client render agree. */
+  hydrate: () => void
   reset: () => void
 }
 
@@ -104,7 +106,8 @@ function persist(state: PersistedFocus): void {
  * from `startedAt` and the wall clock, so there is no drifting interval.
  */
 export const useFocusStore = create<FocusState>((set, get) => ({
-  ...load(),
+  ...initial,
+  hydrate: () => set({ ...load() }),
   start: (opts, now = Date.now()) => {
     const next: PersistedFocus = {
       ...get(),
