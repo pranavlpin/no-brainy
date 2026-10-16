@@ -8,6 +8,7 @@ import { Breadcrumbs } from './breadcrumbs'
 import { UserMenu } from './user-menu'
 import { NotificationBell } from '@/components/notifications/notification-bell'
 import { FocusPill } from './focus-pill'
+import { ContextSwitch } from './context-switch'
 
 export function TopBar() {
   const { setMobileSidebarOpen } = useUIStore()
@@ -27,6 +28,7 @@ export function TopBar() {
       </div>
       <div className="flex items-center gap-2">
         <FocusPill />
+        <ContextSwitch className="hidden md:flex" />
         <button
           type="button"
           onClick={() => setPalette(true)}

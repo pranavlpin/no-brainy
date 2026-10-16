@@ -75,108 +75,108 @@
 /* Theme: Ocean */
 .theme-ocean,
 .light.theme-ocean {
-    --retro-pink: 195 100% 45%;
-    --retro-yellow: 45 90% 55%;
-    --retro-blue: 220 90% 50%;
-    --retro-mint: 175 70% 45%;
-    --retro-orange: 200 80% 55%;
-    --retro-dark: 220 30% 15%;
-    --retro-cream: 200 30% 95%;
-    --sidebar-bg: 215 35% 20%;
-    --sidebar-fg: 200 30% 92%;
-    --page-bg-subtle: 200 30% 96%;
-  }
+  --retro-pink: 195 100% 45%;
+  --retro-yellow: 45 90% 55%;
+  --retro-blue: 220 90% 50%;
+  --retro-mint: 175 70% 45%;
+  --retro-orange: 200 80% 55%;
+  --retro-dark: 220 30% 15%;
+  --retro-cream: 200 30% 95%;
+  --sidebar-bg: 215 35% 20%;
+  --sidebar-fg: 200 30% 92%;
+  --page-bg-subtle: 200 30% 96%;
+}
 
 /* Theme: Forest */
 .theme-forest,
 .light.theme-forest {
-    --retro-pink: 340 60% 55%;
-    --retro-yellow: 45 85% 50%;
-    --retro-blue: 150 60% 35%;
-    --retro-mint: 120 50% 45%;
-    --retro-orange: 25 80% 50%;
-    --retro-dark: 150 20% 12%;
-    --retro-cream: 80 30% 95%;
-    --sidebar-bg: 150 25% 18%;
-    --sidebar-fg: 120 20% 92%;
-    --page-bg-subtle: 80 25% 96%;
-  }
+  --retro-pink: 340 60% 55%;
+  --retro-yellow: 45 85% 50%;
+  --retro-blue: 150 60% 35%;
+  --retro-mint: 120 50% 45%;
+  --retro-orange: 25 80% 50%;
+  --retro-dark: 150 20% 12%;
+  --retro-cream: 80 30% 95%;
+  --sidebar-bg: 150 25% 18%;
+  --sidebar-fg: 120 20% 92%;
+  --page-bg-subtle: 80 25% 96%;
+}
 
 /* Theme: Sunset */
 .theme-sunset,
 .light.theme-sunset {
-    --retro-pink: 340 85% 55%;
-    --retro-yellow: 35 100% 55%;
-    --retro-blue: 270 70% 55%;
-    --retro-mint: 15 80% 55%;
-    --retro-orange: 25 95% 55%;
-    --retro-dark: 270 20% 15%;
-    --retro-cream: 30 50% 95%;
-    --sidebar-bg: 270 25% 20%;
-    --sidebar-fg: 30 30% 92%;
-    --page-bg-subtle: 30 40% 96%;
-  }
+  --retro-pink: 340 85% 55%;
+  --retro-yellow: 35 100% 55%;
+  --retro-blue: 270 70% 55%;
+  --retro-mint: 15 80% 55%;
+  --retro-orange: 25 95% 55%;
+  --retro-dark: 270 20% 15%;
+  --retro-cream: 30 50% 95%;
+  --sidebar-bg: 270 25% 20%;
+  --sidebar-fg: 30 30% 92%;
+  --page-bg-subtle: 30 40% 96%;
+}
 
 /* Dark mode variants */
 .dark.theme-ocean {
-    --background: 210 30% 7%;
-    --card: 210 30% 7%;
-    --popover: 210 30% 7%;
-    --secondary: 210 25% 15%;
-    --muted: 210 25% 15%;
-    --accent: 210 25% 15%;
-    --border: 210 25% 15%;
-    --input: 210 25% 15%;
-    --retro-pink: 195 80% 55%;
-    --retro-yellow: 45 80% 60%;
-    --retro-blue: 210 85% 60%;
-    --retro-mint: 175 60% 55%;
-    --retro-orange: 200 70% 60%;
-    --retro-dark: 210 25% 85%;
-    --retro-cream: 200 20% 12%;
-    --sidebar-bg: 215 30% 12%;
-    --page-bg-subtle: 210 25% 9%;
-  }
+  --background: 210 30% 7%;
+  --card: 210 30% 7%;
+  --popover: 210 30% 7%;
+  --secondary: 210 25% 15%;
+  --muted: 210 25% 15%;
+  --accent: 210 25% 15%;
+  --border: 210 25% 15%;
+  --input: 210 25% 15%;
+  --retro-pink: 195 80% 55%;
+  --retro-yellow: 45 80% 60%;
+  --retro-blue: 210 85% 60%;
+  --retro-mint: 175 60% 55%;
+  --retro-orange: 200 70% 60%;
+  --retro-dark: 210 25% 85%;
+  --retro-cream: 200 20% 12%;
+  --sidebar-bg: 215 30% 12%;
+  --page-bg-subtle: 210 25% 9%;
+}
 
 .dark.theme-forest {
-    --background: 140 20% 7%;
-    --card: 140 20% 7%;
-    --popover: 140 20% 7%;
-    --secondary: 140 15% 14%;
-    --muted: 140 15% 14%;
-    --accent: 140 15% 14%;
-    --border: 140 15% 14%;
-    --input: 140 15% 14%;
-    --retro-pink: 340 50% 60%;
-    --retro-yellow: 45 75% 60%;
-    --retro-blue: 150 50% 50%;
-    --retro-mint: 120 40% 55%;
-    --retro-orange: 25 70% 55%;
-    --retro-dark: 150 15% 85%;
-    --retro-cream: 120 15% 10%;
-    --sidebar-bg: 150 20% 11%;
-    --page-bg-subtle: 140 15% 9%;
-  }
+  --background: 140 20% 7%;
+  --card: 140 20% 7%;
+  --popover: 140 20% 7%;
+  --secondary: 140 15% 14%;
+  --muted: 140 15% 14%;
+  --accent: 140 15% 14%;
+  --border: 140 15% 14%;
+  --input: 140 15% 14%;
+  --retro-pink: 340 50% 60%;
+  --retro-yellow: 45 75% 60%;
+  --retro-blue: 150 50% 50%;
+  --retro-mint: 120 40% 55%;
+  --retro-orange: 25 70% 55%;
+  --retro-dark: 150 15% 85%;
+  --retro-cream: 120 15% 10%;
+  --sidebar-bg: 150 20% 11%;
+  --page-bg-subtle: 140 15% 9%;
+}
 
 .dark.theme-sunset {
-    --background: 270 20% 7%;
-    --card: 270 20% 7%;
-    --popover: 270 20% 7%;
-    --secondary: 270 15% 14%;
-    --muted: 270 15% 14%;
-    --accent: 270 15% 14%;
-    --border: 270 15% 14%;
-    --input: 270 15% 14%;
-    --retro-pink: 340 75% 60%;
-    --retro-yellow: 35 90% 60%;
-    --retro-blue: 270 60% 60%;
-    --retro-mint: 15 70% 60%;
-    --retro-orange: 25 85% 60%;
-    --retro-dark: 270 15% 85%;
-    --retro-cream: 20 20% 10%;
-    --sidebar-bg: 270 20% 11%;
-    --page-bg-subtle: 260 15% 9%;
-  }
+  --background: 270 20% 7%;
+  --card: 270 20% 7%;
+  --popover: 270 20% 7%;
+  --secondary: 270 15% 14%;
+  --muted: 270 15% 14%;
+  --accent: 270 15% 14%;
+  --border: 270 15% 14%;
+  --input: 270 15% 14%;
+  --retro-pink: 340 75% 60%;
+  --retro-yellow: 35 90% 60%;
+  --retro-blue: 270 60% 60%;
+  --retro-mint: 15 70% 60%;
+  --retro-orange: 25 85% 60%;
+  --retro-dark: 270 15% 85%;
+  --retro-cream: 20 20% 10%;
+  --sidebar-bg: 270 20% 11%;
+  --page-bg-subtle: 260 15% 9%;
+}
 
 @layer base {
   * {
@@ -222,7 +222,9 @@
 
 /* Hover shadow animation */
 .hover-shadow-grow {
-  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  transition:
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
 }
 .hover-shadow-grow:hover {
   box-shadow: 8px 8px 0px hsl(var(--retro-dark));
@@ -231,20 +233,40 @@
 
 /* Retro animations */
 @keyframes float {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-10px) rotate(5deg); }
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(5deg);
+  }
 }
 @keyframes float-reverse {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(10px) rotate(-5deg); }
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(10px) rotate(-5deg);
+  }
 }
 @keyframes spin-slow {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
-.animate-float { animation: float 4s ease-in-out infinite; }
-.animate-float-reverse { animation: float-reverse 5s ease-in-out infinite; }
-.animate-spin-slow { animation: spin-slow 20s linear infinite; }
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+.animate-float-reverse {
+  animation: float-reverse 5s ease-in-out infinite;
+}
+.animate-spin-slow {
+  animation: spin-slow 20s linear infinite;
+}
 
 /* Force prose text color to be dark and readable */
 .prose,
@@ -257,7 +279,12 @@
 .prose ul,
 .prose ol,
 .prose blockquote,
-.prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4,
+.prose h5,
+.prose h6 {
   color: hsl(var(--retro-dark)) !important;
 }
 .prose pre,
@@ -365,14 +392,36 @@
 }
 
 /* Aurora background */
+/* Typography pass: one eyebrow and one display title, used by PageHeader. */
+.eyebrow {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: hsl(var(--foreground) / 0.5);
+}
+.display-title {
+  font-family: var(--font-display, inherit);
+  font-size: 1.5rem;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: hsl(var(--foreground));
+}
+@media (min-width: 640px) {
+  .display-title {
+    font-size: 1.75rem;
+  }
+}
+
 .aurora {
   position: fixed;
   inset: 0;
   z-index: 0;
   overflow: hidden;
   pointer-events: none;
-  background:
-    linear-gradient(180deg, hsl(var(--page-bg-subtle)) 0%, hsl(var(--background)) 70%);
+  background: linear-gradient(180deg, hsl(var(--page-bg-subtle)) 0%, hsl(var(--background)) 70%);
 }
 .aurora__blob {
   position: absolute;
@@ -419,16 +468,28 @@
   background-image: radial-gradient(circle, hsl(var(--retro-cream) / 0.05) 1px, transparent 1px);
 }
 @keyframes aurora-a {
-  from { transform: translate3d(0, 0, 0) scale(1); }
-  to { transform: translate3d(9vw, 7vh, 0) scale(1.08); }
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(9vw, 7vh, 0) scale(1.08);
+  }
 }
 @keyframes aurora-b {
-  from { transform: translate3d(0, 0, 0) scale(1.04); }
-  to { transform: translate3d(-8vw, 10vh, 0) scale(0.96); }
+  from {
+    transform: translate3d(0, 0, 0) scale(1.04);
+  }
+  to {
+    transform: translate3d(-8vw, 10vh, 0) scale(0.96);
+  }
 }
 @keyframes aurora-c {
-  from { transform: translate3d(0, 0, 0) scale(1); }
-  to { transform: translate3d(-10vw, -6vh, 0) scale(1.1); }
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(-10vw, -6vh, 0) scale(1.1);
+  }
 }
 
 /* Focus ring and selection */

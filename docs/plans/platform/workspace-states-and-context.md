@@ -29,3 +29,11 @@ UI store adds `context`. Unclassified tasks show in every context.
 ## Risks and open questions
 
 - Context is a filter, never a separate dataset. **Ruling applied.**
+
+## Refinements (while the branch was open)
+
+- `PageHeader` takes an optional icon beside the title; the eyebrow names the sidebar group (Today, Capture, Do, Grow, Reflect, You) so the page and the navigation speak the same language.
+- The context is a client-side filter: tasks and Today lists pass through `filterByContext`, which keeps unclassified tasks; projects always carry a context, so the projects page asks the server for the chosen one and the new-project form pre-selects it.
+- The switch lives in the top bar from the medium breakpoint; on phones the pages still honour the stored choice.
+- The choice persists under `nobrainy-context` and is restored by the same post-mount hydration the other UI preferences use, so the first client render matches the server.
+- Headers applied on Tasks, Projects, Inbox, Goals, Reviews, Planner, and Settings; Notes, Books, Flashcards keep their current headers until those modules are next touched.

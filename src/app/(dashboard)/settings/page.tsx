@@ -19,6 +19,7 @@ import { Dialog } from '@/components/ui/dialog'
 import { SidebarOrderSettings } from '@/components/settings/sidebar-order'
 import { CoreBackupSection } from '@/components/settings/core-backup'
 import { PersonalSetup } from '@/components/settings/personal-setup'
+import { PageHeader } from '@/components/ui/workspace-states'
 import {
   useApiKeyStatus,
   useSaveApiKey,
@@ -520,12 +521,11 @@ function TimezoneSection() {
 export default function SettingsPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-8 py-8">
-      <div>
-        <h1 className="font-display text-2xl font-bold text-retro-dark">Settings</h1>
-        <p className="mt-1 text-sm text-retro-dark/60">
-          Manage your account and application preferences.
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="You"
+        title="Settings"
+        description="Your account, your defaults, and a copy of your progress."
+      />
 
       {/* AI Configuration */}
       <section>

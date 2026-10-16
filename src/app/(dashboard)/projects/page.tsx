@@ -10,34 +10,33 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { StaggerBlock, StaggerGroup } from '@/components/motion'
 import { ProjectCard } from '@/components/projects/project-card'
 import { ProjectForm } from '@/components/projects/project-form'
+import { PageHeader } from '@/components/ui/workspace-states'
 import { useCreateProject, useProjects } from '@/hooks/use-projects'
+import { useUIStore } from '@/stores/ui-store'
 import type { ProjectStatus } from '@/lib/types/projects'
 
 export default function ProjectsPage() {
   const [creating, setCreating] = useState(false)
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState<ProjectStatus | 'all'>('active')
-  const projects = useProjects({ status, search: search || undefined })
+  const context = useUIStore((s) => s.context)
+  const projects = useProjects({ status, context, search: search || undefined })
   const create = useCreateProject()
 
   return (
     <StaggerGroup className="space-y-6">
       <StaggerBlock>
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <div className="flex items-center gap-2">
-              <FolderKanban className="h-5 w-5 text-retro-blue" />
-              <h1 className="font-display text-2xl font-bold text-retro-dark">Projects</h1>
-            </div>
-            <p className="mt-1 font-mono text-sm text-retro-dark/60">
-              Each outcome gets a home and one clear next step.
-            </p>
-          </div>
+        <PageHeader
+          eyebrow="Do"
+          title="Projects"
+          icon={<FolderKanban className="h-5 w-5 text-retro-blue" />}
+          description="Each outcome gets a home and one clear next step."
+        >
           <Button size="sm" onClick={() => setCreating(true)} data-testid="project-new">
             <Plus className="mr-1.5 h-4 w-4" />
             New project
           </Button>
-        </div>
+        </PageHeader>
       </StaggerBlock>
 
       <StaggerBlock>
@@ -107,6 +106,7 @@ export default function ProjectsPage() {
         description="A meaningful outcome can start with one small action."
       >
         <ProjectForm
+          initial={context !== 'all' ? { context } : undefined}
           onSave={async (data) => {
             await create.mutateAsync(data)
             setCreating(false)

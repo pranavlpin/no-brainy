@@ -9,6 +9,7 @@ import { Dialog } from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
 import { GoalCard } from '@/components/goals/goal-card'
 import { GoalForm } from '@/components/goals/goal-form'
+import { PageHeader } from '@/components/ui/workspace-states'
 import { useGoals, useCreateGoal, type GoalFilters } from '@/hooks/use-goals'
 import type { GoalStatus } from '@/lib/types/goals'
 
@@ -30,20 +31,17 @@ export default function GoalsPage(): React.ReactElement {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <Target className="h-5 w-5 text-primary" />
-            <h1 className="font-display text-2xl font-bold text-retro-dark">Goals</h1>
-          </div>
-          <div className="mt-1 h-1 w-12 rounded-full bg-retro-yellow" />
-        </div>
+      <PageHeader
+        eyebrow="Grow"
+        title="Goals"
+        icon={<Target className="h-5 w-5 text-retro-mint" />}
+        description="What success looks like, how it is measured, and the practice behind it."
+      >
         <Button size="sm" onClick={() => setShowGoalForm(true)}>
           <Plus className="h-4 w-4 mr-1" />
           New Goal
         </Button>
-      </div>
+      </PageHeader>
 
       {/* Filters */}
       <div className="flex gap-3">
@@ -83,18 +81,16 @@ export default function GoalsPage(): React.ReactElement {
       ) : goals && goals.length > 0 ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {goals.map((goal) => (
-            <GoalCard
-              key={goal.id}
-              goal={goal}
-              onClick={() => router.push(`/goals/${goal.id}`)}
-            />
+            <GoalCard key={goal.id} goal={goal} onClick={() => router.push(`/goals/${goal.id}`)} />
           ))}
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center border-2 border-dashed border-retro-dark/20 py-16 text-center">
           <Target className="h-12 w-12 text-muted-foreground/40" />
           <p className="mt-4 font-mono text-sm text-muted-foreground">No goals yet.</p>
-          <p className="mt-1 text-xs text-muted-foreground/70">Set goals to stay focused on what matters most.</p>
+          <p className="mt-1 text-xs text-muted-foreground/70">
+            Set goals to stay focused on what matters most.
+          </p>
           <Button size="sm" className="mt-4" onClick={() => setShowGoalForm(true)}>
             <Plus className="h-4 w-4 mr-1" /> Create Your First Goal
           </Button>
@@ -102,11 +98,7 @@ export default function GoalsPage(): React.ReactElement {
       )}
 
       {/* New Goal Dialog */}
-      <Dialog
-        open={showGoalForm}
-        onClose={() => setShowGoalForm(false)}
-        title="New Goal"
-      >
+      <Dialog open={showGoalForm} onClose={() => setShowGoalForm(false)} title="New Goal">
         <GoalForm
           onSubmit={(data) => {
             createGoal.mutate(data, {

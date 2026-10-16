@@ -23,6 +23,7 @@ import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { StaggerBlock, StaggerGroup } from '@/components/motion'
 import { CaptureProcessor } from '@/components/inbox/capture-processor'
+import { PageHeader } from '@/components/ui/workspace-states'
 import { useCaptureState, useInbox, useUndoCapture } from '@/hooks/use-inbox'
 import { useToast } from '@/hooks/use-toast'
 import { useCommandStore } from '@/stores/command-store'
@@ -109,26 +110,29 @@ export default function InboxPage() {
   return (
     <StaggerGroup className="mx-auto max-w-3xl space-y-5">
       <StaggerBlock>
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <div className="flex items-center gap-2">
-              <InboxIcon className="h-5 w-5 text-retro-blue" />
-              <h1 className="font-display text-2xl font-bold text-retro-dark">Inbox</h1>
-            </div>
-            <p className="mt-1 font-mono text-sm text-retro-dark/60">
-              Catch it now. Decide later. Nothing here is a commitment yet.
-            </p>
-          </div>
-          <Button size="sm" onClick={() => openCapture({ kind: 'inbox' })} data-testid="inbox-capture">
+        <PageHeader
+          eyebrow="Capture"
+          title="Inbox"
+          icon={<InboxIcon className="h-5 w-5 text-retro-blue" />}
+          description="Catch it now. Decide later. Nothing here is a commitment yet."
+        >
+          <Button
+            size="sm"
+            onClick={() => openCapture({ kind: 'inbox' })}
+            data-testid="inbox-capture"
+          >
             <Zap className="mr-1.5 h-3.5 w-3.5" />
             Capture
           </Button>
-        </div>
+        </PageHeader>
       </StaggerBlock>
 
       <StaggerBlock>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <div className="flex gap-1 overflow-x-auto rounded-full bg-retro-dark/5 p-1" role="tablist">
+          <div
+            className="flex gap-1 overflow-x-auto rounded-full bg-retro-dark/5 p-1"
+            role="tablist"
+          >
             {VIEWS.map((v) => (
               <button
                 key={v.key}
@@ -294,7 +298,12 @@ export default function InboxPage() {
               {total} capture{total === 1 ? '' : 's'}
             </span>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page <= 1}
+                onClick={() => setPage((p) => p - 1)}
+              >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
               <span>

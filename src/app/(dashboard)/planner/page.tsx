@@ -11,6 +11,7 @@ import { IntentCard } from '@/components/planner/intent-card'
 import { CapacityCard } from '@/components/planner/capacity-card'
 import { TimeBlocks } from '@/components/planner/time-blocks'
 import { AISuggestPanel } from '@/components/planner/ai-suggest-panel'
+import { PageHeader } from '@/components/ui/workspace-states'
 import { StaggerBlock, StaggerGroup, AnimatedNumber } from '@/components/motion'
 import { useTodayPlan, useTriageTask, useUpdatePlan } from '@/hooks/use-planner'
 import { useCreateTask, useUpdateTask } from '@/hooks/use-tasks'
@@ -166,14 +167,12 @@ export default function PlannerPage() {
   return (
     <StaggerGroup className="mx-auto max-w-3xl space-y-5">
       <StaggerBlock>
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <div className="flex items-center gap-2">
-              <CalendarDays className="h-5 w-5 text-retro-blue" />
-              <h1 className="font-display text-2xl font-bold text-retro-dark">Plan the day</h1>
-            </div>
-            <p className="mt-1 font-mono text-sm text-retro-dark/60">{dateLabel}</p>
-          </div>
+        <PageHeader
+          eyebrow="Today"
+          title="Plan the day"
+          icon={<CalendarDays className="h-5 w-5 text-retro-blue" />}
+          description={dateLabel}
+        >
           {aiEnabled && !suggestion && (
             <Button
               variant="outline"
@@ -194,7 +193,7 @@ export default function PlannerPage() {
               )}
             </Button>
           )}
-        </div>
+        </PageHeader>
       </StaggerBlock>
 
       {allDayTasks.length > 0 && (

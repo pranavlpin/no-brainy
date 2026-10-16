@@ -1,8 +1,10 @@
 import { create } from 'zustand'
 import type { NavGroupKey } from '@/lib/nav/items'
+import type { WorkspaceContext } from '@/lib/tasks/context'
 
 const HIDDEN_KEY = 'nobrainy-hidden-nav'
 const COLLAPSED_KEY = 'nobrainy-collapsed-groups'
+const CONTEXT_KEY = 'nobrainy-context'
 
 function readJson<T>(key: string, fallback: T): T {
   if (typeof window === 'undefined') return fallback
@@ -41,6 +43,9 @@ interface UIState {
   toggleGroup: (key: NavGroupKey) => void
   /** Show every item and expand every group. */
   resetNav: () => void
+  /** Work / Personal / all. A filter over the same data, never a separate dataset. */
+  context: WorkspaceContext
+  setContext: (context: WorkspaceContext) => void
   /** True once persisted values have been loaded on the client. */
   hydrated: boolean
   /**
@@ -59,6 +64,7 @@ const SERVER_DEFAULTS = {
   focusTaskId: null as string | null,
   hiddenNavItems: [] as string[],
   collapsedGroups: [] as NavGroupKey[],
+  context: 'all' as WorkspaceContext,
   hydrated: false,
 }
 
@@ -91,10 +97,15 @@ export const useUIStore = create<UIState>((set) => ({
     if (typeof window !== 'undefined') localStorage.removeItem('nobrainy-nav-order')
     set({ hiddenNavItems: [], collapsedGroups: [] })
   },
+  setContext: (context) => {
+    writeJson(CONTEXT_KEY, context)
+    set({ context })
+  },
   hydrate: () =>
     set({
       hiddenNavItems: readJson<string[]>(HIDDEN_KEY, []),
       collapsedGroups: readJson<NavGroupKey[]>(COLLAPSED_KEY, []),
+      context: readJson<WorkspaceContext>(CONTEXT_KEY, 'all'),
       hydrated: true,
     }),
   resetForTests: () => set({ ...SERVER_DEFAULTS }),

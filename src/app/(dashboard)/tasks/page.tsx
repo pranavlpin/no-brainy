@@ -10,7 +10,10 @@ import { TaskList } from '@/components/tasks/task-list'
 import { EisenhowerMatrix } from '@/components/tasks/eisenhower-matrix'
 import { TaskForm } from '@/components/tasks/task-form'
 import { TaskAIPanel } from '@/components/tasks/task-ai-panel'
+import { PageHeader } from '@/components/ui/workspace-states'
 import { useTaskPage, useCreateTask } from '@/hooks/use-tasks'
+import { useUIStore } from '@/stores/ui-store'
+import { filterByContext } from '@/lib/tasks/context'
 import type { TaskPriority, CreateTaskRequest, TaskFilters } from '@/lib/types/tasks'
 
 type ViewMode = 'list' | 'matrix'
@@ -46,8 +49,10 @@ export default function TasksPage() {
 
   const { data, isLoading } = useTaskPage(filters)
   const createTask = useCreateTask()
+  const context = useUIStore((s) => s.context)
 
-  const tasks = data?.items ?? []
+  // The top-bar context narrows the page; unclassified tasks always show.
+  const tasks = filterByContext(data?.items ?? [], context)
   const total = data?.total ?? 0
   const pageSize = data?.pageSize ?? PAGE_SIZE
   const currentPage = data?.page ?? page
@@ -64,20 +69,24 @@ export default function TasksPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="font-display text-2xl font-bold text-retro-dark">Tasks</h1>
-        <div className="flex items-center gap-2">
-          <TaskAIPanel />
-          <button
-            onClick={() => setShowNewForm(true)}
-            className="border-2 border-retro-dark bg-retro-blue px-4 py-2 font-mono text-sm font-bold text-white shadow-hard hover-shadow-grow"
-          >
-            <Plus className="mr-2 inline h-4 w-4" />
-            New Task
-          </button>
-        </div>
-      </div>
+      <PageHeader
+        eyebrow="Do"
+        title="Tasks"
+        description={
+          context === 'all'
+            ? 'Everything with a next step. Plan a day, keep a deadline.'
+            : `Showing ${context} tasks. Unclassified ones stay visible.`
+        }
+      >
+        <TaskAIPanel />
+        <button
+          onClick={() => setShowNewForm(true)}
+          className="border-2 border-retro-dark bg-retro-blue px-4 py-2 font-mono text-sm font-bold text-white shadow-hard hover-shadow-grow"
+        >
+          <Plus className="mr-2 inline h-4 w-4" />
+          New Task
+        </button>
+      </PageHeader>
 
       {/* New task form */}
       {showNewForm && (

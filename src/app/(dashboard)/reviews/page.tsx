@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ReviewCard } from '@/components/reviews/review-card'
 import { WeeklySummary } from '@/components/reviews/weekly-summary'
+import { PageHeader } from '@/components/ui/workspace-states'
 import {
   useDailyReviews,
   useDailyReview,
@@ -35,22 +36,18 @@ export default function ReviewsPage() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-6 p-4 md:p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-display text-2xl font-bold text-retro-dark">Reviews</h1>
-          <div className="mt-1 h-1 w-12 rounded-full bg-retro-blue" />
-          <p className="text-sm text-muted-foreground mt-1">
-            Reflect on your progress and track your journey
-          </p>
-        </div>
+      <PageHeader
+        eyebrow="Reflect"
+        title="Reviews"
+        description="Close each day, adjust each week. Numbers first, no judgement."
+      >
         {!todayLoading && !todayReview && (
           <Button onClick={() => router.push('/reviews/daily')} data-testid="reviews-close-day">
             <Moon className="mr-2 h-4 w-4" />
             Close the day
           </Button>
         )}
-      </div>
+      </PageHeader>
 
       {/* Tabs */}
       <div className="surface-glass flex gap-1 rounded-xl p-1">
