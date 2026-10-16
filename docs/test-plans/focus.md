@@ -41,3 +41,17 @@ Final results: PENDING — no tests have run for this task.
 ## Approval — 2026-10-16
 
 The owner’s conversation message “approved.” approves the parent package, this section’s linked task plan, and the six developer packages listed in NB-02. The proposed section above is retained as the pre-approval record. Tests have not run at this approval checkpoint.
+
+---
+
+## NB-08 execution — 2026-10-16
+
+Behavioral red confirmed for timestamp-derived elapsed work, paused reload recovery, duration validation, concurrent starts/results, and owner-scoped recovery storage. The browser initially failed on the missing session-intention field before UI implementation. Green domain/database slices verify one active owner session, repeat finish idempotency, stale-version rejection, explicit completion, and retained titles after task deletion. Component coverage verifies that Focus leaves the underlying page and its draft mounted and that the compact timer opens the same task.
+
+The first integrated browser pass covered intention retention, 50-minute selection, pause/reload/resume, partial results, and capture during an active timer. An additional lost-response journey commits a result on the server, drops the response, reloads, then retries the stored request. Its first run exposed a test synchronization race while clicking a dialog that correctly closes after server reconciliation; the test now waits for that observed state before leaving Focus.
+
+Unit/component and governance: 76 + 23 passed. Full integration: 23 passed. Types, schema validation, migrations, formatting and production build passed. ESLint has zero errors and four inherited image warnings assigned to NB-12. Final browser recovery result is recorded in the task ledger. Evidence: /Users/pranav/Pranav_projects/github/no-brainy/evidences/focus/durable-sessions/.
+
+### Final integrated result
+
+The full browser run exposed a late authenticated-owner provider remount resetting fast-opened project/task forms. A new component test reproduced the premature editable state; the loading boundary fixed it. A further component red/green test preserves the original task context for a pending lost-response result. Final: 23 governance + 78 unit/component tests; 23 integration; all 9 browser journeys and a final targeted recovery journey passed. Final types/format/schema/build passed; only the four inherited image warnings remain for NB-12.
