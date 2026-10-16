@@ -23,7 +23,11 @@ export function ExpenseMatrix(): React.ReactElement {
   }
 
   if (!data || data.rows.length === 0) {
-    return <div className="py-12 text-center text-muted-foreground">No expense data for this period.</div>
+    return (
+      <div className="py-12 text-center text-muted-foreground">
+        No expense data for this period.
+      </div>
+    )
   }
 
   return (
@@ -31,7 +35,9 @@ export function ExpenseMatrix(): React.ReactElement {
       {/* Month range picker */}
       <div className="flex items-end gap-3">
         <div>
-          <Label htmlFor="startMonth" className="text-xs">From</Label>
+          <Label htmlFor="startMonth" className="text-xs">
+            From
+          </Label>
           <Input
             id="startMonth"
             type="month"
@@ -41,7 +47,9 @@ export function ExpenseMatrix(): React.ReactElement {
           />
         </div>
         <div>
-          <Label htmlFor="endMonth" className="text-xs">To</Label>
+          <Label htmlFor="endMonth" className="text-xs">
+            To
+          </Label>
           <Input
             id="endMonth"
             type="month"
@@ -57,15 +65,20 @@ export function ExpenseMatrix(): React.ReactElement {
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-retro-blue/10">
-              <th className="sticky left-0 z-10 bg-retro-blue/10 px-4 py-3 text-left font-mono text-xs uppercase tracking-wider text-retro-dark/60">
+              <th className="sticky left-0 z-10 bg-retro-blue/10 px-4 py-3 text-left text-xs uppercase tracking-wider text-retro-dark/60">
                 Category
               </th>
               {data.months.map((month) => (
-                <th key={month} className="px-4 py-3 text-right font-mono text-xs uppercase tracking-wider text-retro-dark/60 whitespace-nowrap">
+                <th
+                  key={month}
+                  className="px-4 py-3 text-right text-xs uppercase tracking-wider text-retro-dark/60 whitespace-nowrap"
+                >
                   {formatMonthLabel(month)}
                 </th>
               ))}
-              <th className="px-4 py-3 text-right font-mono text-xs uppercase tracking-wider text-retro-dark/60">Total</th>
+              <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-retro-dark/60">
+                Total
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -75,13 +88,15 @@ export function ExpenseMatrix(): React.ReactElement {
                   <CategoryBadge name={row.category} icon={row.icon} color={row.color} />
                 </td>
                 {data.months.map((month) => (
-                  <td key={month} className="px-4 py-2.5 text-right font-mono text-xs whitespace-nowrap">
-                    {row.months[month] ? formatINR(row.months[month]) : (
+                  <td key={month} className="px-4 py-2.5 text-right text-xs whitespace-nowrap">
+                    {row.months[month] ? (
+                      formatINR(row.months[month])
+                    ) : (
                       <span className="text-muted-foreground/40">-</span>
                     )}
                   </td>
                 ))}
-                <td className="px-4 py-2.5 text-right font-mono text-xs font-semibold whitespace-nowrap">
+                <td className="px-4 py-2.5 text-right text-xs font-semibold whitespace-nowrap">
                   {formatINR(row.total)}
                 </td>
               </tr>
@@ -89,13 +104,13 @@ export function ExpenseMatrix(): React.ReactElement {
           </tbody>
           <tfoot>
             <tr className="border-t-2 border-retro-dark/20 bg-retro-dark/5 font-semibold">
-              <td className="sticky left-0 z-10 bg-retro-dark/5 px-4 py-3 font-mono text-sm">Total</td>
+              <td className="sticky left-0 z-10 bg-retro-dark/5 px-4 py-3 text-sm">Total</td>
               {data.months.map((month) => (
-                <td key={month} className="px-4 py-3 text-right font-mono text-xs whitespace-nowrap">
+                <td key={month} className="px-4 py-3 text-right text-xs whitespace-nowrap">
                   {formatINR(data.monthTotals[month] ?? 0)}
                 </td>
               ))}
-              <td className="px-4 py-3 text-right font-mono text-xs whitespace-nowrap">
+              <td className="px-4 py-3 text-right text-xs whitespace-nowrap">
                 {formatINR(data.grandTotal)}
               </td>
             </tr>

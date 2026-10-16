@@ -13,7 +13,11 @@ import {
   useUpdateExpenseCategory,
   useDeleteExpenseCategory,
 } from '@/hooks/use-expense-categories'
-import type { ExpenseCategoryResponse, CreateCategoryRequest, UpdateCategoryRequest } from '@/lib/types/expenses'
+import type {
+  ExpenseCategoryResponse,
+  CreateCategoryRequest,
+  UpdateCategoryRequest,
+} from '@/lib/types/expenses'
 
 export default function CategoriesPage(): React.ReactElement {
   const [showForm, setShowForm] = useState(false)
@@ -35,7 +39,7 @@ export default function CategoriesPage(): React.ReactElement {
     if (!editing) return
     updateCategory.mutate(
       { id: editing.id, data: data as UpdateCategoryRequest },
-      { onSuccess: () => setEditing(undefined) },
+      { onSuccess: () => setEditing(undefined) }
     )
   }
 
@@ -49,7 +53,7 @@ export default function CategoriesPage(): React.ReactElement {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <Link href="/expenses">
             <Button variant="ghost" size="icon">
@@ -58,12 +62,15 @@ export default function CategoriesPage(): React.ReactElement {
           </Link>
           <div>
             <h1 className="text-2xl font-bold">Categories</h1>
-            <p className="text-sm text-muted-foreground">
-              Manage your expense categories
-            </p>
+            <p className="text-sm text-muted-foreground">Manage your expense categories</p>
           </div>
         </div>
-        <Button onClick={() => { setEditing(undefined); setShowForm(true) }}>
+        <Button
+          onClick={() => {
+            setEditing(undefined)
+            setShowForm(true)
+          }}
+        >
           <Plus className="mr-2 h-4 w-4" />
           New Category
         </Button>
@@ -78,7 +85,10 @@ export default function CategoriesPage(): React.ReactElement {
           <CategoryForm
             category={editing}
             onSubmit={editing ? handleUpdate : handleCreate}
-            onCancel={() => { setShowForm(false); setEditing(undefined) }}
+            onCancel={() => {
+              setShowForm(false)
+              setEditing(undefined)
+            }}
             isPending={createCategory.isPending || updateCategory.isPending}
           />
         </div>
@@ -104,7 +114,9 @@ export default function CategoriesPage(): React.ReactElement {
                   {IconComponent ? (
                     <IconComponent className="h-5 w-5" style={{ color: cat.color }} />
                   ) : (
-                    <span className="text-sm" style={{ color: cat.color }}>?</span>
+                    <span className="text-sm" style={{ color: cat.color }}>
+                      ?
+                    </span>
                   )}
                 </div>
 
@@ -120,7 +132,10 @@ export default function CategoriesPage(): React.ReactElement {
                     variant="ghost"
                     size="icon"
                     className="h-7 w-7"
-                    onClick={() => { setShowForm(false); setEditing(cat) }}
+                    onClick={() => {
+                      setShowForm(false)
+                      setEditing(cat)
+                    }}
                     title="Edit"
                   >
                     <Pencil className="h-3.5 w-3.5" />
@@ -143,7 +158,10 @@ export default function CategoriesPage(): React.ReactElement {
 
           {/* Add new card */}
           <button
-            onClick={() => { setEditing(undefined); setShowForm(true) }}
+            onClick={() => {
+              setEditing(undefined)
+              setShowForm(true)
+            }}
             className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border p-4 text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors min-h-[120px]"
           >
             <Plus className="h-6 w-6 mb-1" />

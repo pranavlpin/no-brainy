@@ -33,7 +33,10 @@ function getStatusText(budget: BudgetResponse): { text: string; className: strin
     return { text: 'Target reached!', className: 'text-green-600 font-bold' }
   }
   if (budget.health === 'over-budget') {
-    return { text: `${formatINR(Math.abs(budget.remaining))} over budget!`, className: 'text-red-600 font-bold' }
+    return {
+      text: `${formatINR(Math.abs(budget.remaining))} over budget!`,
+      className: 'text-red-600 font-bold',
+    }
   }
   if (budget.type === 'target') {
     return { text: `${formatINR(budget.remaining)} to go`, className: 'text-retro-dark/60' }
@@ -48,20 +51,28 @@ export function BudgetCard({ budget, onEdit, onDelete }: BudgetCardProps): React
   const cappedPercentage = Math.min(budget.percentage, 100)
 
   return (
-    <div className={`group relative border-2 ${borderClass} p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-retro-dark/40 hover:shadow-md`}>
+    <div
+      className={`group relative border-2 ${borderClass} p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-retro-dark/40 hover:shadow-md`}
+    >
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-2">
           {(() => {
             const IconComp = ICON_MAP[budget.categoryIcon] || ICON_MAP['tag']
             return IconComp ? (
-              <span className="flex h-8 w-8 items-center justify-center rounded-full" style={{ backgroundColor: `${budget.categoryColor}20`, color: budget.categoryColor }}>
+              <span
+                className="flex h-8 w-8 items-center justify-center rounded-full"
+                style={{
+                  backgroundColor: `${budget.categoryColor}20`,
+                  color: budget.categoryColor,
+                }}
+              >
                 <IconComp className="h-4 w-4" />
               </span>
             ) : null
           })()}
           <div>
-            <h3 className="font-mono text-sm font-bold text-retro-dark">{budget.name}</h3>
+            <h3 className="text-sm font-bold text-retro-dark">{budget.name}</h3>
             <p className="text-xs text-retro-dark/50">{budget.categoryName}</p>
           </div>
         </div>
@@ -87,21 +98,18 @@ export function BudgetCard({ budget, onEdit, onDelete }: BudgetCardProps): React
 
       {/* Amount info */}
       <div className="mt-2 flex items-baseline justify-between">
-        <span className="font-mono text-sm font-bold text-retro-dark">
-          {formatINR(budget.spent)} <span className="text-retro-dark/40 font-normal">/ {formatINR(budget.amount)}</span>
+        <span className="text-sm font-bold text-retro-dark">
+          {formatINR(budget.spent)}{' '}
+          <span className="text-retro-dark/40 font-normal">/ {formatINR(budget.amount)}</span>
         </span>
-        <span className="font-mono text-xs text-retro-dark/60">
-          {budget.percentage.toFixed(0)}%
-        </span>
+        <span className="text-xs text-retro-dark/60">{budget.percentage.toFixed(0)}%</span>
       </div>
 
       {/* Status + days left */}
-      <div className="mt-1 flex items-center justify-between">
-        <span className={`font-mono text-xs ${status.className}`}>{status.text}</span>
+      <div className="mt-1 flex flex-wrap items-center justify-between gap-3">
+        <span className={`text-xs ${status.className}`}>{status.text}</span>
         {budget.daysLeft !== null && (
-          <span className="font-mono text-[10px] text-retro-dark/40">
-            {budget.daysLeft}d left
-          </span>
+          <span className="font-mono text-[10px] text-retro-dark/40">{budget.daysLeft}d left</span>
         )}
       </div>
 

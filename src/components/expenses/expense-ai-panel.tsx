@@ -27,9 +27,10 @@ export function ExpenseAIPanel(): React.ReactElement {
       })
       setResult(res.data)
     } catch (err: unknown) {
-      const message = err && typeof err === 'object' && 'error' in err
-        ? (err as { error: { message: string } }).error.message
-        : 'Failed to analyze expenses'
+      const message =
+        err && typeof err === 'object' && 'error' in err
+          ? (err as { error: { message: string } }).error.message
+          : 'Failed to analyze expenses'
       setError(message)
     } finally {
       setIsLoading(false)
@@ -38,7 +39,12 @@ export function ExpenseAIPanel(): React.ReactElement {
 
   if (!isEnabled) {
     return (
-      <Button variant="outline" size="sm" disabled title="Add your OpenAI API key in Settings to unlock AI features">
+      <Button
+        variant="outline"
+        size="sm"
+        disabled
+        title="Add your OpenAI API key in Settings to unlock AI features"
+      >
         <Sparkles className="h-4 w-4 mr-1 opacity-50" />
         AI Analyze
       </Button>
@@ -60,23 +66,24 @@ export function ExpenseAIPanel(): React.ReactElement {
 
   return (
     <div className="border-2 border-retro-blue/20 bg-retro-blue/5 p-4">
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
         <div className="flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-retro-blue" />
-          <span className="font-mono text-xs uppercase tracking-wider text-retro-dark/60">AI Analysis</span>
+          <span className="text-xs uppercase tracking-wider text-retro-dark/60">AI Analysis</span>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="sm" onClick={handleAnalyze} disabled={isLoading}>
             {isLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Refresh'}
           </Button>
-          <button onClick={() => setResult(null)} className="text-muted-foreground hover:text-foreground">
+          <button
+            onClick={() => setResult(null)}
+            className="text-muted-foreground hover:text-foreground"
+          >
             <X className="h-4 w-4" />
           </button>
         </div>
       </div>
-      {error && (
-        <p className="text-sm text-red-500 mb-2">{error}</p>
-      )}
+      {error && <p className="text-sm text-red-500 mb-2">{error}</p>}
       <div className="prose prose-sm max-w-none text-retro-dark/80 [&_ul]:list-disc [&_ul]:pl-4 [&_li]:text-sm [&_strong]:text-retro-dark [&_h2]:text-base [&_h2]:font-display [&_h3]:text-sm [&_h3]:font-display">
         <div dangerouslySetInnerHTML={{ __html: formatMarkdown(result.analysis) }} />
       </div>

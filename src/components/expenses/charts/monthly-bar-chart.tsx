@@ -1,7 +1,14 @@
 'use client'
 
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Cell,
 } from 'recharts'
 import { formatINR, formatMonthLabel } from '@/lib/expenses/formatters'
 
@@ -16,7 +23,15 @@ interface MonthlyBarChartProps {
   onMonthClick?: (month: string) => void
 }
 
-function CustomTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number }>; label?: string }): React.ReactElement | null {
+function CustomTooltip({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean
+  payload?: Array<{ value: number }>
+  label?: string
+}): React.ReactElement | null {
   if (!active || !payload?.length) return null
   return (
     <div className="rounded-lg border border-border bg-background px-3 py-2 shadow-md">
@@ -27,7 +42,11 @@ function CustomTooltip({ active, payload, label }: { active?: boolean; payload?:
   )
 }
 
-export function MonthlyBarChart({ data, selectedMonth, onMonthClick }: MonthlyBarChartProps): React.ReactElement {
+export function MonthlyBarChart({
+  data,
+  selectedMonth,
+  onMonthClick,
+}: MonthlyBarChartProps): React.ReactElement {
   const chartData = data.map((d) => ({
     month: formatMonthLabel(d.month),
     rawMonth: d.month,
@@ -40,8 +59,16 @@ export function MonthlyBarChart({ data, selectedMonth, onMonthClick }: MonthlyBa
       <ResponsiveContainer width="100%" height={280}>
         <BarChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-          <XAxis dataKey="month" className="text-xs" tick={{ fill: 'currentColor', fontSize: 11 }} />
-          <YAxis className="text-xs" tick={{ fill: 'currentColor', fontSize: 11 }} tickFormatter={(v: number) => `₹${(v / 1000).toFixed(0)}k`} />
+          <XAxis
+            dataKey="month"
+            className="text-xs"
+            tick={{ fill: 'currentColor', fontSize: 11 }}
+          />
+          <YAxis
+            className="text-xs"
+            tick={{ fill: 'currentColor', fontSize: 11 }}
+            tickFormatter={(v: number) => `₹${(v / 1000).toFixed(0)}k`}
+          />
           <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(233 100% 59% / 0.05)' }} />
           <Bar dataKey="total" radius={[4, 4, 0, 0]}>
             {chartData.map((entry, idx) => (
@@ -59,7 +86,7 @@ export function MonthlyBarChart({ data, selectedMonth, onMonthClick }: MonthlyBa
         </BarChart>
       </ResponsiveContainer>
       {selectedMonth && (
-        <p className="mt-2 text-center font-mono text-xs text-retro-dark/50">
+        <p className="mt-2 text-center text-xs text-retro-dark/50">
           Showing stats for {formatMonthLabel(selectedMonth)}
         </p>
       )}

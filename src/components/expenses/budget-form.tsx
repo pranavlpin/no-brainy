@@ -5,7 +5,12 @@ import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { SearchableSelect } from '@/components/ui/searchable-select'
 import { useExpenseCategories } from '@/hooks/use-expense-categories'
-import type { CreateBudgetRequest, BudgetResponse, BudgetType, BudgetPeriod } from '@/lib/types/budgets'
+import type {
+  CreateBudgetRequest,
+  BudgetResponse,
+  BudgetType,
+  BudgetPeriod,
+} from '@/lib/types/budgets'
 
 interface BudgetFormProps {
   budget?: BudgetResponse
@@ -14,7 +19,12 @@ interface BudgetFormProps {
   isPending?: boolean
 }
 
-export function BudgetForm({ budget, onSubmit, onCancel, isPending }: BudgetFormProps): React.ReactElement {
+export function BudgetForm({
+  budget,
+  onSubmit,
+  onCancel,
+  isPending,
+}: BudgetFormProps): React.ReactElement {
   const { data: categories } = useExpenseCategories()
 
   const [name, setName] = useState(budget?.name ?? '')
@@ -49,7 +59,10 @@ export function BudgetForm({ budget, onSubmit, onCancel, isPending }: BudgetForm
     <form onSubmit={handleSubmit} className="space-y-4 max-w-lg">
       {/* Name */}
       <div>
-        <label htmlFor="budget-name" className="font-mono text-xs uppercase tracking-wider text-retro-dark/70">
+        <label
+          htmlFor="budget-name"
+          className="text-xs uppercase tracking-wider text-retro-dark/70"
+        >
           Name
         </label>
         <Input
@@ -63,15 +76,15 @@ export function BudgetForm({ budget, onSubmit, onCancel, isPending }: BudgetForm
 
       {/* Type toggle */}
       <div>
-        <label className="font-mono text-xs uppercase tracking-wider text-retro-dark/70">Type</label>
+        <label className="text-xs uppercase tracking-wider text-retro-dark/70">Type</label>
         <div className="flex items-center gap-2 mt-1">
           <button
             type="button"
             onClick={() => setType('limit')}
-            className={`flex items-center gap-2 border-2 px-3 py-1.5 font-mono text-xs font-bold transition-colors ${
+            className={`flex items-center gap-2 border-2 px-3 py-1.5 text-xs font-bold transition-colors ${
               type === 'limit'
                 ? 'border-retro-dark bg-retro-dark text-white'
-                : 'border-retro-dark/30 bg-white text-retro-dark hover:border-retro-dark/60'
+                : 'border-retro-dark/30 bg-card text-retro-dark hover:border-retro-dark/60'
             }`}
           >
             Spending Limit
@@ -79,10 +92,10 @@ export function BudgetForm({ budget, onSubmit, onCancel, isPending }: BudgetForm
           <button
             type="button"
             onClick={() => setType('target')}
-            className={`flex items-center gap-2 border-2 px-3 py-1.5 font-mono text-xs font-bold transition-colors ${
+            className={`flex items-center gap-2 border-2 px-3 py-1.5 text-xs font-bold transition-colors ${
               type === 'target'
                 ? 'border-retro-dark bg-retro-dark text-white'
-                : 'border-retro-dark/30 bg-white text-retro-dark hover:border-retro-dark/60'
+                : 'border-retro-dark/30 bg-card text-retro-dark hover:border-retro-dark/60'
             }`}
           >
             Savings Target
@@ -92,7 +105,10 @@ export function BudgetForm({ budget, onSubmit, onCancel, isPending }: BudgetForm
 
       {/* Category */}
       <div>
-        <label htmlFor="budget-category" className="font-mono text-xs uppercase tracking-wider text-retro-dark/70">
+        <label
+          htmlFor="budget-category"
+          className="text-xs uppercase tracking-wider text-retro-dark/70"
+        >
           Category
         </label>
         <SearchableSelect
@@ -107,7 +123,10 @@ export function BudgetForm({ budget, onSubmit, onCancel, isPending }: BudgetForm
 
       {/* Amount */}
       <div>
-        <label htmlFor="budget-amount" className="font-mono text-xs uppercase tracking-wider text-retro-dark/70">
+        <label
+          htmlFor="budget-amount"
+          className="text-xs uppercase tracking-wider text-retro-dark/70"
+        >
           Amount (INR)
         </label>
         <Input
@@ -124,7 +143,10 @@ export function BudgetForm({ budget, onSubmit, onCancel, isPending }: BudgetForm
 
       {/* Period */}
       <div>
-        <label htmlFor="budget-period" className="font-mono text-xs uppercase tracking-wider text-retro-dark/70">
+        <label
+          htmlFor="budget-period"
+          className="text-xs uppercase tracking-wider text-retro-dark/70"
+        >
           Period
         </label>
         <Select
@@ -143,7 +165,10 @@ export function BudgetForm({ budget, onSubmit, onCancel, isPending }: BudgetForm
       {period === 'total' && (
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label htmlFor="budget-start" className="font-mono text-xs uppercase tracking-wider text-retro-dark/70">
+            <label
+              htmlFor="budget-start"
+              className="text-xs uppercase tracking-wider text-retro-dark/70"
+            >
               Start Date
             </label>
             <Input
@@ -154,7 +179,10 @@ export function BudgetForm({ budget, onSubmit, onCancel, isPending }: BudgetForm
             />
           </div>
           <div>
-            <label htmlFor="budget-end" className="font-mono text-xs uppercase tracking-wider text-retro-dark/70">
+            <label
+              htmlFor="budget-end"
+              className="text-xs uppercase tracking-wider text-retro-dark/70"
+            >
               End Date
             </label>
             <Input
@@ -172,14 +200,14 @@ export function BudgetForm({ budget, onSubmit, onCancel, isPending }: BudgetForm
         <button
           type="button"
           onClick={onCancel}
-          className="border-2 border-retro-dark/30 px-4 py-2 font-mono text-sm font-bold text-retro-dark hover:border-retro-dark/60"
+          className="border-2 border-retro-dark/30 px-4 py-2 text-sm font-bold text-retro-dark hover:border-retro-dark/60"
         >
           Cancel
         </button>
         <button
           type="submit"
           disabled={isPending || !name || !amount || !categoryId}
-          className="border-2 border-retro-dark bg-retro-blue px-4 py-2 font-mono text-sm font-bold text-white shadow-hard hover-shadow-grow disabled:opacity-50"
+          className="inline-flex items-center rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 disabled:opacity-50"
         >
           {isPending ? 'Saving...' : budget ? 'Update Budget' : 'Add Budget'}
         </button>
