@@ -18,6 +18,7 @@ import {
 import { useReviewAISummary } from '@/hooks/use-review-ai'
 import { useAI } from '@/hooks/use-ai'
 import { useUserToday } from '@/hooks/use-user-today'
+import { useFocusSessions } from '@/hooks/use-focus-sessions'
 import { useToast } from '@/hooks/use-toast'
 import { formatDateKey, isValidDateKey } from '@/lib/dates'
 
@@ -31,6 +32,7 @@ function DailyReviewContent() {
 
   const { data: existingReview, isLoading } = useDailyReview(date)
   const { data: weekly } = useWeeklySummary()
+  const { data: focusDay } = useFocusSessions(date)
   const createReview = useCreateReview()
   const updateReview = useUpdateReview(date)
   const aiSummary = useReviewAISummary(date)
@@ -160,6 +162,7 @@ function DailyReviewContent() {
               tasksMissed: existingReview?.tasksMissed ?? 0,
               notesCreated: existingReview?.notesCreated ?? 0,
               cardsReviewed: existingReview?.cardsReviewed ?? 0,
+              focusMinutes: focusDay?.totalWorkMinutes ?? null,
             }}
             initial={{
               reflectionMd: existingReview?.reflectionMd,

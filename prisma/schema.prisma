@@ -43,6 +43,7 @@ model User {
   watchlistItems    WatchlistItem[]
   stashChannels     StashChannel[]
   stashMessages     StashMessage[]
+  focusSessions     FocusSession[]
   @@map("users")
 }
 
@@ -138,11 +139,28 @@ model Task {
   subtasks   Task[]  @relation("Subtasks")
   goal       Goal?   @relation(fields: [goalId], references: [id], onDelete: SetNull)
   taskLinks  TaskLink[]
+  focusSessions FocusSession[]
   @@index([userId, status])
   @@index([userId, dueDate])
   @@index([userId, quadrant])
   @@index([parentTaskId])
   @@map("tasks")
+}
+
+model FocusSession {
+  id          String    @id @default(cuid())
+  userId      String
+  taskId      String?
+  kind        String    @default("work")
+  startedAt   DateTime  @default(now())
+  endedAt     DateTime?
+  durationSec Int       @default(0)
+  completed   Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task Task? @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  @@index([userId, startedAt])
+  @@map("focus_sessions")
 }
 
 model TaskLink {

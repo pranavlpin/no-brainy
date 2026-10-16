@@ -1,241 +1,248 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { motion } from 'framer-motion'
+import { Coffee, Pause, Play, RotateCcw, SkipForward } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Play, Pause, RotateCcw } from 'lucide-react'
-
-type TimerState = 'idle' | 'working' | 'break' | 'paused'
-
-const WORK_DURATION = 25 * 60 // 25 minutes in seconds
-const SHORT_BREAK = 5 * 60 // 5 minutes
-const LONG_BREAK = 15 * 60 // 15 minutes
-const POMODOROS_BEFORE_LONG_BREAK = 4
+import { useFocusStore } from '@/stores/focus-store'
+import { useEndFocusSession, useStartFocusSession } from '@/hooks/use-focus-sessions'
+import { useToast } from '@/hooks/use-toast'
+import { WORK_SEC, formatClock, remainingSeconds } from '@/lib/focus/timer'
+import { cn } from '@/lib/utils'
 
 interface PomodoroTimerProps {
   className?: string
+  taskId?: string | null
+  taskTitle?: string | null
 }
 
-export function PomodoroTimer({ className }: PomodoroTimerProps) {
-  const [state, setState] = useState<TimerState>('idle')
-  const [timeLeft, setTimeLeft] = useState(WORK_DURATION)
-  const [totalTime, setTotalTime] = useState(WORK_DURATION)
-  const [pomodoroCount, setPomodoroCount] = useState(0)
-  const [pausedFrom, setPausedFrom] = useState<TimerState | null>(null)
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const audioRef = useRef<AudioContext | null>(null)
-
-  const playBeep = useCallback(() => {
+function useBeep() {
+  const ctxRef = useRef<AudioContext | null>(null)
+  return useCallback(() => {
     try {
-      const ctx = audioRef.current ?? new AudioContext()
-      audioRef.current = ctx
+      const ctx = ctxRef.current ?? new AudioContext()
+      ctxRef.current = ctx
       const osc = ctx.createOscillator()
       const gain = ctx.createGain()
       osc.connect(gain)
       gain.connect(ctx.destination)
       osc.frequency.value = 800
-      gain.gain.value = 0.3
+      gain.gain.value = 0.25
       osc.start()
       osc.stop(ctx.currentTime + 0.3)
     } catch {
-      // Audio not available
+      /* audio unavailable */
     }
   }, [])
+}
 
-  const startWork = useCallback(() => {
-    setTimeLeft(WORK_DURATION)
-    setTotalTime(WORK_DURATION)
-    setState('working')
-    setPausedFrom(null)
-  }, [])
-
-  const startBreak = useCallback(() => {
-    const isLongBreak = (pomodoroCount + 1) % POMODOROS_BEFORE_LONG_BREAK === 0
-    const breakTime = isLongBreak ? LONG_BREAK : SHORT_BREAK
-    setTimeLeft(breakTime)
-    setTotalTime(breakTime)
-    setState('break')
-    setPausedFrom(null)
-  }, [pomodoroCount])
-
-  const handleTimerEnd = useCallback(() => {
-    playBeep()
-    if (state === 'working') {
-      setPomodoroCount((c) => c + 1)
-      startBreak()
-    } else if (state === 'break') {
-      startWork()
-    }
-  }, [state, playBeep, startBreak, startWork])
+/**
+ * Pomodoro timer backed by the persisted focus store. Work sessions are
+ * recorded on the server so the day's deep-work minutes show up on Home
+ * and in the evening review.
+ */
+export function PomodoroTimer({ className, taskId = null, taskTitle = null }: PomodoroTimerProps) {
+  const store = useFocusStore()
+  const startSession = useStartFocusSession()
+  const endSession = useEndFocusSession()
+  const toast = useToast()
+  const beep = useBeep()
+  const [now, setNow] = useState(() => Date.now())
+  const finishing = useRef(false)
 
   useEffect(() => {
-    if (state === 'working' || state === 'break') {
-      intervalRef.current = setInterval(() => {
-        setTimeLeft((t) => {
-          if (t <= 1) {
-            if (intervalRef.current) clearInterval(intervalRef.current)
-            handleTimerEnd()
-            return 0
+    if (store.phase !== 'running') return
+    const t = setInterval(() => setNow(Date.now()), 250)
+    return () => clearInterval(t)
+  }, [store.phase])
+
+  const remaining = remainingSeconds(store, now)
+  const progress = store.plannedSec > 0 ? 1 - remaining / store.plannedSec : 0
+
+  const beginWork = useCallback(async () => {
+    const started = Date.now()
+    store.start({ kind: 'work', plannedSec: WORK_SEC, taskId, taskTitle }, started)
+    try {
+      const session = await startSession.mutateAsync({ taskId, kind: 'work' })
+      useFocusStore.getState().setSessionId(session.id)
+    } catch {
+      toast.show('Timer running, but the session could not be saved', 'error')
+    }
+  }, [store, startSession, taskId, taskTitle, toast])
+
+  const beginBreak = useCallback(() => {
+    const sec = useFocusStore.getState().nextBreakSec()
+    store.start({ kind: 'break', plannedSec: sec, taskId, taskTitle }, Date.now())
+  }, [store, taskId, taskTitle])
+
+  const finishCurrent = useCallback(
+    async (completed: boolean) => {
+      const s = useFocusStore.getState()
+      if (s.kind === 'work' && s.sessionId) {
+        try {
+          const ended = await endSession.mutateAsync({ id: s.sessionId, completed })
+          if (ended.durationSec >= 60) {
+            toast.show(`${Math.round(ended.durationSec / 60)} min of deep work logged`)
           }
-          return t - 1
-        })
-      }, 1000)
-    }
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current)
-    }
-  }, [state, handleTimerEnd])
+        } catch {
+          /* best effort */
+        }
+      }
+      if (s.kind === 'work' && completed) s.completePomodoro()
+    },
+    [endSession, toast]
+  )
 
-  const togglePause = useCallback(() => {
-    if (state === 'paused' && pausedFrom) {
-      setState(pausedFrom)
-      setPausedFrom(null)
-    } else if (state === 'working' || state === 'break') {
-      if (intervalRef.current) clearInterval(intervalRef.current)
-      setPausedFrom(state)
-      setState('paused')
-    }
-  }, [state, pausedFrom])
+  // Auto-advance when the segment ends.
+  useEffect(() => {
+    if (store.phase !== 'running' || remaining > 0 || finishing.current) return
+    finishing.current = true
+    beep()
+    const wasWork = store.kind === 'work'
+    void finishCurrent(true).then(() => {
+      if (wasWork) beginBreak()
+      else useFocusStore.getState().stop()
+      finishing.current = false
+    })
+  }, [remaining, store.phase, store.kind, beep, finishCurrent, beginBreak])
 
-  const reset = useCallback(() => {
-    if (intervalRef.current) clearInterval(intervalRef.current)
-    setState('idle')
-    setTimeLeft(WORK_DURATION)
-    setTotalTime(WORK_DURATION)
-    setPausedFrom(null)
-  }, [])
+  const reset = async () => {
+    await finishCurrent(false)
+    store.stop()
+  }
 
-  // Keyboard shortcuts
+  const skip = async () => {
+    const wasWork = store.kind === 'work'
+    await finishCurrent(false)
+    if (wasWork) beginBreak()
+    else store.stop()
+  }
+
+  // Keyboard: space toggles, r resets
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
       if (e.code === 'Space') {
         e.preventDefault()
-        if (state === 'idle') {
-          startWork()
-        } else {
-          togglePause()
-        }
+        const s = useFocusStore.getState()
+        if (s.phase === 'idle') void beginWork()
+        else if (s.phase === 'running') s.pause()
+        else s.resume()
       } else if (e.code === 'KeyR' && !e.metaKey && !e.ctrlKey) {
         e.preventDefault()
-        reset()
+        void reset()
       }
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [state, togglePause, reset, startWork])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [beginWork])
 
-  const minutes = Math.floor(timeLeft / 60)
-  const seconds = timeLeft % 60
-  const progress = totalTime > 0 ? (totalTime - timeLeft) / totalTime : 0
-
-  // SVG circle properties
-  const size = 200
-  const strokeWidth = 6
-  const radius = (size - strokeWidth) / 2
+  const size = 220
+  const stroke = 8
+  const radius = (size - stroke) / 2
   const circumference = 2 * Math.PI * radius
-  const dashOffset = circumference * (1 - progress)
 
-  const stateLabel =
-    state === 'idle'
+  const label =
+    store.phase === 'idle'
       ? 'Ready'
-      : state === 'working'
-        ? 'Focus'
-        : state === 'break'
+      : store.phase === 'paused'
+        ? 'Paused'
+        : store.kind === 'break'
           ? 'Break'
-          : 'Paused'
-
-  const ringColor =
-    state === 'break'
-      ? 'stroke-green-500'
-      : state === 'paused'
-        ? 'stroke-yellow-500'
-        : 'stroke-primary'
+          : 'Focus'
+  const ring =
+    store.kind === 'break'
+      ? 'stroke-retro-mint'
+      : store.phase === 'paused'
+        ? 'stroke-retro-yellow'
+        : 'stroke-retro-blue'
 
   return (
-    <div className={className}>
-      <div className="flex flex-col items-center gap-4">
-        {/* Circular progress */}
-        <div className="relative">
-          <svg width={size} height={size} className="transform -rotate-90">
-            <circle
-              cx={size / 2}
-              cy={size / 2}
-              r={radius}
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={strokeWidth}
-              className="text-muted/20"
-            />
-            <circle
-              cx={size / 2}
-              cy={size / 2}
-              r={radius}
-              fill="none"
-              strokeWidth={strokeWidth}
-              strokeLinecap="round"
-              strokeDasharray={circumference}
-              strokeDashoffset={dashOffset}
-              className={`transition-all duration-1000 ${ringColor}`}
-            />
-          </svg>
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-4xl font-mono font-bold tabular-nums">
-              {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
+    <div className={cn('flex flex-col items-center gap-5', className)} data-testid="focus-timer">
+      <div className="relative">
+        <svg width={size} height={size} className="-rotate-90">
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            strokeWidth={stroke}
+            className="stroke-retro-dark/10"
+          />
+          <motion.circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            strokeWidth={stroke}
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            animate={{ strokeDashoffset: circumference * (1 - progress) }}
+            transition={{ type: 'spring', stiffness: 60, damping: 20 }}
+            className={cn('transition-colors duration-300', ring)}
+          />
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className="font-mono text-5xl font-bold tabular-nums text-retro-dark">
+            {formatClock(remaining)}
+          </span>
+          <span className="mt-1 font-mono text-[11px] uppercase tracking-[0.18em] text-retro-dark/50">
+            {label}
+          </span>
+          {store.pomodoroCount > 0 && (
+            <span className="mt-2 flex gap-1" aria-label={`${store.pomodoroCount} pomodoros today`}>
+              {Array.from({ length: Math.min(store.pomodoroCount, 8) }).map((_, i) => (
+                <span key={i} className="h-1.5 w-1.5 rounded-full bg-retro-pink" />
+              ))}
             </span>
-            <span className="text-sm text-muted-foreground mt-1">{stateLabel}</span>
-          </div>
-        </div>
-
-        {/* Controls */}
-        <div className="flex items-center gap-2">
-          {state === 'idle' ? (
-            <Button onClick={startWork} size="lg">
-              <Play className="mr-2 h-4 w-4" />
-              Start
-            </Button>
-          ) : (
-            <>
-              <Button onClick={togglePause} variant="outline" size="lg">
-                {state === 'paused' ? (
-                  <>
-                    <Play className="mr-2 h-4 w-4" />
-                    Resume
-                  </>
-                ) : (
-                  <>
-                    <Pause className="mr-2 h-4 w-4" />
-                    Pause
-                  </>
-                )}
-              </Button>
-              <Button onClick={reset} variant="ghost" size="icon">
-                <RotateCcw className="h-4 w-4" />
-              </Button>
-            </>
           )}
         </div>
-
-        {/* Session counter */}
-        <div className="flex items-center gap-1.5">
-          {Array.from({ length: POMODOROS_BEFORE_LONG_BREAK }).map((_, i) => (
-            <div
-              key={i}
-              className={`h-2 w-2 rounded-full ${
-                i < pomodoroCount % POMODOROS_BEFORE_LONG_BREAK
-                  ? 'bg-primary'
-                  : 'bg-muted-foreground/20'
-              }`}
-            />
-          ))}
-          <span className="ml-2 text-xs text-muted-foreground">
-            {pomodoroCount} pomodoro{pomodoroCount !== 1 ? 's' : ''} completed
-          </span>
-        </div>
-
-        <p className="text-[11px] text-muted-foreground/60">
-          Space = pause/resume &middot; R = reset
-        </p>
       </div>
+
+      <div className="flex items-center gap-2">
+        {store.phase === 'idle' ? (
+          <Button onClick={() => void beginWork()} size="lg" data-testid="focus-start">
+            <Play className="mr-2 h-4 w-4" />
+            Start 25 min
+          </Button>
+        ) : (
+          <>
+            <Button
+              onClick={() => (store.phase === 'running' ? store.pause() : store.resume())}
+              variant="outline"
+              size="lg"
+              data-testid="focus-pause"
+            >
+              {store.phase === 'paused' ? (
+                <>
+                  <Play className="mr-2 h-4 w-4" /> Resume
+                </>
+              ) : (
+                <>
+                  <Pause className="mr-2 h-4 w-4" /> Pause
+                </>
+              )}
+            </Button>
+            <Button
+              onClick={() => void skip()}
+              variant="ghost"
+              size="lg"
+              title="Skip to the next segment"
+            >
+              {store.kind === 'work' ? (
+                <Coffee className="h-4 w-4" />
+              ) : (
+                <SkipForward className="h-4 w-4" />
+              )}
+            </Button>
+            <Button onClick={() => void reset()} variant="ghost" size="lg" title="Reset (r)">
+              <RotateCcw className="h-4 w-4" />
+            </Button>
+          </>
+        )}
+      </div>
+      <p className="font-mono text-[11px] text-retro-dark/40">space start/pause · r reset</p>
     </div>
   )
 }

@@ -7,6 +7,7 @@ import { useDarkModeStore } from '@/stores/dark-mode-store'
 import { Breadcrumbs } from './breadcrumbs'
 import { UserMenu } from './user-menu'
 import { NotificationBell } from '@/components/notifications/notification-bell'
+import { FocusPill } from './focus-pill'
 
 export function TopBar() {
   const { setMobileSidebarOpen } = useUIStore()
@@ -25,6 +26,7 @@ export function TopBar() {
         <Breadcrumbs />
       </div>
       <div className="flex items-center gap-2">
+        <FocusPill />
         <button
           type="button"
           onClick={() => setPalette(true)}

@@ -13,6 +13,7 @@ import {
 import { dayPhase } from '@/lib/home/phase'
 import { computeReviewStreak } from '@/lib/home/streak'
 import { buildTodayPayload, getOrCreatePlan } from '@/lib/planner/today'
+import { localDayBounds } from '@/lib/dates'
 import type { HomeData, HomeGoal } from '@/lib/types/home'
 
 const STALE_DAYS = 7
@@ -33,7 +34,8 @@ export const GET = withAuth(async (_req: NextRequest, user) => {
     const dayPlan = await getOrCreatePlan(user, key)
     const plan = await buildTodayPayload(user, key, dayPlan)
 
-    const [todayReview, recentReviews, overdueCount, goals, dueByDeck, readingBooks] =
+    const localDay = localDayBounds(key, tz)
+    const [todayReview, recentReviews, overdueCount, goals, dueByDeck, readingBooks, focusAgg] =
       await Promise.all([
         prisma.dailyReview.findUnique({
           where: { userId_reviewDate: { userId: user.id, reviewDate: today } },
@@ -73,6 +75,15 @@ export const GET = withAuth(async (_req: NextRequest, user) => {
           select: { id: true, title: true, author: true, pagesRead: true, pagesTotal: true },
           orderBy: { updatedAt: 'desc' },
           take: 3,
+        }),
+        prisma.focusSession.aggregate({
+          where: {
+            userId: user.id,
+            kind: 'work',
+            endedAt: { not: null },
+            startedAt: { gte: localDay.start, lt: localDay.end },
+          },
+          _sum: { durationSec: true },
         }),
       ])
 
@@ -147,7 +158,7 @@ export const GET = withAuth(async (_req: NextRequest, user) => {
       goals: { active, staleCount },
       streak,
       overdueCount,
-      focusMinutesToday: null,
+      focusMinutesToday: Math.round((focusAgg._sum.durationSec ?? 0) / 60),
     }
 
     return NextResponse.json({ success: true, data })

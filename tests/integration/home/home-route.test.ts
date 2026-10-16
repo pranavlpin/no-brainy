@@ -9,8 +9,9 @@ const goal = { findMany: vi.fn() }
 const flashcard = { groupBy: vi.fn() }
 const deck = { findMany: vi.fn() }
 const book = { findMany: vi.fn() }
+const focusSession = { aggregate: vi.fn() }
 vi.mock('@/lib/prisma', () => ({
-  prisma: { dayPlan, task, dailyReview, goal, flashcard, deck, book },
+  prisma: { dayPlan, task, dailyReview, goal, flashcard, deck, book, focusSession },
 }))
 vi.mock('@/lib/auth/middleware', () => ({
   withAuth:
@@ -97,6 +98,7 @@ describe('GET /api/home', () => {
     ])
     flashcard.groupBy.mockReset().mockResolvedValue([{ deckId: 'd1', _count: { _all: 7 } }])
     deck.findMany.mockReset().mockResolvedValue([{ id: 'd1', name: 'System Design' }])
+    focusSession.aggregate.mockReset().mockResolvedValue({ _sum: { durationSec: 3000 } })
     book.findMany
       .mockReset()
       .mockResolvedValue([
@@ -132,5 +134,6 @@ describe('GET /api/home', () => {
     expect(data.goals.staleCount).toBe(1)
     expect(data.overdueCount).toBe(2)
     expect(data.phase).toBe('evening')
+    expect(data.focusMinutesToday).toBe(50)
   })
 })
