@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { personalSettings } from '@/lib/data/settings'
 import { prisma } from '@/lib/prisma'
 import { withAuth } from '@/lib/auth/middleware'
 import { createTaskSchema, taskQuerySchema } from '@/lib/validations/tasks'
@@ -116,6 +117,7 @@ export const POST = withAuth(async (req: NextRequest, user) => {
   try {
     const body = await req.json()
     const data = createTaskSchema.parse(body)
+    const defaults = personalSettings(user.timezone, user.preferences)
 
     if (!(await validTaskRelations(prisma, user.id, data))) {
       return NextResponse.json(
@@ -139,7 +141,10 @@ export const POST = withAuth(async (req: NextRequest, user) => {
           plannedDate: data.plannedDate ? new Date(`${data.plannedDate}T00:00:00Z`) : null,
           estimatedMinutes: data.estimatedMinutes ?? null,
           effort: data.effort ?? null,
-          context: data.context ?? null,
+          context:
+            data.context === undefined && defaults.setupComplete
+              ? defaults.defaultContext
+              : (data.context ?? null),
           routinePaused: data.routinePaused ?? false,
           descriptionMd: data.descriptionMd,
           priority: data.priority,

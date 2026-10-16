@@ -7,13 +7,25 @@ import { serializeTask } from '@/lib/tasks/serialize'
 import { updateDayPlanSchema } from '@/lib/validations/planner'
 import { addCalendarDays } from '@/lib/dates/calendar'
 import type { TimeBlock } from '@/lib/types/planner'
+import { personalSettings } from '@/lib/data/settings'
 
 /** Return one calendar plan and live task representations in the saved priority order. */
 export async function readDayPlan(db: Prisma.TransactionClient, userId: string, date: string) {
   const planDate = new Date(`${date}T00:00:00Z`)
+  const owner = await db.user.findUniqueOrThrow({
+    where: { id: userId },
+    select: { timezone: true, preferences: true },
+  })
+  const defaults = personalSettings(owner.timezone, owner.preferences)
   const plan = await db.dayPlan.upsert({
     where: { userId_planDate: { userId, planDate } },
-    create: { userId, planDate },
+    create: {
+      userId,
+      planDate,
+      availableMinutes: defaults.availableMinutes,
+      workStart: defaults.workStart,
+      workEnd: defaults.workEnd,
+    },
     update: {},
   })
   const nextDay = new Date(`${addCalendarDays(date, 1)}T00:00:00Z`)
@@ -53,9 +65,16 @@ export async function saveDayPlan(user: AuthUser, date: string, body: unknown) {
   const { expectedUpdatedAt, ...input } = updateDayPlanSchema.parse(body)
   const planDate = new Date(`${date}T00:00:00Z`)
   return prisma.$transaction(async (db) => {
+    const defaults = personalSettings(user.timezone, user.preferences)
     const existing = await db.dayPlan.upsert({
       where: { userId_planDate: { userId: user.id, planDate } },
-      create: { userId: user.id, planDate },
+      create: {
+        userId: user.id,
+        planDate,
+        availableMinutes: defaults.availableMinutes,
+        workStart: defaults.workStart,
+        workEnd: defaults.workEnd,
+      },
       update: {},
     })
     const start = input.workStart === undefined ? existing.workStart : input.workStart
