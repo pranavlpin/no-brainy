@@ -9,7 +9,15 @@ import { Input } from '@/components/ui/input'
 import type { TaskResponse } from '@/lib/types/tasks'
 
 /** Offer explicit choices for unfinished work while keeping deadlines and history intact. */
-export function UnfinishedWork({ tasks, date }: { tasks: TaskResponse[]; date: string }) {
+export function UnfinishedWork({
+  tasks,
+  date,
+  continueLabel = 'Continue today',
+}: {
+  tasks: TaskResponse[]
+  date: string
+  continueLabel?: string
+}) {
   const update = useUpdateTask()
   const create = useCreateTask()
   const [choice, setChoice] = useState<{
@@ -75,7 +83,7 @@ export function UnfinishedWork({ tasks, date }: { tasks: TaskResponse[]; date: s
               disabled={pending}
               onClick={() => void save(task, date)}
             >
-              Continue today
+              {continueLabel}
             </Button>
             {(['reschedule', 'split', 'drop'] as const).map((kind) => (
               <Button

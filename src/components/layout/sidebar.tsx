@@ -39,7 +39,7 @@ const NAV_ITEMS_MAP: Record<string, NavItem> = {
   '/books': { label: 'Books', href: '/books', icon: BookOpen },
   '/flashcards': { label: 'Flashcards', href: '/flashcards', icon: Layers },
   '/planner': { label: 'Daily Planner', href: '/planner', icon: Calendar },
-  '/reviews': { label: 'Nightly Reviews', href: '/reviews', icon: BarChart3 },
+  '/reviews': { label: 'Reflections', href: '/reviews', icon: BarChart3 },
   '/goals': { label: 'Growth', href: '/goals', icon: Target },
   '/search': { label: 'Search', href: '/search', icon: Search },
   '/analytics': { label: 'Analytics', href: '/analytics', icon: TrendingUp },
