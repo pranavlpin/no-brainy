@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { cn } from '@/lib/utils'
+import { Dialog } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { useCreateNote } from '@/hooks/use-notes'
 import { useCreateTask } from '@/hooks/use-tasks'
@@ -54,18 +55,6 @@ export function QuickCaptureModal({ open, onClose }: QuickCaptureModalProps) {
     }
   }, [open])
 
-  useEffect(() => {
-    if (!open) return
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.preventDefault()
-        handleClose()
-      }
-    }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  }, [open, handleClose])
-
   const handleSubmit = useCallback(async () => {
     const trimmed = content.trim()
     if (!trimmed || submitting.current) return
@@ -106,110 +95,103 @@ export function QuickCaptureModal({ open, onClose }: QuickCaptureModalProps) {
   const isSubmitting = createNote.isPending || createTask.isPending
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-start justify-center pt-[20vh]">
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/50 animate-in fade-in duration-150"
-        onClick={handleClose}
+    <Dialog open={open} onClose={handleClose} title="Quick capture">
+      {/* Input */}
+      <input
+        ref={inputRef}
+        autoFocus
+        aria-label="Capture text"
+        type="text"
+        value={content}
+        onChange={(e) => setContent(e.target.value)}
+        onKeyDown={handleKeyDown}
+        placeholder="Quick capture... (note or task)"
+        className="w-full border-0 bg-transparent text-lg font-medium text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-0"
+        disabled={isSubmitting}
       />
 
-      {/* Modal */}
-      <div className="relative z-[61] w-full max-w-lg rounded-xl bg-white p-6 shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-200">
-        {/* Input */}
-        <input
-          ref={inputRef}
-          type="text"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Quick capture... (note or task)"
-          className="w-full border-0 bg-transparent text-lg font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-0"
-          disabled={isSubmitting}
-        />
-
-        <div className="mt-4 flex flex-col gap-4">
-          {/* Type toggle */}
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-500">Type:</span>
-            <div className="flex rounded-lg bg-gray-100 p-0.5">
-              <button
-                type="button"
-                onClick={() => setType('note')}
-                className={cn(
-                  'rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
-                  type === 'note'
-                    ? 'bg-blue-600 text-white shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                )}
-              >
-                Note
-              </button>
-              <button
-                type="button"
-                onClick={() => setType('task')}
-                className={cn(
-                  'rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
-                  type === 'task'
-                    ? 'bg-green-600 text-white shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                )}
-              >
-                Task
-              </button>
-            </div>
-          </div>
-
-          {/* Task-specific fields */}
-          {type === 'task' && (
-            <div className="flex flex-wrap items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-150">
-              {/* Priority */}
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-500">Priority:</span>
-                <select
-                  value={priority}
-                  onChange={(e) => setPriority(e.target.value as TaskPriority)}
-                  className="rounded-md border border-gray-200 bg-white px-2 py-1 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  {priorities.map((p) => (
-                    <option key={p.value} value={p.value}>
-                      {p.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Due date */}
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-500">Due:</span>
-                <input
-                  type="date"
-                  value={dueDate}
-                  onChange={(e) => setDueDate(e.target.value)}
-                  className="rounded-md border border-gray-200 bg-white px-2 py-1 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Footer */}
-          <div className="flex items-center justify-between border-t border-gray-100 pt-3">
-            <p className="text-xs text-gray-400">
-              Press{' '}
-              <kbd className="rounded border border-gray-200 bg-gray-50 px-1 py-0.5 text-[10px] font-mono">
-                Enter
-              </kbd>{' '}
-              to submit,{' '}
-              <kbd className="rounded border border-gray-200 bg-gray-50 px-1 py-0.5 text-[10px] font-mono">
-                Esc
-              </kbd>{' '}
-              to close
-            </p>
-            <Button size="sm" onClick={handleSubmit} disabled={!content.trim() || isSubmitting}>
-              {isSubmitting ? 'Creating...' : 'Create'}
-            </Button>
+      <div className="mt-4 flex flex-col gap-4">
+        {/* Type toggle */}
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">Type:</span>
+          <div className="flex rounded-lg bg-muted p-0.5">
+            <button
+              type="button"
+              onClick={() => setType('note')}
+              className={cn(
+                'rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
+                type === 'note'
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              Note
+            </button>
+            <button
+              type="button"
+              onClick={() => setType('task')}
+              className={cn(
+                'rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
+                type === 'task'
+                  ? 'bg-green-600 text-white shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              Task
+            </button>
           </div>
         </div>
+
+        {/* Task-specific fields */}
+        {type === 'task' && (
+          <div className="flex flex-wrap items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-150">
+            {/* Priority */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Priority:</span>
+              <select
+                value={priority}
+                onChange={(e) => setPriority(e.target.value as TaskPriority)}
+                className="rounded-md border border-border bg-popover px-2 py-1 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {priorities.map((p) => (
+                  <option key={p.value} value={p.value}>
+                    {p.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Due date */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Due:</span>
+              <input
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                className="rounded-md border border-border bg-popover px-2 py-1 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Footer */}
+        <div className="flex items-center justify-between border-t border-border pt-3">
+          <p className="text-xs text-muted-foreground">
+            Press{' '}
+            <kbd className="rounded border border-border bg-muted px-1 py-0.5 text-[10px] font-mono">
+              Enter
+            </kbd>{' '}
+            to submit,{' '}
+            <kbd className="rounded border border-border bg-muted px-1 py-0.5 text-[10px] font-mono">
+              Esc
+            </kbd>{' '}
+            to close
+          </p>
+          <Button size="sm" onClick={handleSubmit} disabled={!content.trim() || isSubmitting}>
+            {isSubmitting ? 'Creating...' : 'Create'}
+          </Button>
+        </div>
       </div>
-    </div>
+    </Dialog>
   )
 }

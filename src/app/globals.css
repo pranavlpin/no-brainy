@@ -1,71 +1,73 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 60 20% 98%;
+    --foreground: 207 27% 19%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 207 27% 19%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
-    --radius: 0.5rem;
-
-    /* Retro accent palette */
-    --retro-pink: 336 100% 58%;
-    --retro-yellow: 52 100% 50%;
-    --retro-blue: 233 100% 59%;
-    --retro-mint: 160 100% 45%;
-    --retro-orange: 18 100% 60%;
-    --retro-dark: 240 20% 13%;
-    --retro-cream: 44 100% 95%;
-
-    /* Layout colors */
-    --sidebar-bg: 220 15% 18%;
-    --sidebar-fg: 210 40% 90%;
-    --page-bg-subtle: 44 100% 95%;
+    --popover-foreground: 207 27% 19%;
+    --primary: var(--retro-blue);
+    --primary-foreground: 0 0% 100%;
+    --secondary: 169 25% 93%;
+    --secondary-foreground: 172 40% 26%;
+    --muted: 150 10% 95%;
+    --muted-foreground: 207 10% 45%;
+    --accent: 166 30% 94%;
+    --accent-foreground: 172 40% 26%;
+    --destructive: 0 62% 48%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 160 10% 89%;
+    --input: 160 10% 85%;
+    --ring: var(--retro-blue);
+    --radius: 1rem;
+    --retro-pink: 343 55% 59%;
+    --retro-yellow: 38 80% 69%;
+    --retro-blue: 173 57% 31%;
+    --retro-mint: 156 42% 52%;
+    --retro-orange: 26 65% 59%;
+    --retro-dark: 207 27% 19%;
+    --retro-cream: 50 28% 97%;
+    --sidebar-bg: 50 30% 99%;
+    --sidebar-fg: 207 27% 19%;
+    --page-bg-subtle: 150 18% 96%;
+    --space-page: clamp(1rem, 3vw, 2.5rem);
+    --motion-fast: 160ms;
+    --motion-enter: 260ms;
+    --ease-settle: cubic-bezier(0.2, 0.8, 0.2, 1);
+    --shadow-soft: 0 3px 18px hsl(207 27% 19% / 0.045);
+    --shadow-soft-lg: 0 20px 80px hsl(207 27% 19% / 0.15);
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
-    --retro-dark: 220 15% 85%;
-    --retro-cream: 220 15% 12%;
-    --sidebar-bg: 220 20% 12%;
-    --sidebar-fg: 210 40% 90%;
-    --page-bg-subtle: 220 20% 8%;
+    --background: 210 23% 9%;
+    --foreground: 180 12% 91%;
+    --card: 210 20% 13%;
+    --card-foreground: 180 12% 91%;
+    --popover: 210 20% 14%;
+    --popover-foreground: 180 12% 91%;
+    --primary-foreground: 173 50% 10%;
+    --secondary: 190 20% 19%;
+    --secondary-foreground: 165 30% 85%;
+    --muted: 210 15% 17%;
+    --muted-foreground: 195 12% 65%;
+    --accent: 185 22% 19%;
+    --accent-foreground: 165 30% 85%;
+    --destructive: 0 62% 61%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 205 15% 23%;
+    --input: 205 15% 28%;
+    --retro-blue: 165 50% 62%;
+    --retro-dark: 180 12% 91%;
+    --retro-cream: 210 23% 9%;
+    --sidebar-bg: 210 24% 11%;
+    --sidebar-fg: 180 12% 91%;
+    --page-bg-subtle: 200 25% 11%;
+    --shadow-soft: 0 3px 18px hsl(0 0% 0% / 0.1);
+    --shadow-soft-lg: 0 20px 80px hsl(0 0% 0% / 0.4);
   }
 }
 
@@ -75,108 +77,108 @@
 /* Theme: Ocean */
 .theme-ocean,
 .light.theme-ocean {
-    --retro-pink: 195 100% 45%;
-    --retro-yellow: 45 90% 55%;
-    --retro-blue: 220 90% 50%;
-    --retro-mint: 175 70% 45%;
-    --retro-orange: 200 80% 55%;
-    --retro-dark: 220 30% 15%;
-    --retro-cream: 200 30% 95%;
-    --sidebar-bg: 215 35% 20%;
-    --sidebar-fg: 200 30% 92%;
-    --page-bg-subtle: 200 30% 96%;
-  }
+  --retro-pink: 195 100% 45%;
+  --retro-yellow: 45 90% 55%;
+  --retro-blue: 220 90% 50%;
+  --retro-mint: 175 70% 45%;
+  --retro-orange: 200 80% 55%;
+  --retro-dark: 220 30% 15%;
+  --retro-cream: 200 30% 95%;
+  --sidebar-bg: 215 35% 20%;
+  --sidebar-fg: 200 30% 92%;
+  --page-bg-subtle: 200 30% 96%;
+}
 
 /* Theme: Forest */
 .theme-forest,
 .light.theme-forest {
-    --retro-pink: 340 60% 55%;
-    --retro-yellow: 45 85% 50%;
-    --retro-blue: 150 60% 35%;
-    --retro-mint: 120 50% 45%;
-    --retro-orange: 25 80% 50%;
-    --retro-dark: 150 20% 12%;
-    --retro-cream: 80 30% 95%;
-    --sidebar-bg: 150 25% 18%;
-    --sidebar-fg: 120 20% 92%;
-    --page-bg-subtle: 80 25% 96%;
-  }
+  --retro-pink: 340 60% 55%;
+  --retro-yellow: 45 85% 50%;
+  --retro-blue: 150 60% 35%;
+  --retro-mint: 120 50% 45%;
+  --retro-orange: 25 80% 50%;
+  --retro-dark: 150 20% 12%;
+  --retro-cream: 80 30% 95%;
+  --sidebar-bg: 150 25% 18%;
+  --sidebar-fg: 120 20% 92%;
+  --page-bg-subtle: 80 25% 96%;
+}
 
 /* Theme: Sunset */
 .theme-sunset,
 .light.theme-sunset {
-    --retro-pink: 340 85% 55%;
-    --retro-yellow: 35 100% 55%;
-    --retro-blue: 270 70% 55%;
-    --retro-mint: 15 80% 55%;
-    --retro-orange: 25 95% 55%;
-    --retro-dark: 270 20% 15%;
-    --retro-cream: 30 50% 95%;
-    --sidebar-bg: 270 25% 20%;
-    --sidebar-fg: 30 30% 92%;
-    --page-bg-subtle: 30 40% 96%;
-  }
+  --retro-pink: 340 85% 55%;
+  --retro-yellow: 35 100% 55%;
+  --retro-blue: 270 70% 55%;
+  --retro-mint: 15 80% 55%;
+  --retro-orange: 25 95% 55%;
+  --retro-dark: 270 20% 15%;
+  --retro-cream: 30 50% 95%;
+  --sidebar-bg: 270 25% 20%;
+  --sidebar-fg: 30 30% 92%;
+  --page-bg-subtle: 30 40% 96%;
+}
 
 /* Dark mode variants */
 .dark.theme-ocean {
-    --background: 210 30% 7%;
-    --card: 210 30% 7%;
-    --popover: 210 30% 7%;
-    --secondary: 210 25% 15%;
-    --muted: 210 25% 15%;
-    --accent: 210 25% 15%;
-    --border: 210 25% 15%;
-    --input: 210 25% 15%;
-    --retro-pink: 195 80% 55%;
-    --retro-yellow: 45 80% 60%;
-    --retro-blue: 210 85% 60%;
-    --retro-mint: 175 60% 55%;
-    --retro-orange: 200 70% 60%;
-    --retro-dark: 210 25% 85%;
-    --retro-cream: 200 20% 12%;
-    --sidebar-bg: 215 30% 12%;
-    --page-bg-subtle: 210 25% 9%;
-  }
+  --background: 210 30% 7%;
+  --card: 210 30% 7%;
+  --popover: 210 30% 7%;
+  --secondary: 210 25% 15%;
+  --muted: 210 25% 15%;
+  --accent: 210 25% 15%;
+  --border: 210 25% 15%;
+  --input: 210 25% 15%;
+  --retro-pink: 195 80% 55%;
+  --retro-yellow: 45 80% 60%;
+  --retro-blue: 210 85% 60%;
+  --retro-mint: 175 60% 55%;
+  --retro-orange: 200 70% 60%;
+  --retro-dark: 210 25% 85%;
+  --retro-cream: 200 20% 12%;
+  --sidebar-bg: 215 30% 12%;
+  --page-bg-subtle: 210 25% 9%;
+}
 
 .dark.theme-forest {
-    --background: 140 20% 7%;
-    --card: 140 20% 7%;
-    --popover: 140 20% 7%;
-    --secondary: 140 15% 14%;
-    --muted: 140 15% 14%;
-    --accent: 140 15% 14%;
-    --border: 140 15% 14%;
-    --input: 140 15% 14%;
-    --retro-pink: 340 50% 60%;
-    --retro-yellow: 45 75% 60%;
-    --retro-blue: 150 50% 50%;
-    --retro-mint: 120 40% 55%;
-    --retro-orange: 25 70% 55%;
-    --retro-dark: 150 15% 85%;
-    --retro-cream: 120 15% 10%;
-    --sidebar-bg: 150 20% 11%;
-    --page-bg-subtle: 140 15% 9%;
-  }
+  --background: 140 20% 7%;
+  --card: 140 20% 7%;
+  --popover: 140 20% 7%;
+  --secondary: 140 15% 14%;
+  --muted: 140 15% 14%;
+  --accent: 140 15% 14%;
+  --border: 140 15% 14%;
+  --input: 140 15% 14%;
+  --retro-pink: 340 50% 60%;
+  --retro-yellow: 45 75% 60%;
+  --retro-blue: 150 50% 50%;
+  --retro-mint: 120 40% 55%;
+  --retro-orange: 25 70% 55%;
+  --retro-dark: 150 15% 85%;
+  --retro-cream: 120 15% 10%;
+  --sidebar-bg: 150 20% 11%;
+  --page-bg-subtle: 140 15% 9%;
+}
 
 .dark.theme-sunset {
-    --background: 270 20% 7%;
-    --card: 270 20% 7%;
-    --popover: 270 20% 7%;
-    --secondary: 270 15% 14%;
-    --muted: 270 15% 14%;
-    --accent: 270 15% 14%;
-    --border: 270 15% 14%;
-    --input: 270 15% 14%;
-    --retro-pink: 340 75% 60%;
-    --retro-yellow: 35 90% 60%;
-    --retro-blue: 270 60% 60%;
-    --retro-mint: 15 70% 60%;
-    --retro-orange: 25 85% 60%;
-    --retro-dark: 270 15% 85%;
-    --retro-cream: 20 20% 10%;
-    --sidebar-bg: 270 20% 11%;
-    --page-bg-subtle: 260 15% 9%;
-  }
+  --background: 270 20% 7%;
+  --card: 270 20% 7%;
+  --popover: 270 20% 7%;
+  --secondary: 270 15% 14%;
+  --muted: 270 15% 14%;
+  --accent: 270 15% 14%;
+  --border: 270 15% 14%;
+  --input: 270 15% 14%;
+  --retro-pink: 340 75% 60%;
+  --retro-yellow: 35 90% 60%;
+  --retro-blue: 270 60% 60%;
+  --retro-mint: 15 70% 60%;
+  --retro-orange: 25 85% 60%;
+  --retro-dark: 270 15% 85%;
+  --retro-cream: 20 20% 10%;
+  --sidebar-bg: 270 20% 11%;
+  --page-bg-subtle: 260 15% 9%;
+}
 
 @layer base {
   * {
@@ -184,7 +186,8 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'Inter', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
   }
 }
 
@@ -197,54 +200,64 @@
   background-image: radial-gradient(circle, hsl(var(--retro-cream) / 0.03) 1px, transparent 1px);
 }
 
-/* Hard shadow utilities */
-.shadow-hard {
-  box-shadow: 4px 4px 0px hsl(var(--retro-dark));
+/* Legacy elevation aliases keep existing modules coherent during their incremental redesign. */
+.shadow-hard,
+.shadow-hard-pink,
+.shadow-hard-blue,
+.shadow-hard-yellow,
+.shadow-hard-mint,
+.shadow-hard-orange {
+  box-shadow: var(--shadow-soft);
 }
 .shadow-hard-lg {
-  box-shadow: 8px 8px 0px hsl(var(--retro-dark));
+  box-shadow: var(--shadow-soft-lg);
 }
-.shadow-hard-pink {
-  box-shadow: 4px 4px 0px hsl(var(--retro-pink));
-}
-.shadow-hard-blue {
-  box-shadow: 4px 4px 0px hsl(var(--retro-blue));
-}
-.shadow-hard-yellow {
-  box-shadow: 4px 4px 0px hsl(var(--retro-yellow));
-}
-.shadow-hard-mint {
-  box-shadow: 4px 4px 0px hsl(var(--retro-mint));
-}
-.shadow-hard-orange {
-  box-shadow: 4px 4px 0px hsl(var(--retro-orange));
-}
-
-/* Hover shadow animation */
 .hover-shadow-grow {
-  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  transition:
+    box-shadow var(--motion-fast) ease,
+    transform var(--motion-fast) ease;
 }
 .hover-shadow-grow:hover {
-  box-shadow: 8px 8px 0px hsl(var(--retro-dark));
-  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-soft-lg);
+  transform: translateY(-1px);
 }
 
 /* Retro animations */
 @keyframes float {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-10px) rotate(5deg); }
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(5deg);
+  }
 }
 @keyframes float-reverse {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(10px) rotate(-5deg); }
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(10px) rotate(-5deg);
+  }
 }
 @keyframes spin-slow {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
-.animate-float { animation: float 4s ease-in-out infinite; }
-.animate-float-reverse { animation: float-reverse 5s ease-in-out infinite; }
-.animate-spin-slow { animation: spin-slow 20s linear infinite; }
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+.animate-float-reverse {
+  animation: float-reverse 5s ease-in-out infinite;
+}
+.animate-spin-slow {
+  animation: spin-slow 20s linear infinite;
+}
 
 /* Force prose text color to be dark and readable */
 .prose,
@@ -257,7 +270,12 @@
 .prose ul,
 .prose ol,
 .prose blockquote,
-.prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4,
+.prose h5,
+.prose h6 {
   color: hsl(var(--retro-dark)) !important;
 }
 .prose pre,
@@ -303,4 +321,96 @@
   border: 2px solid hsl(var(--retro-dark) / 0.6);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
   cursor: pointer;
+}
+
+/* Personal workspace surfaces and motion. Backgrounds stay still while content enters. */
+.workspace-canvas {
+  background:
+    radial-gradient(ellipse at 90% 0%, hsl(var(--retro-mint) / 0.07), transparent 45%),
+    radial-gradient(ellipse at 30% 100%, hsl(var(--retro-yellow) / 0.065), transparent 50%),
+    hsl(var(--background));
+}
+.surface {
+  border: 1px solid hsl(var(--border) / 0.8);
+  border-radius: 1.5rem;
+  background: hsl(var(--card));
+  box-shadow: var(--shadow-soft);
+}
+.surface-soft {
+  border: 1px solid hsl(var(--border) / 0.55);
+  border-radius: 1.5rem;
+  background: hsl(var(--card) / 0.65);
+}
+.eyebrow {
+  font-size: 0.65rem;
+  line-height: 1.5;
+  font-weight: 650;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: hsl(var(--muted-foreground));
+}
+.display-title {
+  font-size: clamp(1.8rem, 3.2vw, 2.65rem);
+  line-height: 1.14;
+  font-weight: 650;
+  letter-spacing: -0.045em;
+}
+.shadow-soft {
+  box-shadow: var(--shadow-soft);
+}
+.shadow-soft-lg {
+  box-shadow: var(--shadow-soft-lg);
+}
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes panel-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes fade-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.motion-page {
+  animation: page-enter var(--motion-enter) var(--ease-settle) both;
+}
+.motion-panel {
+  animation: panel-enter 200ms var(--ease-settle) both;
+}
+.motion-fade {
+  animation: fade-enter var(--motion-fast) ease both;
+}
+:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 3px;
+}
+::selection {
+  background: hsl(var(--retro-mint) / 0.25);
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
 }
