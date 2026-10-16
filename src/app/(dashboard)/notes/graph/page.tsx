@@ -24,21 +24,21 @@ export default function NoteGraphPage(): React.ReactElement {
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-4 md:p-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="sm" onClick={() => router.push('/notes')}>
             <ArrowLeft className="mr-1.5 h-4 w-4" />
             Back
           </Button>
-          <h1 className="font-display text-2xl font-bold text-retro-dark">Note Graph</h1>
+          <h1 className="display-title">Note Graph</h1>
         </div>
 
         {/* View toggle */}
-        <div className="flex items-center gap-1 border-2 border-retro-dark/15 bg-white p-1">
+        <div className="flex items-center gap-1 border-2 border-retro-dark/15 bg-card p-1">
           <button
             onClick={() => setView('links')}
             className={cn(
-              'flex items-center gap-1.5 px-3 py-1.5 font-mono text-xs font-medium transition-colors',
+              'flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors',
               view === 'links'
                 ? 'bg-retro-blue/10 text-retro-dark'
                 : 'text-retro-dark/40 hover:text-retro-dark/70'
@@ -50,7 +50,7 @@ export default function NoteGraphPage(): React.ReactElement {
           <button
             onClick={() => setView('tags')}
             className={cn(
-              'flex items-center gap-1.5 px-3 py-1.5 font-mono text-xs font-medium transition-colors',
+              'flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors',
               view === 'tags'
                 ? 'bg-retro-blue/10 text-retro-dark'
                 : 'text-retro-dark/40 hover:text-retro-dark/70'
@@ -69,13 +69,11 @@ export default function NoteGraphPage(): React.ReactElement {
       </p>
 
       {/* Graph */}
-      {isLoading && (
-        <Skeleton className="h-[600px] w-full" />
-      )}
+      {isLoading && <Skeleton className="h-[600px] w-full" />}
 
       {data && data.nodes.length > 0 && (
         <>
-          <div className="font-mono text-xs text-muted-foreground">
+          <div className="text-xs text-muted-foreground">
             {data.nodes.length} notes &middot; {data.edges.length} connections
           </div>
           <NoteGraphView data={data} width={1100} height={600} />
@@ -83,8 +81,8 @@ export default function NoteGraphPage(): React.ReactElement {
       )}
 
       {data && data.nodes.length === 0 && (
-        <div className="flex flex-col items-center justify-center border-2 border-dashed border-retro-dark/20 py-16 text-center">
-          <p className="font-mono text-sm text-muted-foreground">
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border py-16 text-center">
+          <p className="text-sm text-muted-foreground">
             {view === 'links'
               ? 'No linked notes yet. Use /link in the editor to connect notes.'
               : 'No tagged notes yet. Add tags to your notes to see connections.'}

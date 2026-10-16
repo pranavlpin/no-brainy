@@ -1,5 +1,6 @@
 'use client'
 
+import { RemoteImage } from '@/components/ui/remote-image'
 import Link from 'next/link'
 import { BookOpen } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -8,10 +9,22 @@ import { ReadingProgress } from './reading-progress'
 import type { BookResponse, BookStatus } from '@/lib/types/books'
 
 const statusConfig: Record<BookStatus, { label: string; className: string }> = {
-  want_to_read: { label: 'Want to Read', className: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' },
-  reading: { label: 'Reading', className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
-  completed: { label: 'Completed', className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' },
-  abandoned: { label: 'Abandoned', className: 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-300' },
+  want_to_read: {
+    label: 'Want to Read',
+    className: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
+  },
+  reading: {
+    label: 'Reading',
+    className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+  },
+  completed: {
+    label: 'Completed',
+    className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+  },
+  abandoned: {
+    label: 'Abandoned',
+    className: 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-300',
+  },
 }
 
 const coverColors = [
@@ -45,7 +58,14 @@ export function BookCard({ book }: BookCardProps) {
       {/* Cover */}
       <div className="relative aspect-[3/4] w-full overflow-hidden">
         {book.coverUrl ? (
-          <img
+          <RemoteImage
+            width={600}
+            height={800}
+            fallback={
+              <div className="flex h-full w-full items-center justify-center bg-primary/10">
+                <BookOpen size={48} className="text-primary/50" />
+              </div>
+            }
             src={book.coverUrl}
             alt={book.title}
             className="h-full w-full object-cover transition-transform group-hover:scale-105"
@@ -72,12 +92,8 @@ export function BookCard({ book }: BookCardProps) {
 
       {/* Info */}
       <div className="flex flex-1 flex-col gap-1.5 p-3">
-        <h3 className="line-clamp-2 text-sm font-semibold leading-tight">
-          {book.title}
-        </h3>
-        {book.author && (
-          <p className="text-xs text-muted-foreground">{book.author}</p>
-        )}
+        <h3 className="line-clamp-2 text-sm font-semibold leading-tight">{book.title}</h3>
+        {book.author && <p className="text-xs text-muted-foreground">{book.author}</p>}
 
         <StarRating value={book.rating} readOnly size={14} />
 
@@ -101,9 +117,7 @@ export function BookCard({ book }: BookCardProps) {
               </span>
             ))}
             {book.genre.length > 3 && (
-              <span className="text-[10px] text-muted-foreground">
-                +{book.genre.length - 3}
-              </span>
+              <span className="text-[10px] text-muted-foreground">+{book.genre.length - 3}</span>
             )}
           </div>
         )}

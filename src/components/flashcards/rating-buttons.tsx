@@ -8,7 +8,13 @@ interface RatingButtonsProps {
   disabled?: boolean
 }
 
-const RATINGS: { rating: ReviewRating; label: string; hint: string; key: string; className: string }[] = [
+const RATINGS: {
+  rating: ReviewRating
+  label: string
+  hint: string
+  key: string
+  className: string
+}[] = [
   {
     rating: 'forgot',
     label: 'Forgot',
@@ -67,7 +73,7 @@ export function RatingButtons({ onRate, disabled }: RatingButtonsProps) {
           >
             <span>{r.label}</span>
             <span className="text-[10px] font-normal opacity-80">{r.hint}</span>
-            <kbd className="mt-1 rounded bg-white/20 px-1.5 py-0.5 text-[10px] font-mono">
+            <kbd className="mt-1 rounded bg-card/20 px-1.5 py-0.5 text-[10px] font-mono">
               {r.key}
             </kbd>
           </button>

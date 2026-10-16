@@ -1,5 +1,6 @@
 'use client'
 
+import { RemoteImage } from '@/components/ui/remote-image'
 import { Film, Tv, Pencil, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { StarRating } from './star-rating'
@@ -7,10 +8,22 @@ import { Badge } from '@/components/ui/badge'
 import type { WatchlistItemResponse, WatchlistStatus, WatchlistType } from '@/lib/types/watchlist'
 
 const statusConfig: Record<WatchlistStatus, { label: string; className: string }> = {
-  want_to_watch: { label: 'Want to Watch', className: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' },
-  watching: { label: 'Watching', className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
-  completed: { label: 'Completed', className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' },
-  dropped: { label: 'Dropped', className: 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-300' },
+  want_to_watch: {
+    label: 'Want to Watch',
+    className: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
+  },
+  watching: {
+    label: 'Watching',
+    className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+  },
+  completed: {
+    label: 'Completed',
+    className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+  },
+  dropped: {
+    label: 'Dropped',
+    className: 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-300',
+  },
 }
 
 const typeConfig: Record<WatchlistType, { label: string; icon: typeof Film }> = {
@@ -47,7 +60,9 @@ const genreColors: Record<string, 'blue' | 'green' | 'orange' | 'red' | 'yellow'
   Fantasy: 'orange',
 }
 
-function getGenreBadgeVariant(genre: string): 'blue' | 'green' | 'orange' | 'red' | 'yellow' | 'secondary' {
+function getGenreBadgeVariant(
+  genre: string
+): 'blue' | 'green' | 'orange' | 'red' | 'yellow' | 'secondary' {
   return genreColors[genre] ?? 'secondary'
 }
 
@@ -63,11 +78,18 @@ export function WatchlistCard({ item, onEdit, onDelete }: WatchlistCardProps): J
   const TypeIcon = typeInfo.icon
 
   return (
-    <div className="group relative flex flex-col overflow-hidden border-2 border-retro-dark/20 bg-card transition-shadow hover:shadow-hard">
+    <div className="group relative flex flex-col overflow-hidden rounded-xl border border-border bg-card transition-shadow hover:shadow-md">
       {/* Cover */}
       <div className="relative aspect-[16/10] w-full overflow-hidden">
         {item.coverUrl ? (
-          <img
+          <RemoteImage
+            width={640}
+            height={400}
+            fallback={
+              <div className="flex h-full w-full items-center justify-center bg-primary/10">
+                <TypeIcon size={48} className="text-primary/50" />
+              </div>
+            }
             src={item.coverUrl}
             alt={item.title}
             className="h-full w-full object-cover transition-transform group-hover:scale-105"
@@ -99,15 +121,16 @@ export function WatchlistCard({ item, onEdit, onDelete }: WatchlistCardProps): J
         </span>
 
         {/* Hover actions */}
-        <div className="absolute bottom-2 right-2 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+        <div className="absolute bottom-2 right-2 flex gap-1 opacity-100 transition-opacity sm:opacity-0 group-hover:opacity-100 group-focus-within:opacity-100">
           {onEdit && (
             <button
               type="button"
+              aria-label={`Edit ${item.title}`}
               onClick={(e) => {
                 e.stopPropagation()
                 onEdit(item)
               }}
-              className="rounded bg-white/90 p-1.5 text-retro-dark shadow-sm transition-colors hover:bg-retro-blue hover:text-white"
+              className="rounded bg-card/90 p-1.5 text-retro-dark shadow-sm transition-colors hover:bg-retro-blue hover:text-white"
             >
               <Pencil size={14} />
             </button>
@@ -115,11 +138,12 @@ export function WatchlistCard({ item, onEdit, onDelete }: WatchlistCardProps): J
           {onDelete && (
             <button
               type="button"
+              aria-label={`Delete ${item.title}`}
               onClick={(e) => {
                 e.stopPropagation()
                 onDelete(item.id)
               }}
-              className="rounded bg-white/90 p-1.5 text-retro-dark shadow-sm transition-colors hover:bg-red-500 hover:text-white"
+              className="rounded bg-card/90 p-1.5 text-retro-dark shadow-sm transition-colors hover:bg-red-500 hover:text-white"
             >
               <Trash2 size={14} />
             </button>
@@ -133,16 +157,10 @@ export function WatchlistCard({ item, onEdit, onDelete }: WatchlistCardProps): J
           <h3 className="line-clamp-2 text-sm font-semibold leading-tight font-display">
             {item.title}
           </h3>
-          {item.year && (
-            <span className="shrink-0 font-mono text-xs text-muted-foreground">
-              {item.year}
-            </span>
-          )}
+          {item.year && <span className="shrink-0 text-xs text-muted-foreground">{item.year}</span>}
         </div>
 
-        {item.platform && (
-          <p className="font-mono text-xs text-muted-foreground">{item.platform}</p>
-        )}
+        {item.platform && <p className="text-xs text-muted-foreground">{item.platform}</p>}
 
         <StarRating value={item.rating} readOnly size={14} />
 
@@ -154,9 +172,7 @@ export function WatchlistCard({ item, onEdit, onDelete }: WatchlistCardProps): J
               </Badge>
             ))}
             {item.genre.length > 3 && (
-              <span className="text-[10px] text-muted-foreground">
-                +{item.genre.length - 3}
-              </span>
+              <span className="text-[10px] text-muted-foreground">+{item.genre.length - 3}</span>
             )}
           </div>
         )}

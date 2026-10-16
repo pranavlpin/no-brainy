@@ -130,7 +130,7 @@ export default function NoteDetailPage() {
   return (
     <div className="mx-auto max-w-4xl space-y-4 p-4 md:p-6">
       {/* Top bar */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <Button variant="ghost" size="sm" onClick={() => router.push('/notes')}>
           <ArrowLeft className="mr-1.5 h-4 w-4" />
           Back

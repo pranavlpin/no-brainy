@@ -1,13 +1,6 @@
 'use client'
 
-import {
-  CheckCircle2,
-  BookOpen,
-  Brain,
-  Flame,
-  TrendingUp,
-  Wallet,
-} from 'lucide-react'
+import { CheckCircle2, BookOpen, Brain, Flame, TrendingUp, Wallet } from 'lucide-react'
 import { useAnalytics } from '@/hooks/use-analytics'
 import { StatCard } from '@/components/analytics/stat-card'
 import { BarChart } from '@/components/analytics/bar-chart'
@@ -93,8 +86,7 @@ function CompletionRateChart({
     <div className="flex items-end gap-px" style={{ height: 120 }}>
       {data.map((day) => {
         const rate = day.total > 0 ? day.completed / day.total : 0
-        const barHeight =
-          maxCompleted > 0 ? (day.completed / maxCompleted) * 100 : 0
+        const barHeight = maxCompleted > 0 ? (day.completed / maxCompleted) * 100 : 0
 
         return (
           <div
@@ -118,18 +110,12 @@ function LoadingSkeleton() {
     <div className="animate-pulse space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div
-            key={i}
-            className="h-32 rounded-lg border border-border bg-muted"
-          />
+          <div key={i} className="h-32 rounded-lg border border-border bg-muted" />
         ))}
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div
-            key={i}
-            className="h-56 rounded-lg border border-border bg-muted"
-          />
+          <div key={i} className="h-56 rounded-lg border border-border bg-muted" />
         ))}
       </div>
     </div>
@@ -142,7 +128,7 @@ export default function AnalyticsPage() {
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <h1 className="font-display text-2xl font-bold text-retro-dark">Analytics</h1>
+        <h1 className="display-title">Analytics</h1>
         <LoadingSkeleton />
       </div>
     )
@@ -151,7 +137,7 @@ export default function AnalyticsPage() {
   if (error || !data) {
     return (
       <div className="space-y-6">
-        <h1 className="font-display text-2xl font-bold text-retro-dark">Analytics</h1>
+        <h1 className="display-title">Analytics</h1>
         <p className="text-muted-foreground">
           Failed to load analytics data. Please try again later.
         </p>
@@ -161,30 +147,14 @@ export default function AnalyticsPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="font-display text-2xl font-bold text-retro-dark">Analytics</h1>
+      <h1 className="display-title">Analytics</h1>
 
       {/* Summary Stats */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          icon={CheckCircle2}
-          value={data.totalTasksCompleted}
-          label="Tasks Completed"
-        />
-        <StatCard
-          icon={BookOpen}
-          value={data.totalBooksRead}
-          label="Books Read"
-        />
-        <StatCard
-          icon={Brain}
-          value={data.totalCardsReviewed}
-          label="Cards Reviewed"
-        />
-        <StatCard
-          icon={TrendingUp}
-          value={data.totalNotes}
-          label="Total Notes"
-        />
+        <StatCard icon={CheckCircle2} value={data.totalTasksCompleted} label="Tasks Completed" />
+        <StatCard icon={BookOpen} value={data.totalBooksRead} label="Books Read" />
+        <StatCard icon={Brain} value={data.totalCardsReviewed} label="Cards Reviewed" />
+        <StatCard icon={TrendingUp} value={data.totalNotes} label="Total Notes" />
       </div>
 
       {/* Charts Grid */}
@@ -198,9 +168,7 @@ export default function AnalyticsPage() {
             }))}
             height={160}
           />
-          <p className="mt-2 text-xs text-muted-foreground">
-            Total notes: {data.totalNotes}
-          </p>
+          <p className="mt-2 text-xs text-muted-foreground">Total notes: {data.totalNotes}</p>
         </ChartCard>
 
         {/* Expense Analytics */}
@@ -242,9 +210,7 @@ export default function AnalyticsPage() {
         <ChartCard title="Review Streak">
           <div className="flex flex-col items-center justify-center py-4">
             <div className="flex items-center gap-2">
-              {data.reviewStreak > 0 && (
-                <Flame className="h-8 w-8 text-orange-500" />
-              )}
+              {data.reviewStreak > 0 && <Flame className="h-8 w-8 text-orange-500" />}
               <span className="text-5xl font-bold tabular-nums text-card-foreground">
                 {data.reviewStreak}
               </span>

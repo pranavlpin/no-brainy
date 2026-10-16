@@ -158,7 +158,7 @@ function ApiKeySection() {
       {/* Model Selection */}
       {hasKey && (
         <div className="mt-4 border-t border-retro-dark/10 pt-4">
-          <label className="font-mono text-xs uppercase tracking-wider text-retro-dark/60 mb-2 block">
+          <label className="text-xs uppercase tracking-wider text-retro-dark/60 mb-2 block">
             Default AI Model
           </label>
           <select
@@ -170,7 +170,7 @@ function ApiKeySection() {
                 body: JSON.stringify({ aiModel: e.target.value }),
               })
             }}
-            className="border-2 border-retro-dark/20 bg-background px-3 py-2 text-sm font-mono w-full max-w-xs"
+            className="rounded-xl border border-border bg-background px-3 py-2 text-sm font-mono w-full max-w-xs"
           >
             <option value="gpt-4o">GPT-4o (Best quality, higher cost)</option>
             <option value="gpt-4o-mini">GPT-4o Mini (Faster, cheaper)</option>
@@ -297,7 +297,7 @@ export default function SettingsPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-8 py-8">
       <div>
-        <h1 className="font-display text-2xl font-bold text-retro-dark">Settings</h1>
+        <h1 className="display-title">Settings</h1>
         <p className="mt-1 text-sm text-retro-dark/60">
           Manage your account and application preferences.
         </p>
@@ -305,27 +305,25 @@ export default function SettingsPage() {
 
       {/* AI Configuration */}
       <section>
-        <h2 className="font-display mb-4 text-lg font-semibold text-retro-dark">
-          AI Configuration
-        </h2>
+        <h2 className="mb-4 text-lg font-semibold tracking-tight">AI Configuration</h2>
         <ApiKeySection />
       </section>
 
       {/* Sidebar Order */}
       <section>
-        <h2 className="font-display mb-4 text-lg font-semibold text-retro-dark">Sidebar</h2>
+        <h2 className="mb-4 text-lg font-semibold tracking-tight">Sidebar</h2>
         <SidebarOrderSettings />
       </section>
 
       {/* Theme */}
       <section>
-        <h2 className="font-display mb-4 text-lg font-semibold text-retro-dark">Theme</h2>
+        <h2 className="mb-4 text-lg font-semibold tracking-tight">Theme</h2>
         <ThemeSection />
       </section>
 
       {/* Notification Preferences */}
       <section>
-        <h2 className="font-display mb-4 text-lg font-semibold text-retro-dark">Notifications</h2>
+        <h2 className="mb-4 text-lg font-semibold tracking-tight">Notifications</h2>
         <NotificationPreferencesSection />
       </section>
     </div>

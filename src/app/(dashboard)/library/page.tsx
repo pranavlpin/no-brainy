@@ -77,27 +77,57 @@ export default function LibraryPage() {
         </Link>
       </header>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {collections.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className="surface group p-6 transition-transform hover:-translate-y-1"
-          >
-            <div className="mb-7 flex items-center justify-between">
-              <span className={`rounded-2xl p-3 ${item.color}`}>
-                <item.icon className="h-5 w-5" />
-              </span>
-              <ArrowUpRight className="h-4 w-4 text-muted-foreground/40 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
-            </div>
-            <h2 className="text-lg font-semibold tracking-tight">{item.title}</h2>
-            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{item.subtitle}</p>
-          </Link>
-        ))}
+        {collections
+          .filter((item) => !['/watchlist', '/stash'].includes(item.href))
+          .map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="surface group p-6 transition-transform hover:-translate-y-1"
+            >
+              <div className="mb-7 flex items-center justify-between">
+                <span className={`rounded-2xl p-3 ${item.color}`}>
+                  <item.icon className="h-5 w-5" />
+                </span>
+                <ArrowUpRight className="h-4 w-4 text-muted-foreground/40 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+              </div>
+              <h2 className="text-lg font-semibold tracking-tight">{item.title}</h2>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{item.subtitle}</p>
+            </Link>
+          ))}
       </div>
+      <section className="surface-soft flex flex-wrap items-center justify-between gap-4 p-6">
+        <div>
+          <h2 className="text-lg font-semibold">Let learning become practice.</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Try an idea, notice what happened, and keep what helps.
+          </p>
+        </div>
+        <div className="flex gap-4 text-sm text-primary">
+          <Link href="/growth" className="underline underline-offset-4">
+            Your growth
+          </Link>
+          <Link href="/reviews" className="underline underline-offset-4">
+            Make time to reflect
+          </Link>
+        </div>
+      </section>
       <section>
         <p className="eyebrow mb-4">Life, a little more organised</p>
         <div className="grid gap-4 sm:grid-cols-2">
           {[
+            {
+              href: '/watchlist',
+              title: 'Watchlist',
+              description: 'Make room for stories and downtime.',
+              icon: Film,
+            },
+            {
+              href: '/stash',
+              title: 'Stash',
+              description: 'Files and private reference spaces.',
+              icon: Archive,
+            },
             {
               href: '/expenses',
               title: 'Expenses',

@@ -1,5 +1,6 @@
 'use client'
 
+import { RemoteImage } from '@/components/ui/remote-image'
 import { BookExperiment } from '@/components/growth/book-experiment'
 
 import { useState, useCallback } from 'react'
@@ -149,7 +150,14 @@ export default function BookDetailPage() {
         {/* Cover */}
         <div className="shrink-0">
           {book.coverUrl ? (
-            <img
+            <RemoteImage
+              width={480}
+              height={640}
+              fallback={
+                <div className="flex aspect-[3/4] w-48 items-center justify-center rounded-2xl bg-primary/10">
+                  <BookOpen size={64} className="text-primary/50" />
+                </div>
+              }
               src={book.coverUrl}
               alt={book.title}
               className="aspect-[3/4] w-48 rounded-lg object-cover shadow-md"

@@ -1,5 +1,6 @@
 'use client'
 
+import { ErrorState } from '@/components/ui/workspace-states'
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { Plus, FileText, LayoutGrid, List, Network } from 'lucide-react'
@@ -35,7 +36,7 @@ export default function NotesPage() {
     search: debouncedSearch || undefined,
   }
 
-  const { data, isLoading } = useNotes(activeFilters)
+  const { data, isLoading, isError, refetch } = useNotes(activeFilters)
   const updateNote = useUpdateNote()
 
   const notes = useMemo(() => data ?? [], [data])
@@ -51,11 +52,13 @@ export default function NotesPage() {
     return Array.from(tagSet).sort()
   }, [notes])
 
+  if (isError) return <ErrorState retry={() => void refetch()} />
+
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-4 md:p-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="font-display text-2xl font-bold text-retro-dark">Notes</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="display-title">Notes</h1>
         <div className="flex items-center gap-2">
           <div className="hidden sm:flex items-center rounded-md border border-input">
             <button
@@ -91,7 +94,7 @@ export default function NotesPage() {
           </Button>
           <button
             onClick={() => router.push('/notes/new')}
-            className="border-2 border-retro-dark bg-retro-blue px-4 py-2 font-mono text-sm font-bold text-white shadow-hard hover-shadow-grow"
+            className="inline-flex items-center rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
           >
             <Plus className="mr-1.5 inline h-4 w-4" />
             New Note
@@ -117,7 +120,7 @@ export default function NotesPage() {
           )}
         >
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="rounded-lg border border-border bg-white p-4 shadow-sm">
+            <div key={i} className="rounded-lg border border-border bg-card p-4 shadow-sm">
               <Skeleton className="h-5 w-3/4" />
               <Skeleton className="mt-3 h-4 w-full" />
               <Skeleton className="mt-1.5 h-4 w-2/3" />

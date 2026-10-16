@@ -20,6 +20,7 @@ interface UploadUrlResponse {
 }
 
 export function StashComposer({ channelId }: StashComposerProps) {
+  const [sendError, setSendError] = useState<string | null>(null)
   const [content, setContent] = useState('')
   const [label, setLabel] = useState('')
   const [showLabel, setShowLabel] = useState(false)
@@ -28,11 +29,15 @@ export function StashComposer({ channelId }: StashComposerProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const send = useSendMessage(channelId)
+  const location = useRef({ channelId, epoch: 0 })
+  if (location.current.channelId !== channelId)
+    location.current = { channelId, epoch: location.current.epoch + 1 }
 
   const linkDetected = useMemo(() => isHttpUrl(content), [content])
 
   useEffect(() => {
     setContent('')
+    setSendError(null)
     setLabel('')
     setShowLabel(false)
     setUploading(null)
@@ -40,9 +45,11 @@ export function StashComposer({ channelId }: StashComposerProps) {
   }, [channelId])
 
   const handleSend = async () => {
+    const epoch = location.current.epoch
     const trimmed = content.trim()
     const trimmedLabel = label.trim()
     if (trimmed.length === 0 && trimmedLabel.length === 0) return
+    setSendError(null)
     try {
       if (linkDetected) {
         await send.mutateAsync({
@@ -57,12 +64,14 @@ export function StashComposer({ channelId }: StashComposerProps) {
           label: trimmedLabel || undefined,
         })
       }
+      if (location.current.epoch !== epoch) return
       setContent('')
       setLabel('')
       setShowLabel(false)
       textareaRef.current?.focus()
     } catch {
-      /* surfaced via parent later */
+      if (location.current.epoch === epoch)
+        setSendError('Could not send this message. Your text is kept; press Send to retry.')
     }
   }
 
@@ -132,6 +141,11 @@ export function StashComposer({ channelId }: StashComposerProps) {
 
   return (
     <div className="border-t border-border bg-background p-3">
+      {sendError && (
+        <p role="alert" className="mb-3 text-sm text-destructive">
+          {sendError}
+        </p>
+      )}
       {showLabel && (
         <input
           type="text"
@@ -139,7 +153,7 @@ export function StashComposer({ channelId }: StashComposerProps) {
           onChange={(e) => setLabel(e.target.value)}
           placeholder="Label (optional, e.g. 'Gmail account')"
           maxLength={200}
-          className="mb-2 w-full border-2 border-retro-dark/20 bg-background px-3 py-1.5 text-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-retro-blue"
+          className="mb-2 w-full rounded-xl border border-border bg-background px-3 py-1.5 text-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-retro-blue"
         />
       )}
       {linkDetected && !uploading && (
@@ -155,7 +169,7 @@ export function StashComposer({ channelId }: StashComposerProps) {
         </div>
       )}
       {uploadError && (
-        <div className="mb-2 flex items-center justify-between gap-2 text-xs text-destructive">
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-3 gap-2 text-xs text-destructive">
           <span className="truncate">{uploadError}</span>
           <button
             type="button"
@@ -192,13 +206,9 @@ export function StashComposer({ channelId }: StashComposerProps) {
         >
           <Paperclip className="h-4 w-4" />
         </button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          className="hidden"
-          onChange={handleFileSelect}
-        />
+        <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileSelect} />
         <textarea
+          aria-label="Stash message"
           ref={textareaRef}
           value={content}
           onChange={(e) => setContent(e.target.value)}
@@ -206,8 +216,8 @@ export function StashComposer({ channelId }: StashComposerProps) {
           placeholder="Type a message or paste a URL… (Cmd/Ctrl+Enter to send)"
           rows={1}
           maxLength={50_000}
-          disabled={!!uploading}
-          className="flex max-h-40 min-h-10 w-full resize-none border-2 border-retro-dark/20 bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-retro-blue disabled:opacity-50"
+          disabled={!!uploading || send.isPending}
+          className="flex max-h-40 min-h-10 w-full resize-none rounded-xl border border-border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-retro-blue disabled:opacity-50"
         />
         <button
           type="button"

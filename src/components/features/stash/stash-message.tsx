@@ -1,6 +1,14 @@
 'use client'
 
-import { Pin, Trash2, Link as LinkIcon, ExternalLink, FileText, Download, ImageIcon } from 'lucide-react'
+import {
+  Pin,
+  Trash2,
+  Link as LinkIcon,
+  ExternalLink,
+  FileText,
+  Download,
+  ImageIcon,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { getHostname } from '@/lib/stash/url'
 import type { StashMessageResponse } from '@/types/stash'
@@ -39,9 +47,7 @@ function LinkCard({ url, title }: { url: string; title: string | null }) {
           <span className="truncate">{getHostname(url)}</span>
           <ExternalLink className="h-3 w-3 shrink-0 opacity-0 transition-opacity group-hover:opacity-100" />
         </div>
-        <div className="mt-0.5 truncate text-sm font-medium text-retro-dark">
-          {title || url}
-        </div>
+        <div className="mt-0.5 truncate text-sm font-medium text-retro-dark">{title || url}</div>
       </div>
     </a>
   )
@@ -70,13 +76,8 @@ function FileCard({
         className="group block max-w-[320px] overflow-hidden rounded-md border border-retro-blue/20 bg-background hover:border-retro-blue/40"
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={fileUrl}
-          alt={fileName}
-          className="max-h-80 w-full object-cover"
-          loading="lazy"
-        />
-        <div className="flex items-center justify-between gap-2 px-2.5 py-1.5 text-xs">
+        <img src={fileUrl} alt={fileName} className="max-h-80 w-full object-cover" loading="lazy" />
+        <div className="flex flex-wrap items-center justify-between gap-3 gap-2 px-2.5 py-1.5 text-xs">
           <div className="flex items-center gap-1.5 text-muted-foreground">
             <ImageIcon className="h-3 w-3 shrink-0" />
             <span className="truncate">{fileName}</span>
