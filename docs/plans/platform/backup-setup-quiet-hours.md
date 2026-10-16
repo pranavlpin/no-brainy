@@ -40,3 +40,12 @@ Export button, file picker, preview counts, confirm; setup form with plain expla
 ## Risks and open questions
 
 - Import is additive only; nothing is replaced or deleted. **Ruling applied.**
+
+## Refinements (while the branch was open)
+
+- The backup covers this branch's core tables: captures, goals, projects, notes, tasks, task links, project notes, note links, day plans, daily and weekly reviews, focus sessions, growth evidence. Bookmarks, books, flashcards, money, Stash, and credentials stay out; links to them are counted in `omittedLinks`.
+- Import is additive with fresh ids for every row (`remapBackup` is pure and unit-tested); a receipt per request id and per file digest makes a retry return the earlier result. Open focus sessions in a backup are closed at export time.
+- A preview endpoint (`POST /api/data/preview`) returns counts, skipped calendar days, and a fingerprint the confirm must match; the import route refuses anything without `confirm: true`.
+- Personal defaults (capacity, buffer, working window, default context, chime) live under `preferences.personal`; new day plans take them. The timezone keeps syncing from the browser and is shown under Time rather than edited here.
+- Quiet hours and the close-the-day reminder time live under `preferences.notificationPreferences`; generation skips everything inside the window in the user's zone and uses the reminder time instead of a fixed 20:00.
+- Account-level reduced motion was not added: the device setting is already respected everywhere.

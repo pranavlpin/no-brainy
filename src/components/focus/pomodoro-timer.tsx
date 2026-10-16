@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { FinishDialog } from '@/components/focus/finish-dialog'
 import { useFocusStore } from '@/stores/focus-store'
 import { useEndFocusSession, useStartFocusSession } from '@/hooks/use-focus-sessions'
+import { usePersonalSettings } from '@/hooks/use-personal-settings'
 import { useToast } from '@/hooks/use-toast'
 import { WORK_SEC, elapsedSeconds, formatClock, remainingSeconds } from '@/lib/focus/timer'
 import { cn } from '@/lib/utils'
@@ -55,7 +56,12 @@ export function PomodoroTimer({ className, taskId = null, taskTitle = null }: Po
   const startSession = useStartFocusSession()
   const endSession = useEndFocusSession()
   const toast = useToast()
-  const beep = useBeep()
+  const chime = useBeep()
+  const { data: personal } = usePersonalSettings()
+  const soundOn = personal?.sound !== false
+  const beep = useCallback(() => {
+    if (soundOn) chime()
+  }, [soundOn, chime])
   const [now, setNow] = useState(() => Date.now())
   const [intentionDraft, setIntentionDraft] = useState('')
   const [finishOpen, setFinishOpen] = useState(false)

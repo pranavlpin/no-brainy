@@ -2,6 +2,7 @@ import type { DayPlan, Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { addDays, dateFromKey, dayBoundsUtc } from '@/lib/dates'
 import { formatTask } from '@/lib/tasks/format'
+import { personalSettings } from '@/lib/settings/personal'
 import type { AuthUser } from '@/lib/types/auth'
 import type { PlannerGoal, TimeBlock } from '@/lib/types/planner'
 import type { TaskResponse } from '@/lib/types/tasks'
@@ -34,8 +35,14 @@ export interface TodayPayload {
 const DEFAULT_AVAILABLE_MINUTES = 180
 const DEFAULT_BUFFER_MINUTES = 15
 
-/** Find today's plan or create it, seeding the intent from last night's review. */
-export async function getOrCreatePlan(user: Pick<AuthUser, 'id'>, key: string): Promise<DayPlan> {
+/**
+ * Find today's plan or create it, seeding the intent from last night's review
+ * and the capacity from the user's personal defaults.
+ */
+export async function getOrCreatePlan(
+  user: Pick<AuthUser, 'id'> & Partial<Pick<AuthUser, 'timezone' | 'preferences'>>,
+  key: string
+): Promise<DayPlan> {
   const planDate = dateFromKey(key)
   const existing = await prisma.dayPlan.findUnique({
     where: { userId_planDate: { userId: user.id, planDate } },
@@ -46,8 +53,19 @@ export async function getOrCreatePlan(user: Pick<AuthUser, 'id'>, key: string): 
     select: { tomorrowIntent: true },
   })
   const intentMd = yesterdayReview?.tomorrowIntent?.trim() || null
+  const defaults = personalSettings(user.timezone ?? 'UTC', user.preferences)
   return prisma.dayPlan.create({
-    data: { userId: user.id, planDate, focusTaskIds: [], timeBlocks: [], intentMd },
+    data: {
+      userId: user.id,
+      planDate,
+      focusTaskIds: [],
+      timeBlocks: [],
+      intentMd,
+      availableMinutes: defaults.availableMinutes,
+      bufferMinutes: defaults.bufferMinutes,
+      workStart: defaults.workStart,
+      workEnd: defaults.workEnd,
+    },
   })
 }
 

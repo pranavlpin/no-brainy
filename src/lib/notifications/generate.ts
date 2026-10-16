@@ -7,10 +7,23 @@ import {
   todayKey,
   userTimezone,
 } from '@/lib/dates'
-import { resolveNotificationPreferences } from './preferences'
+import {
+  inQuietHours,
+  resolveNotificationPreferences,
+  resolveReminderSettings,
+  timeToMinutes,
+} from './preferences'
 
 export const REVIEW_REMINDER_HOUR = 20
 export const MORNING_BRIEF_UNTIL_HOUR = 10
+
+/** Local minute within the hour, 0 to 59. */
+function localMinute(tz: string, now: Date): number {
+  const part = new Intl.DateTimeFormat('en-US', { timeZone: tz, minute: 'numeric' }).formatToParts(
+    now
+  )
+  return Number(part.find((p) => p.type === 'minute')?.value ?? '0')
+}
 
 interface GenerateUser {
   id: string
@@ -36,11 +49,15 @@ export async function generateForUser(
   const hour = localHour(tz, now)
   const { start: todayStart, end: todayEnd } = dayBoundsUtc(key)
   const { start: localStart, end: localEnd } = localDayBounds(key, tz)
-  const prefs = resolveNotificationPreferences(
-    ((user.preferences ?? {}) as Record<string, unknown>).notificationPreferences as
-      Record<string, unknown> | undefined
-  )
+  const stored = ((user.preferences ?? {}) as Record<string, unknown>).notificationPreferences as
+    Record<string, unknown> | undefined
+  const prefs = resolveNotificationPreferences(stored)
+  const reminder = resolveReminderSettings(stored)
   const created: string[] = []
+
+  // Quiet hours: nothing is created inside the window; the next run catches up.
+  const minutesOfDay = hour * 60 + localMinute(tz, now)
+  if (inQuietHours(reminder.quietHours, minutesOfDay)) return { created }
 
   const existsToday = async (type: string, relatedId?: string | null) =>
     prisma.notification.findFirst({
@@ -161,7 +178,7 @@ export async function generateForUser(
     }
   }
 
-  if (prefs.dailyReviewReminders && hour >= REVIEW_REMINDER_HOUR) {
+  if (prefs.dailyReviewReminders && minutesOfDay >= timeToMinutes(reminder.reviewReminderTime)) {
     const review = await prisma.dailyReview.findFirst({
       where: { userId: user.id, reviewDate: dateFromKey(key) },
       select: { id: true },

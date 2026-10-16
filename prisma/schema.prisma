@@ -48,6 +48,7 @@ model User {
   projects          Project[]
   growthEvidence    GrowthEvidence[]
   weeklyReviews     WeeklyReview[]
+  importReceipts    CoreImportReceipt[]
   @@map("users")
 }
 
@@ -150,6 +151,20 @@ model WeeklyReview {
   nextTask Task? @relation("NextWeekAction", fields: [nextTaskId], references: [id], onDelete: SetNull)
   @@unique([userId, weekStart])
   @@map("weekly_reviews")
+}
+
+/// A confirmed core import; the same request id or the same file never imports twice.
+model CoreImportReceipt {
+  id              String   @id @default(cuid())
+  userId          String
+  clientRequestId String
+  digest          String
+  result          Json
+  createdAt       DateTime @default(now())
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([userId, clientRequestId])
+  @@unique([userId, digest])
+  @@map("core_import_receipts")
 }
 
 model UserSession {

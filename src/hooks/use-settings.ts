@@ -54,8 +54,8 @@ export function useRemoveApiKey() {
 
 // --- Notification Preferences ---
 
-export type { NotificationPreferences } from '@/lib/notifications/preferences'
-import type { NotificationPreferences } from '@/lib/notifications/preferences'
+export type { NotificationPreferences, NotificationSettings } from '@/lib/notifications/preferences'
+import type { NotificationSettings } from '@/lib/notifications/preferences'
 
 const NOTIF_PREFS_KEY = ['settings', 'notification-preferences'] as const
 
@@ -63,7 +63,7 @@ export function useNotificationPreferences() {
   return useQuery({
     queryKey: NOTIF_PREFS_KEY,
     queryFn: async () => {
-      const res = await apiClient<ApiResponse<NotificationPreferences>>(
+      const res = await apiClient<ApiResponse<NotificationSettings>>(
         '/api/settings/notification-preferences'
       )
       return res.data
@@ -74,8 +74,8 @@ export function useNotificationPreferences() {
 export function useUpdateNotificationPreferences() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (prefs: Partial<NotificationPreferences>) => {
-      const res = await apiClient<ApiResponse<NotificationPreferences>>(
+    mutationFn: async (prefs: Partial<NotificationSettings>) => {
+      const res = await apiClient<ApiResponse<NotificationSettings>>(
         '/api/settings/notification-preferences',
         {
           method: 'PUT',
