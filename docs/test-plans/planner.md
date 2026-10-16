@@ -41,3 +41,9 @@ Final results: PENDING — no tests have run for this task.
 ## Approval — 2026-10-16
 
 The owner’s conversation message “approved.” approves the parent package, this section’s linked task plan, and the six developer packages listed in NB-02. The proposed section above is retained as the pre-approval record. Tests have not run at this approval checkpoint.
+
+---
+
+## NB-07 execution — 2026-10-16
+
+Behavioral red → green for capacity accounting, invalid dates, owner/active selection, scheduling without deadline mutation, stale-save conflicts, all-earlier unfinished work, paginated undated selection and deliberate carry-forward. Browser journey covers outcome, capacity, priority selection beyond page one, time-block create/edit/delete, reload persistence, completion/undo and Focus entry. Full results: 23 governance + 69 unit/component, 21 integration, 8 browser tests passed; types/format/schema/build passed. Four inherited image lint warnings remain assigned to NB-12. Evidence: /Users/pranav/Pranav_projects/github/no-brainy/evidences/planner/today-and-capacity/.

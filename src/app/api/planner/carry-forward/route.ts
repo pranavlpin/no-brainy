@@ -1,110 +1,56 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { todayInTimezone } from '@/lib/dates/calendar'
 import { prisma } from '@/lib/prisma'
 import { withAuth } from '@/lib/auth/middleware'
-import type { TaskResponse } from '@/lib/types/tasks'
+import { addCalendarDays, todayInTimezone } from '@/lib/dates/calendar'
+import { serializeTask } from '@/lib/tasks/serialize'
+import { dateParamSchema } from '@/lib/validations/planner'
+import { plannerFailure } from '@/lib/planner/server'
 
-function formatTask(task: {
-  id: string
-  userId: string
-  parentTaskId: string | null
-  goalId: string | null
-  title: string
-  descriptionMd: string
-  priority: string
-  status: string
-  tags: string[]
-  dueDate: Date | null
-  completedAt: Date | null
-  isRecurring: boolean
-  rrule: string | null
-  quadrant: string | null
-  orderIndex: number
-  createdAt: Date
-  updatedAt: Date
-}): TaskResponse {
-  return {
-    id: task.id,
-    userId: task.userId,
-    parentTaskId: task.parentTaskId,
-    goalId: task.goalId,
-    title: task.title,
-    descriptionMd: task.descriptionMd,
-    priority: task.priority as TaskResponse['priority'],
-    status: task.status as TaskResponse['status'],
-    tags: task.tags,
-    dueDate: task.dueDate?.toISOString() ?? null,
-    completedAt: task.completedAt?.toISOString() ?? null,
-    isRecurring: task.isRecurring,
-    rrule: task.rrule,
-    quadrant: task.quadrant as TaskResponse['quadrant'],
-    orderIndex: task.orderIndex,
-    createdAt: task.createdAt.toISOString(),
-    updatedAt: task.updatedAt.toISOString(),
-  }
-}
-
-export const POST = withAuth(async (_req: NextRequest, user) => {
+export const POST = withAuth(async (req: NextRequest, user) => {
   try {
-    const today = new Date(`${todayInTimezone(user.timezone)}T00:00:00.000Z`)
-    const yesterday = new Date(today)
-    yesterday.setUTCDate(yesterday.getUTCDate() - 1)
-
-    // Find yesterday's plan
-    const yesterdayPlan = await prisma.dayPlan.findUnique({
-      where: {
-        userId_planDate: {
-          userId: user.id,
-          planDate: yesterday,
-        },
-      },
+    const date = req.nextUrl.searchParams.get('before')
+      ? dateParamSchema.parse(req.nextUrl.searchParams.get('before'))
+      : todayInTimezone(user.timezone)
+    const before = new Date(`${date}T00:00:00Z`)
+    const prior = await prisma.dayPlan.findMany({
+      where: { userId: user.id, planDate: { lt: before } },
+      select: { focusTaskIds: true, growthTaskId: true },
     })
-
-    // Get tasks due yesterday that are not completed
-    const yesterdayEnd = new Date(today)
-    const incompleteDueTasks = await prisma.task.findMany({
+    const priorIds = [
+      ...new Set(
+        prior.flatMap((plan) => [
+          ...plan.focusTaskIds,
+          ...(plan.growthTaskId ? [plan.growthTaskId] : []),
+        ])
+      ),
+    ]
+    const suggestions = await prisma.task.findMany({
       where: {
         userId: user.id,
-        dueDate: { gte: yesterday, lt: yesterdayEnd },
-        status: { notIn: ['completed', 'cancelled'] },
+        status: { in: ['pending', 'in_progress'] },
+        routinePaused: false,
+        AND: [
+          { OR: [{ plannedDate: null }, { plannedDate: { lt: before } }] },
+          {
+            OR: [
+              { plannedDate: { lt: before } },
+              { dueDate: { lt: before } },
+              { id: { in: priorIds } },
+            ],
+          },
+        ],
       },
-      orderBy: { orderIndex: 'asc' },
+      orderBy: [{ plannedDate: 'asc' }, { createdAt: 'asc' }],
     })
-
-    // Also get incomplete focus tasks from yesterday's plan
-    let incompleteFocusTasks: typeof incompleteDueTasks = []
-    if (yesterdayPlan && yesterdayPlan.focusTaskIds.length > 0) {
-      incompleteFocusTasks = await prisma.task.findMany({
-        where: {
-          id: { in: yesterdayPlan.focusTaskIds },
-          userId: user.id,
-          status: { notIn: ['completed', 'cancelled'] },
-        },
-      })
-    }
-
-    // Merge and deduplicate
-    const taskMap = new Map<string, (typeof incompleteDueTasks)[number]>()
-    for (const task of [...incompleteDueTasks, ...incompleteFocusTasks]) {
-      taskMap.set(task.id, task)
-    }
-
-    const suggestions = Array.from(taskMap.values()).map(formatTask)
-
     return NextResponse.json({
       success: true,
       data: {
-        suggestions,
-        yesterdayDate: yesterday.toISOString(),
+        suggestions: suggestions.map(serializeTask),
+        yesterdayDate: addCalendarDays(date, -1),
+        beforeDate: date,
       },
     })
-  } catch {
-    return NextResponse.json(
-      {
-        success: false,
-        error: { code: 'INTERNAL_ERROR', message: 'An unexpected error occurred' },
-      },
-      { status: 500 }
-    )
+  } catch (error) {
+    return plannerFailure(error)
   }
 })

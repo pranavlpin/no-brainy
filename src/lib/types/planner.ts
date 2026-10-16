@@ -9,6 +9,13 @@ export interface TimeBlock {
 }
 
 export interface DayPlanResponse {
+  mainOutcome: string
+  availableMinutes: number
+  bufferMinutes: number
+  workStart: string | null
+  workEnd: string | null
+  growthTaskId: string | null
+  updatedAt: string
   id: string
   userId: string
   planDate: string
@@ -25,6 +32,13 @@ export interface CreateDayPlanRequest {
 }
 
 export interface UpdateDayPlanRequest {
+  mainOutcome?: string
+  availableMinutes?: number
+  bufferMinutes?: number
+  workStart?: string | null
+  workEnd?: string | null
+  growthTaskId?: string | null
+  expectedUpdatedAt?: string
   focusTaskIds?: string[]
   timeBlocks?: TimeBlock[]
   aiBriefMd?: string | null
