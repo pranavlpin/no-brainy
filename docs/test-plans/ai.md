@@ -41,3 +41,11 @@ Final results: PENDING — no tests have run for this task.
 ## Approval — 2026-10-16
 
 The owner’s conversation message “approved.” approves the parent package, this section’s linked task plan, and the six developer packages listed in NB-02. The proposed section above is retained as the pre-approval record. Tests have not run at this approval checkpoint.
+
+---
+
+## NB-11 execution results — 2026-10-16
+
+Plan executed from `ca65960e17b04898de3074d70f18f61e34309237` on `feature/ai-contextual-assistance`. T01–T06 pass through deterministic validation, actual isolated database context, mocked provider responses and component interactions. Invalid IDs/output, private errors, no-key manual use, exact source titles/date windows, explicit edit/accept/dismiss, source-preserving retries and finance bounds are covered. Regression assertions precede their corresponding fixes.
+
+Full results: 23 governance + 103 unit/component tests, 48 database tests and 12 browser journeys passed; formatting, TypeScript and production build passed. Four inherited image lint warnings remain for NB-12; zero new lint findings. No live provider call, screenshots or review report. Logs: /Users/pranav/Pranav_projects/github/no-brainy/evidences/ai/contextual-assistance/.

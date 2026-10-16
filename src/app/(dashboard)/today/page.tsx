@@ -252,9 +252,12 @@ function DayWorkspace({
               variant="outline"
               disabled={aiSuggest.isPending}
               onClick={() =>
-                aiSuggest.mutate(undefined, {
-                  onSuccess: (response) => setSuggestion(response.data),
-                })
+                aiSuggest.mutate(
+                  { date },
+                  {
+                    onSuccess: (response) => setSuggestion(response.data),
+                  }
+                )
               }
             >
               {aiSuggest.isPending ? 'Thinking…' : 'Suggest a few priorities'}

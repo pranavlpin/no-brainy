@@ -8,13 +8,14 @@ import { streamAIResponse } from '@/lib/ai/stream-client'
 import type { CoachMessage } from '@/lib/ai/types'
 
 interface MessageWithMeta {
+  id: string
   message: CoachMessage
   timestamp: Date
 }
 
 const SUGGESTED_PROMPTS = [
   'What should I focus on today?',
-  'Why am I not completing my tasks?',
+  'What could make my next step easier?',
   'Summarize my week',
   'What topics should I review?',
 ]
@@ -38,6 +39,7 @@ export function CoachChat() {
       if (!content.trim() || isStreaming) return
 
       const userMsg: MessageWithMeta = {
+        id: crypto.randomUUID(),
         message: { role: 'user', content: content.trim() },
         timestamp: new Date(),
       }
@@ -49,6 +51,7 @@ export function CoachChat() {
 
       // Prepare assistant placeholder
       const assistantMsg: MessageWithMeta = {
+        id: crypto.randomUUID(),
         message: { role: 'assistant', content: '' },
         timestamp: new Date(),
       }
@@ -77,8 +80,7 @@ export function CoachChat() {
           })
         }
       } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : 'Something went wrong'
+        const errorMessage = err instanceof Error ? err.message : 'Something went wrong'
         setMessages((prev) => {
           const updated = [...prev]
           const last = updated[updated.length - 1]
@@ -88,8 +90,7 @@ export function CoachChat() {
               message: {
                 ...last.message,
                 content:
-                  last.message.content ||
-                  `I'm sorry, I encountered an error: ${errorMessage}`,
+                  last.message.content || `I'm sorry, I encountered an error: ${errorMessage}`,
               },
             }
           }
@@ -102,9 +103,12 @@ export function CoachChat() {
     [messages, isStreaming]
   )
 
-  const handleSend = useCallback((context?: ContextAttachment) => {
-    sendMessage(input, context)
-  }, [input, sendMessage])
+  const handleSend = useCallback(
+    (context?: ContextAttachment) => {
+      sendMessage(input, context)
+    },
+    [input, sendMessage]
+  )
 
   const handleSuggestion = useCallback(
     (prompt: string) => {
@@ -115,6 +119,9 @@ export function CoachChat() {
 
   return (
     <div className="flex h-full flex-col">
+      <p role="status" className="sr-only">
+        {isStreaming ? 'Preparing a response' : messages.length ? 'Response ready' : 'Coach ready'}
+      </p>
       {/* Message area */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 ? (
@@ -125,8 +132,8 @@ export function CoachChat() {
               </div>
               <h2 className="text-xl font-semibold">NoBrainy Coach</h2>
               <p className="max-w-sm text-sm text-muted-foreground">
-                Ask me about your productivity, tasks, notes, or habits. I can
-                help you stay focused and organized.
+                Ask me about your productivity, tasks, notes, or practices. I can help you stay
+                focused and organized.
               </p>
             </div>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -142,19 +149,14 @@ export function CoachChat() {
             </div>
           </div>
         ) : (
-          messages.map((m, i) => (
-            <ChatMessage key={i} message={m.message} timestamp={m.timestamp} />
+          messages.map((m) => (
+            <ChatMessage key={m.id} message={m.message} timestamp={m.timestamp} />
           ))
         )}
       </div>
 
       {/* Input area */}
-      <ChatInput
-        value={input}
-        onChange={setInput}
-        onSend={handleSend}
-        isStreaming={isStreaming}
-      />
+      <ChatInput value={input} onChange={setInput} onSend={handleSend} isStreaming={isStreaming} />
     </div>
   )
 }
