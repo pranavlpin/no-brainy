@@ -4,6 +4,7 @@ import { SessionProvider } from 'next-auth/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useState } from 'react'
 import { ThemeInitializer } from '@/components/theme-initializer'
+import { MotionProvider } from '@/components/motion/motion-provider'
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -16,8 +17,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <SessionProvider>
       <QueryClientProvider client={queryClient}>
-        <ThemeInitializer />
-        {children}
+        <MotionProvider>
+          <ThemeInitializer />
+          {children}
+        </MotionProvider>
       </QueryClientProvider>
     </SessionProvider>
   )

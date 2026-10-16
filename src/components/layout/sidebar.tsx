@@ -79,7 +79,7 @@ export function Sidebar() {
       {/* Mobile backdrop */}
       {mobileSidebarOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+          className="fixed inset-0 z-40 bg-retro-dark/50 backdrop-blur-sm animate-in fade-in duration-150 lg:hidden"
           onClick={() => setMobileSidebarOpen(false)}
         />
       )}
@@ -87,7 +87,7 @@ export function Sidebar() {
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 flex flex-col bg-sidebar-bg transition-all duration-300',
+          'fixed inset-y-0 left-0 z-50 flex flex-col border-r border-white/10 bg-sidebar-bg/90 backdrop-blur-xl transition-all duration-300 ease-smooth',
           sidebarCollapsed ? 'w-16' : 'w-64',
           // Mobile: hidden by default, shown when open
           mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full',
@@ -97,7 +97,9 @@ export function Sidebar() {
         {/* Header */}
         <div className="flex h-14 items-center justify-between border-b border-white/10 px-4">
           {!sidebarCollapsed && (
-            <span className="text-lg font-bold text-sidebar-fg">NoBrainy</span>
+            <span className="font-display text-lg font-bold tracking-tight text-sidebar-fg">
+              NoBrainy<span className="text-retro-pink">.</span>
+            </span>
           )}
           {/* Mobile close button */}
           <button
@@ -129,9 +131,7 @@ export function Sidebar() {
 
             return (
               <div key={item.href}>
-                {showDivider && (
-                  <div className="my-1 border-t border-white/10" />
-                )}
+                {showDivider && <div className="my-2 border-t border-white/10" />}
                 <SidebarNavItem item={item} />
               </div>
             )

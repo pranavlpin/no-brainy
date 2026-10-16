@@ -1,58 +1,103 @@
 'use client'
 
-import { useEffect } from 'react'
-import { useToast } from '@/hooks/use-toast'
+import { useEffect, useRef, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react'
+import { useToast, type ToastItem } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
 
-export function Toast() {
-  const { message, type, hide } = useToast()
+const ICONS = {
+  success: CheckCircle2,
+  error: AlertCircle,
+  info: Info,
+} as const
+
+const TONES = {
+  success: 'border-retro-mint/60 text-retro-dark',
+  error: 'border-retro-pink/70 text-retro-dark',
+  info: 'border-retro-blue/60 text-retro-dark',
+} as const
+
+const ICON_TONES = {
+  success: 'text-retro-mint',
+  error: 'text-retro-pink',
+  info: 'text-retro-blue',
+} as const
+
+function ToastRow({ toast, onDismiss }: { toast: ToastItem; onDismiss: (id: string) => void }) {
+  const [paused, setPaused] = useState(false)
+  const remaining = useRef(toast.durationMs)
+  const startedAt = useRef<number>(Date.now())
 
   useEffect(() => {
-    if (message) {
-      const timer = setTimeout(hide, 3000)
-      return () => clearTimeout(timer)
+    if (paused) return
+    startedAt.current = Date.now()
+    const timer = setTimeout(() => onDismiss(toast.id), remaining.current)
+    return () => {
+      clearTimeout(timer)
+      remaining.current = Math.max(0, remaining.current - (Date.now() - startedAt.current))
     }
-  }, [message, hide])
+  }, [paused, toast.id, onDismiss])
 
-  if (!message) return null
+  const Icon = ICONS[toast.type]
 
   return (
-    <div className="fixed bottom-4 right-4 z-[100] animate-in fade-in slide-in-from-bottom-4">
-      <div
-        className={cn(
-          'flex items-center gap-2 border-2 border-retro-dark px-4 py-3 text-sm font-medium text-white shadow-hard',
-          type === 'success' ? 'bg-green-600' : 'bg-red-600'
-        )}
+    <motion.div
+      layout
+      data-testid={`toast-${toast.id}`}
+      initial={{ opacity: 0, y: 16, scale: 0.96 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: 8, scale: 0.98 }}
+      transition={{ type: 'spring', stiffness: 420, damping: 34 }}
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      className={cn(
+        'pointer-events-auto flex min-w-[260px] max-w-sm items-start gap-3 border-l-4 px-4 py-3 text-sm font-medium surface-glass rounded-xl',
+        TONES[toast.type]
+      )}
+    >
+      <Icon className={cn('mt-0.5 h-4 w-4 shrink-0', ICON_TONES[toast.type])} />
+      <span className="flex-1 leading-snug">{toast.message}</span>
+      {toast.action && (
+        <button
+          type="button"
+          onClick={() => {
+            toast.action?.onClick()
+            onDismiss(toast.id)
+          }}
+          className="shrink-0 font-mono text-xs font-bold uppercase tracking-wide text-retro-blue hover:underline"
+        >
+          {toast.action.label}
+        </button>
+      )}
+      <button
+        type="button"
+        aria-label="Dismiss"
+        onClick={() => onDismiss(toast.id)}
+        className="shrink-0 text-retro-dark/40 transition-colors hover:text-retro-dark"
       >
-        {type === 'success' ? (
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-4 w-4"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-          >
-            <path
-              fillRule="evenodd"
-              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-              clipRule="evenodd"
-            />
-          </svg>
-        ) : (
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-4 w-4"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-          >
-            <path
-              fillRule="evenodd"
-              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-              clipRule="evenodd"
-            />
-          </svg>
-        )}
-        {message}
-      </div>
+        <X className="h-3.5 w-3.5" />
+      </button>
+    </motion.div>
+  )
+}
+
+/** Stacked, animated toast region. Mount once in the app shell. */
+export function Toast() {
+  const toasts = useToast((s) => s.toasts)
+  const dismiss = useToast((s) => s.dismiss)
+
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className="pointer-events-none fixed bottom-4 right-4 z-[100] flex flex-col items-end gap-2 pb-[env(safe-area-inset-bottom)]"
+    >
+      <AnimatePresence initial={false}>
+        {toasts.map((t) => (
+          <ToastRow key={t.id} toast={t} onDismiss={dismiss} />
+        ))}
+      </AnimatePresence>
     </div>
   )
 }
