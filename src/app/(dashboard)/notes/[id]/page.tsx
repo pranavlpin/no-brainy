@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { useSetBreadcrumbTitle } from '@/stores/breadcrumb-store'
 import { useParams, useRouter } from 'next/navigation'
 import { ArrowLeft, Pin, PinOff, Trash2, Share2, Link2, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -29,6 +30,8 @@ export default function NoteDetailPage() {
   const noteId = params.id as string
 
   const { data: note, isLoading, error } = useNote(noteId)
+
+  useSetBreadcrumbTitle(note?.title ?? null)
   const updateNote = useUpdateNote()
   const deleteNote = useDeleteNote()
   const { data: noteLinks } = useNoteLinks(noteId)
@@ -49,7 +52,11 @@ export default function NoteDetailPage() {
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [isExtractingActions, setIsExtractingActions] = useState(false)
-  const [extractedActions, setExtractedActions] = useState<Array<{ title: string; priority: 'urgent' | 'high' | 'medium' | 'low'; reason: string }> | null>(null)
+  const [extractedActions, setExtractedActions] = useState<Array<{
+    title: string
+    priority: 'urgent' | 'high' | 'medium' | 'low'
+    reason: string
+  }> | null>(null)
   const [initialized, setInitialized] = useState(false)
 
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -149,11 +156,7 @@ export default function NoteDetailPage() {
   }
 
   const saveStatusText =
-    saveStatus === 'saving'
-      ? 'Saving...'
-      : saveStatus === 'saved'
-        ? 'Saved just now'
-        : ''
+    saveStatus === 'saving' ? 'Saving...' : saveStatus === 'saved' ? 'Saved just now' : ''
 
   // Loading state
   if (isLoading) {
@@ -195,7 +198,12 @@ export default function NoteDetailPage() {
           {saveStatusText && (
             <span className="text-xs text-muted-foreground">{saveStatusText}</span>
           )}
-          <Button variant="ghost" size="icon" onClick={handlePinToggle} title={isPinned ? 'Unpin' : 'Pin'}>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handlePinToggle}
+            title={isPinned ? 'Unpin' : 'Pin'}
+          >
             {isPinned ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
           </Button>
           <Button
@@ -208,7 +216,11 @@ export default function NoteDetailPage() {
           </Button>
           {shareUrl && (
             <Button variant="ghost" size="icon" onClick={handleCopyLink} title="Copy share link">
-              {copied ? <Check className="h-4 w-4 text-green-500" /> : <Link2 className="h-4 w-4" />}
+              {copied ? (
+                <Check className="h-4 w-4 text-green-500" />
+              ) : (
+                <Link2 className="h-4 w-4" />
+              )}
             </Button>
           )}
           <Button
@@ -235,7 +247,12 @@ export default function NoteDetailPage() {
       <TagInput tags={tags} onChange={handleTagsChange} />
 
       {/* Editor */}
-      <MarkdownEditor value={content} onChange={handleContentChange} minHeight="500px" noteId={noteId} />
+      <MarkdownEditor
+        value={content}
+        onChange={handleContentChange}
+        minHeight="500px"
+        noteId={noteId}
+      />
 
       {/* AI Actions */}
       <NoteAIPanel
@@ -252,7 +269,15 @@ export default function NoteDetailPage() {
             setIsExtractingActions(true)
             setExtractedActions(null)
             try {
-              const res = await apiClient<AIActionResponse<{ tasks: Array<{ title: string; priority: 'urgent' | 'high' | 'medium' | 'low'; reason: string }> }>>(`/api/notes/${noteId}/ai/actions`, {
+              const res = await apiClient<
+                AIActionResponse<{
+                  tasks: Array<{
+                    title: string
+                    priority: 'urgent' | 'high' | 'medium' | 'low'
+                    reason: string
+                  }>
+                }>
+              >(`/api/notes/${noteId}/ai/actions`, {
                 method: 'POST',
               })
               setExtractedActions(res.data.tasks)

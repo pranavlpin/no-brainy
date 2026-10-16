@@ -1,33 +1,45 @@
-"use client"
+'use client'
 
-import { useState, useEffect, useCallback, useRef } from "react"
-import { useParams, useRouter } from "next/navigation"
-import { ArrowLeft, Trash2, Focus } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select } from "@/components/ui/select"
-import { MarkdownEditor } from "@/components/editor/markdown-editor"
-import { SubtaskList } from "@/components/tasks/subtask-list"
-import { PriorityBadge } from "@/components/tasks/priority-badge"
-import { useTask, useUpdateTask, useDeleteTask } from "@/hooks/use-tasks"
-import { useTaskLinks, useAddTaskLink, useRemoveTaskLink } from "@/hooks/use-links"
-import { useUIStore } from "@/stores/ui-store"
-import { LinkManager } from "@/components/linking/link-manager"
-import type { LinkedItemData } from "@/components/linking/linked-item"
-import { cn } from "@/lib/utils"
-import type {
-  TaskPriority,
-  TaskStatus,
-  TaskQuadrant,
-  UpdateTaskRequest,
-} from "@/lib/types/tasks"
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { useSetBreadcrumbTitle } from '@/stores/breadcrumb-store'
+import { useParams, useRouter } from 'next/navigation'
+import { ArrowLeft, Trash2, Focus } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Select } from '@/components/ui/select'
+import { MarkdownEditor } from '@/components/editor/markdown-editor'
+import { SubtaskList } from '@/components/tasks/subtask-list'
+import { PriorityBadge } from '@/components/tasks/priority-badge'
+import { useTask, useUpdateTask, useDeleteTask } from '@/hooks/use-tasks'
+import { useTaskLinks, useAddTaskLink, useRemoveTaskLink } from '@/hooks/use-links'
+import { useUIStore } from '@/stores/ui-store'
+import { LinkManager } from '@/components/linking/link-manager'
+import type { LinkedItemData } from '@/components/linking/linked-item'
+import { cn } from '@/lib/utils'
+import type { TaskPriority, TaskStatus, TaskQuadrant, UpdateTaskRequest } from '@/lib/types/tasks'
 
 const quadrantOptions: { value: TaskQuadrant; label: string; color: string }[] = [
-  { value: "urgent_important", label: "Do First", color: "bg-red-100 border-red-300 dark:bg-red-950/30 dark:border-red-800" },
-  { value: "not_urgent_important", label: "Schedule", color: "bg-blue-100 border-blue-300 dark:bg-blue-950/30 dark:border-blue-800" },
-  { value: "urgent_not_important", label: "Delegate", color: "bg-yellow-100 border-yellow-300 dark:bg-yellow-950/30 dark:border-yellow-800" },
-  { value: "not_urgent_not_important", label: "Eliminate", color: "bg-gray-100 border-gray-300 dark:bg-gray-800 dark:border-gray-700" },
+  {
+    value: 'urgent_important',
+    label: 'Do First',
+    color: 'bg-red-100 border-red-300 dark:bg-red-950/30 dark:border-red-800',
+  },
+  {
+    value: 'not_urgent_important',
+    label: 'Schedule',
+    color: 'bg-blue-100 border-blue-300 dark:bg-blue-950/30 dark:border-blue-800',
+  },
+  {
+    value: 'urgent_not_important',
+    label: 'Delegate',
+    color: 'bg-yellow-100 border-yellow-300 dark:bg-yellow-950/30 dark:border-yellow-800',
+  },
+  {
+    value: 'not_urgent_not_important',
+    label: 'Eliminate',
+    color: 'bg-gray-100 border-gray-300 dark:bg-gray-800 dark:border-gray-700',
+  },
 ]
 
 export default function TaskDetailPage() {
@@ -36,6 +48,8 @@ export default function TaskDetailPage() {
   const id = params.id as string
 
   const { data: task, isLoading } = useTask(id)
+
+  useSetBreadcrumbTitle(task?.title ?? null)
   const updateTask = useUpdateTask()
   const deleteTask = useDeleteTask()
   const enterFocusMode = useUIStore((s) => s.enterFocusMode)
@@ -50,15 +64,15 @@ export default function TaskDetailPage() {
     extra: l.extra,
   }))
 
-  const [title, setTitle] = useState("")
-  const [descriptionMd, setDescriptionMd] = useState("")
-  const [priority, setPriority] = useState<TaskPriority>("medium")
-  const [status, setStatus] = useState<TaskStatus>("pending")
-  const [dueDate, setDueDate] = useState("")
-  const [tagsInput, setTagsInput] = useState("")
-  const [quadrant, setQuadrant] = useState<TaskQuadrant | "">("")
+  const [title, setTitle] = useState('')
+  const [descriptionMd, setDescriptionMd] = useState('')
+  const [priority, setPriority] = useState<TaskPriority>('medium')
+  const [status, setStatus] = useState<TaskStatus>('pending')
+  const [dueDate, setDueDate] = useState('')
+  const [tagsInput, setTagsInput] = useState('')
+  const [quadrant, setQuadrant] = useState<TaskQuadrant | ''>('')
   const [isRecurring, setIsRecurring] = useState(false)
-  const [rrule, setRrule] = useState("")
+  const [rrule, setRrule] = useState('')
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [initialized, setInitialized] = useState(false)
 
@@ -69,11 +83,11 @@ export default function TaskDetailPage() {
       setDescriptionMd(task.descriptionMd)
       setPriority(task.priority)
       setStatus(task.status)
-      setDueDate(task.dueDate ? task.dueDate.split("T")[0] : "")
-      setTagsInput(task.tags.join(", "))
-      setQuadrant(task.quadrant ?? "")
+      setDueDate(task.dueDate ? task.dueDate.split('T')[0] : '')
+      setTagsInput(task.tags.join(', '))
+      setQuadrant(task.quadrant ?? '')
       setIsRecurring(task.isRecurring)
-      setRrule(task.rrule ?? "")
+      setRrule(task.rrule ?? '')
       setInitialized(true)
     }
   }, [task, initialized])
@@ -120,13 +134,13 @@ export default function TaskDetailPage() {
   const handleTagsChange = (val: string) => {
     setTagsInput(val)
     const tags = val
-      .split(",")
+      .split(',')
       .map((t) => t.trim())
       .filter(Boolean)
     scheduleAutoSave({ tags })
   }
 
-  const handleQuadrantChange = (val: TaskQuadrant | "") => {
+  const handleQuadrantChange = (val: TaskQuadrant | '') => {
     setQuadrant(val)
     scheduleAutoSave({ quadrant: val || null })
   }
@@ -143,49 +157,33 @@ export default function TaskDetailPage() {
 
   const handleDelete = () => {
     deleteTask.mutate(id, {
-      onSuccess: () => router.push("/tasks"),
+      onSuccess: () => router.push('/tasks'),
     })
   }
 
   if (isLoading) {
-    return (
-      <div className="py-12 text-center text-muted-foreground">
-        Loading task...
-      </div>
-    )
+    return <div className="py-12 text-center text-muted-foreground">Loading task...</div>
   }
 
   if (!task) {
-    return (
-      <div className="py-12 text-center text-muted-foreground">
-        Task not found.
-      </div>
-    )
+    return <div className="py-12 text-center text-muted-foreground">Task not found.</div>
   }
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => router.push("/tasks")}>
+        <Button variant="ghost" size="icon" onClick={() => router.push('/tasks')}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div className="flex-1">
           <PriorityBadge priority={priority} />
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => enterFocusMode(id)}
-        >
+        <Button variant="outline" size="sm" onClick={() => enterFocusMode(id)}>
           <Focus className="mr-1 h-4 w-4" />
           Focus
         </Button>
-        <Button
-          variant="destructive"
-          size="sm"
-          onClick={() => setShowDeleteConfirm(true)}
-        >
+        <Button variant="destructive" size="sm" onClick={() => setShowDeleteConfirm(true)}>
           <Trash2 className="mr-1 h-4 w-4" />
           Delete
         </Button>
@@ -204,13 +202,9 @@ export default function TaskDetailPage() {
               onClick={handleDelete}
               disabled={deleteTask.isPending}
             >
-              {deleteTask.isPending ? "Deleting..." : "Confirm Delete"}
+              {deleteTask.isPending ? 'Deleting...' : 'Confirm Delete'}
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowDeleteConfirm(false)}
-            >
+            <Button variant="outline" size="sm" onClick={() => setShowDeleteConfirm(false)}>
               Cancel
             </Button>
           </div>
@@ -286,15 +280,13 @@ export default function TaskDetailPage() {
               key={opt.value}
               type="button"
               className={cn(
-                "rounded-md border px-3 py-2 text-sm text-left transition-colors",
+                'rounded-md border px-3 py-2 text-sm text-left transition-colors',
                 opt.color,
                 quadrant === opt.value
-                  ? "ring-2 ring-ring ring-offset-1"
-                  : "opacity-60 hover:opacity-100"
+                  ? 'ring-2 ring-ring ring-offset-1'
+                  : 'opacity-60 hover:opacity-100'
               )}
-              onClick={() =>
-                handleQuadrantChange(quadrant === opt.value ? "" : opt.value)
-              }
+              onClick={() => handleQuadrantChange(quadrant === opt.value ? '' : opt.value)}
             >
               {opt.label}
             </button>

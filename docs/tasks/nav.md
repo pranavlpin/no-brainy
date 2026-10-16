@@ -4,4 +4,4 @@ Append-only ledger for the `nav` module (sidebar, breadcrumbs, top bar). See `CL
 
 | ID | Task | Date | Branch | Plan | Status |
 |---|---|---|---|---|---|
-| T09 | Grouped sidebar, badges, complete breadcrumbs | 2026-10-16 | feature/platform-daily-loop-overhaul | [plan](../plans/nav/sidebar-groups-and-breadcrumbs.md) | in progress |
+| T09 | Grouped sidebar, badges, complete breadcrumbs | 2026-10-16 | feature/platform-daily-loop-overhaul | [plan](../plans/nav/sidebar-groups-and-breadcrumbs.md) | done — 32 files / 110 tests green; grouped collapsible sidebar with live badges, breadcrumbs show entity titles |

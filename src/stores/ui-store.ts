@@ -1,42 +1,26 @@
 import { create } from 'zustand'
+import type { NavGroupKey } from '@/lib/nav/items'
 
-// Default sidebar nav order
-export const DEFAULT_NAV_ORDER = [
-  '/',
-  '/notes',
-  '/stash',
-  '/tasks',
-  '/planner',
-  '/expenses',
-  '/budgets',
-  '/reviews',
-  '/books',
-  '/watchlist',
-  '/bookmarks',
-  '/goals',
-  '/search',
-  '/analytics',
-  '/insights',
-  '/ai',
-]
+const HIDDEN_KEY = 'nobrainy-hidden-nav'
+const COLLAPSED_KEY = 'nobrainy-collapsed-groups'
 
-function loadNavOrder(): string[] {
-  if (typeof window === 'undefined') return DEFAULT_NAV_ORDER
+function readJson<T>(key: string, fallback: T): T {
+  if (typeof window === 'undefined') return fallback
   try {
-    const stored = localStorage.getItem('nobrainy-nav-order')
-    if (stored) {
-      const parsed = JSON.parse(stored) as string[]
-      // Merge: keep stored order but add any new items not in stored
-      const storedSet = new Set(parsed)
-      const missing = DEFAULT_NAV_ORDER.filter((href) => !storedSet.has(href))
-      // Today always leads, even for users with a saved order from before it existed.
-      const merged = [...parsed, ...missing].filter((href) => href !== '/')
-      return ['/', ...merged]
-    }
+    const raw = localStorage.getItem(key)
+    return raw ? (JSON.parse(raw) as T) : fallback
   } catch {
-    /* ignore */
+    return fallback
   }
-  return DEFAULT_NAV_ORDER
+}
+
+function writeJson(key: string, value: unknown): void {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.setItem(key, JSON.stringify(value))
+  } catch {
+    /* storage unavailable */
+  }
 }
 
 interface UIState {
@@ -49,12 +33,14 @@ interface UIState {
   focusTaskId: string | null
   enterFocusMode: (taskId: string) => void
   exitFocusMode: () => void
-  navOrder: string[]
-  setNavOrder: (order: string[]) => void
-  resetNavOrder: () => void
+  /** Nav hrefs the user chose to hide from the sidebar. */
   hiddenNavItems: string[]
-  setHiddenNavItems: (items: string[]) => void
   toggleNavItem: (href: string) => void
+  /** Sidebar groups the user folded away. */
+  collapsedGroups: NavGroupKey[]
+  toggleGroup: (key: NavGroupKey) => void
+  /** Show every item and expand every group. */
+  resetNav: () => void
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -67,38 +53,28 @@ export const useUIStore = create<UIState>((set) => ({
   focusTaskId: null,
   enterFocusMode: (taskId) => set({ focusMode: true, focusTaskId: taskId }),
   exitFocusMode: () => set({ focusMode: false, focusTaskId: null }),
-  navOrder: loadNavOrder(),
-  setNavOrder: (order) => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('nobrainy-nav-order', JSON.stringify(order))
-    }
-    set({ navOrder: order })
-  },
-  resetNavOrder: () => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('nobrainy-nav-order')
-      localStorage.removeItem('nobrainy-hidden-nav')
-    }
-    set({ navOrder: DEFAULT_NAV_ORDER, hiddenNavItems: [] })
-  },
-  hiddenNavItems:
-    typeof window !== 'undefined'
-      ? JSON.parse(localStorage.getItem('nobrainy-hidden-nav') || '[]')
-      : [],
-  setHiddenNavItems: (items) => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('nobrainy-hidden-nav', JSON.stringify(items))
-    }
-    set({ hiddenNavItems: items })
-  },
+  hiddenNavItems: readJson<string[]>(HIDDEN_KEY, []),
   toggleNavItem: (href) =>
     set((s) => {
       const hidden = s.hiddenNavItems.includes(href)
         ? s.hiddenNavItems.filter((h) => h !== href)
         : [...s.hiddenNavItems, href]
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('nobrainy-hidden-nav', JSON.stringify(hidden))
-      }
+      writeJson(HIDDEN_KEY, hidden)
       return { hiddenNavItems: hidden }
     }),
+  collapsedGroups: readJson<NavGroupKey[]>(COLLAPSED_KEY, []),
+  toggleGroup: (key) =>
+    set((s) => {
+      const collapsed = s.collapsedGroups.includes(key)
+        ? s.collapsedGroups.filter((k) => k !== key)
+        : [...s.collapsedGroups, key]
+      writeJson(COLLAPSED_KEY, collapsed)
+      return { collapsedGroups: collapsed }
+    }),
+  resetNav: () => {
+    writeJson(HIDDEN_KEY, [])
+    writeJson(COLLAPSED_KEY, [])
+    if (typeof window !== 'undefined') localStorage.removeItem('nobrainy-nav-order')
+    set({ hiddenNavItems: [], collapsedGroups: [] })
+  },
 }))
