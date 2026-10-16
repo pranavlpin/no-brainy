@@ -87,9 +87,7 @@ export const GET = withAuth(async (req: NextRequest, user) => {
       const date = new Date(monday)
       date.setUTCDate(monday.getUTCDate() + i)
       const dateStr = date.toISOString().split('T')[0]
-      const review = reviews.find(
-        (r) => r.reviewDate.toISOString().split('T')[0] === dateStr
-      )
+      const review = reviews.find((r) => r.reviewDate.toISOString().split('T')[0] === dateStr)
 
       if (review) {
         totalTasksCompleted += review.tasksCompleted

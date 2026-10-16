@@ -46,6 +46,30 @@ describe('GET /api/planner/today honors the user timezone', () => {
     expect(json.data.planDate.startsWith('2026-10-17')).toBe(true)
   })
 
+  it("seeds a new plan with last night's tomorrow intent", async () => {
+    dayPlan.findUnique.mockResolvedValue(null)
+    dailyReview.findUnique.mockResolvedValue({ tomorrowIntent: 'Write the Home page' })
+    dayPlan.create.mockImplementation(async ({ data }: { data: Record<string, unknown> }) => ({
+      id: 'p1',
+      userId: 'u1',
+      planDate: data.planDate,
+      focusTaskIds: [],
+      timeBlocks: [],
+      aiBriefMd: null,
+      intentMd: data.intentMd ?? null,
+      createdAt: new Date(),
+    }))
+    const { GET } = await import('@/app/api/planner/today/route')
+    const res = await GET(new NextRequest('http://localhost/api/planner/today'))
+    const json = await res.json()
+    expect(dayPlan.create.mock.calls[0][0].data.intentMd).toBe('Write the Home page')
+    expect(json.data.intentMd).toBe('Write the Home page')
+    // The review looked up is yesterday's (2026-10-16 for a plan on 2026-10-17).
+    const lookedUp = dailyReview.findUnique.mock.calls[0][0].where.userId_reviewDate
+      .reviewDate as Date
+    expect(lookedUp.toISOString()).toBe('2026-10-16T00:00:00.000Z')
+  })
+
   it('returns intent, carry-forward leftovers, and goal chips', async () => {
     dayPlan.findUnique.mockResolvedValue({
       id: 'p1',

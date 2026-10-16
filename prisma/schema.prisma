@@ -239,6 +239,7 @@ model DailyReview {
   reflectionMd   String   @default("") @db.Text
   aiSummaryMd    String?  @db.Text
   mood           String?
+  tomorrowIntent String?
   createdAt      DateTime @default(now())
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   @@unique([userId, reviewDate])

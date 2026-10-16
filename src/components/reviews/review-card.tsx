@@ -24,7 +24,8 @@ export function ReviewCard({ review, onClick }: ReviewCardProps) {
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full items-center gap-4 rounded-lg border border-border bg-card p-4 text-left transition-colors hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      data-testid={`review-card-${review.reviewDate}`}
+      className="surface-glass hover-lift flex w-full items-center gap-4 rounded-2xl p-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       {/* Mood */}
       <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-muted text-xl">
@@ -34,11 +35,21 @@ export function ReviewCard({ review, onClick }: ReviewCardProps) {
       {/* Date and reflection preview */}
       <div className="min-w-0 flex-1">
         <p className="text-sm font-medium">{formatted}</p>
-        {review.reflectionMd && (
-          <p className="mt-0.5 truncate text-xs text-muted-foreground">
-            {review.reflectionMd.slice(0, 100)}
+        {review.tomorrowIntent ? (
+          <p className="mt-0.5 truncate text-xs text-retro-dark/70">
+            <span className="font-mono text-[10px] uppercase tracking-wider text-retro-pink">
+              next{' '}
+            </span>
+            {review.tomorrowIntent}
           </p>
-        )}
+        ) : review.reflectionMd ? (
+          <p className="mt-0.5 truncate text-xs text-muted-foreground">
+            {review.reflectionMd
+              .replace(/^##\s.+$/gm, '')
+              .trim()
+              .slice(0, 100)}
+          </p>
+        ) : null}
       </div>
 
       {/* Stats summary */}

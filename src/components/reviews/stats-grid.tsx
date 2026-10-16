@@ -1,6 +1,7 @@
 'use client'
 
 import { CheckCircle2, XCircle, FileText, Brain } from 'lucide-react'
+import { AnimatedNumber } from '@/components/motion/animated-number'
 
 interface StatsGridProps {
   tasksCompleted: number
@@ -12,53 +13,51 @@ interface StatsGridProps {
 const stats = [
   {
     key: 'tasksCompleted' as const,
-    label: 'Tasks Completed',
+    label: 'Tasks done',
     icon: CheckCircle2,
-    color: 'text-green-600 dark:text-green-400',
-    bg: 'bg-green-50 dark:bg-green-950/30',
-    topBorder: 'border-t-retro-blue',
+    color: 'text-retro-mint',
+    accent: 'border-t-retro-mint',
   },
   {
     key: 'tasksMissed' as const,
-    label: 'Tasks Missed',
+    label: 'Tasks missed',
     icon: XCircle,
-    color: 'text-red-600 dark:text-red-400',
-    bg: 'bg-red-50 dark:bg-red-950/30',
-    topBorder: 'border-t-retro-pink',
+    color: 'text-retro-pink',
+    accent: 'border-t-retro-pink',
   },
   {
     key: 'notesCreated' as const,
-    label: 'Notes Created',
+    label: 'Notes created',
     icon: FileText,
-    color: 'text-blue-600 dark:text-blue-400',
-    bg: 'bg-blue-50 dark:bg-blue-950/30',
-    topBorder: 'border-t-retro-mint',
+    color: 'text-retro-blue',
+    accent: 'border-t-retro-blue',
   },
   {
     key: 'cardsReviewed' as const,
-    label: 'Cards Reviewed',
+    label: 'Cards reviewed',
     icon: Brain,
-    color: 'text-purple-600 dark:text-purple-400',
-    bg: 'bg-purple-50 dark:bg-purple-950/30',
-    topBorder: 'border-t-retro-yellow',
+    color: 'text-retro-orange',
+    accent: 'border-t-retro-yellow',
   },
 ]
 
 export function StatsGrid(props: StatsGridProps) {
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4" data-testid="stats-grid">
       {stats.map((stat) => {
         const Icon = stat.icon
         return (
           <div
             key={stat.key}
-            className={`flex flex-col items-center gap-2 rounded-lg border border-border border-t-3 p-4 ${stat.bg} ${stat.topBorder}`}
+            className={`surface-glass flex flex-col items-center gap-1.5 rounded-2xl border-t-3 p-4 ${stat.accent}`}
           >
             <Icon className={`h-5 w-5 ${stat.color}`} />
-            <span className="text-2xl font-bold tabular-nums">
-              {props[stat.key]}
-            </span>
-            <span className="text-xs text-muted-foreground text-center">
+            <AnimatedNumber
+              value={props[stat.key]}
+              className="font-display text-2xl font-bold tabular-nums text-retro-dark"
+              data-testid={`stat-${stat.key}`}
+            />
+            <span className="text-center font-mono text-[11px] uppercase tracking-wider text-retro-dark/50">
               {stat.label}
             </span>
           </div>

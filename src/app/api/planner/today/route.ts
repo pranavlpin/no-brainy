@@ -82,8 +82,14 @@ async function getOrCreatePlan(user: AuthUser, key: string): Promise<DayPlan> {
     where: { userId_planDate: { userId: user.id, planDate } },
   })
   if (existing) return existing
+  // First visit of the day: carry in last night's "one thing for tomorrow".
+  const yesterdayReview = await prisma.dailyReview.findUnique({
+    where: { userId_reviewDate: { userId: user.id, reviewDate: dateFromKey(addDays(key, -1)) } },
+    select: { tomorrowIntent: true },
+  })
+  const intentMd = yesterdayReview?.tomorrowIntent?.trim() || null
   return prisma.dayPlan.create({
-    data: { userId: user.id, planDate, focusTaskIds: [], timeBlocks: [] },
+    data: { userId: user.id, planDate, focusTaskIds: [], timeBlocks: [], intentMd },
   })
 }
 

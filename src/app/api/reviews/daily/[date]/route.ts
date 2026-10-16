@@ -6,6 +6,7 @@ import { ZodError } from 'zod'
 import type { DailyReviewResponse } from '@/lib/types/reviews'
 import type { ApiResponse } from '@/lib/types/api'
 import { dateFromKey, localDayBounds, userTimezone } from '@/lib/dates'
+import { handoffIntentToNextDay } from '@/lib/reviews/handoff'
 
 function formatReview(review: {
   id: string
@@ -18,6 +19,7 @@ function formatReview(review: {
   reflectionMd: string
   aiSummaryMd: string | null
   mood: string | null
+  tomorrowIntent?: string | null
   createdAt: Date
 }): DailyReviewResponse {
   return {
@@ -31,6 +33,7 @@ function formatReview(review: {
     reflectionMd: review.reflectionMd,
     aiSummaryMd: review.aiSummaryMd,
     mood: review.mood,
+    tomorrowIntent: review.tomorrowIntent ?? null,
     createdAt: review.createdAt.toISOString(),
   }
 }
@@ -93,35 +96,34 @@ export async function GET(req: NextRequest) {
     // Recalculate stats live so they reflect current task state
     const { start: dayStart, end: dayEnd } = localDayBounds(dateStr, userTimezone(user))
 
-    const [tasksCompleted, tasksMissed, notesCreated, reviewSessions] =
-      await Promise.all([
-        prisma.task.count({
-          where: {
-            userId: user.id,
-            completedAt: { gte: dayStart, lt: dayEnd },
-          },
-        }),
-        prisma.task.count({
-          where: {
-            userId: user.id,
-            dueDate: reviewDate,
-            status: { not: 'completed' },
-          },
-        }),
-        prisma.note.count({
-          where: {
-            userId: user.id,
-            createdAt: { gte: dayStart, lt: dayEnd },
-          },
-        }),
-        prisma.reviewSession.aggregate({
-          where: {
-            userId: user.id,
-            startedAt: { gte: dayStart, lt: dayEnd },
-          },
-          _sum: { cardsReviewed: true },
-        }),
-      ])
+    const [tasksCompleted, tasksMissed, notesCreated, reviewSessions] = await Promise.all([
+      prisma.task.count({
+        where: {
+          userId: user.id,
+          completedAt: { gte: dayStart, lt: dayEnd },
+        },
+      }),
+      prisma.task.count({
+        where: {
+          userId: user.id,
+          dueDate: reviewDate,
+          status: { not: 'completed' },
+        },
+      }),
+      prisma.note.count({
+        where: {
+          userId: user.id,
+          createdAt: { gte: dayStart, lt: dayEnd },
+        },
+      }),
+      prisma.reviewSession.aggregate({
+        where: {
+          userId: user.id,
+          startedAt: { gte: dayStart, lt: dayEnd },
+        },
+        _sum: { cardsReviewed: true },
+      }),
+    ])
 
     const cardsReviewed = reviewSessions._sum.cardsReviewed ?? 0
 
@@ -197,6 +199,15 @@ export async function PUT(req: NextRequest) {
       where: { id: existing.id },
       data,
     })
+
+    if (typeof data.tomorrowIntent === 'string' && data.tomorrowIntent.trim()) {
+      await handoffIntentToNextDay({
+        userId: user.id,
+        reviewDateKey: dateStr,
+        intent: data.tomorrowIntent,
+        previousIntent: existing.tomorrowIntent ?? null,
+      })
+    }
 
     const response: ApiResponse<DailyReviewResponse> = {
       success: true,

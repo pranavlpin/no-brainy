@@ -50,34 +50,25 @@ export function WeeklySummary({ data }: WeeklySummaryProps) {
 
       {/* Day-by-day breakdown */}
       <div>
-        <h4 className="mb-3 text-sm font-medium text-muted-foreground">
-          Daily Breakdown
-        </h4>
+        <h4 className="mb-3 text-sm font-medium text-muted-foreground">Daily Breakdown</h4>
         <div className="grid grid-cols-7 gap-2">
           {data.dailyBreakdown.map((day) => {
-            const dayLabel = new Date(day.date + 'T00:00:00').toLocaleDateString(
-              'en-US',
-              { weekday: 'short' }
-            )
+            const dayLabel = new Date(day.date + 'T00:00:00').toLocaleDateString('en-US', {
+              weekday: 'short',
+            })
             return (
               <div
                 key={day.date}
                 className={`flex flex-col items-center gap-1 rounded-lg border p-2 text-center ${
-                  day.hasReview
-                    ? 'border-primary/30 bg-primary/5'
-                    : 'border-border bg-muted/30'
+                  day.hasReview ? 'border-primary/30 bg-primary/5' : 'border-border bg-muted/30'
                 }`}
               >
-                <span className="text-[10px] font-medium text-muted-foreground">
-                  {dayLabel}
-                </span>
+                <span className="text-[10px] font-medium text-muted-foreground">{dayLabel}</span>
                 <span className="text-sm">
                   {day.hasReview ? getMoodEmoji(day.mood) || '\u2713' : '\u2014'}
                 </span>
                 {day.hasReview && (
-                  <span className="text-[10px] text-muted-foreground">
-                    {day.tasksCompleted}t
-                  </span>
+                  <span className="text-[10px] text-muted-foreground">{day.tasksCompleted}t</span>
                 )}
               </div>
             )
@@ -101,9 +92,7 @@ function StatCard({
     <div className="flex flex-col items-center gap-1.5 rounded-lg border border-border bg-card p-3">
       {icon}
       <span className="text-xl font-bold tabular-nums">{value}</span>
-      <span className="text-[10px] text-muted-foreground text-center leading-tight">
-        {label}
-      </span>
+      <span className="text-[10px] text-muted-foreground text-center leading-tight">{label}</span>
     </div>
   )
 }
