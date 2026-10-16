@@ -4,7 +4,7 @@ Thank you for your interest in contributing to NoBrainy! This guide will help yo
 
 ## Code of Conduct
 
-By participating in this project, you agree to abide by our [Code of Conduct](CODE_OF_CONDUCT.md).
+By participating in this project, you agree to abide by our [Code of Conduct](https://github.com/pranavlpin/no-brainy/blob/main/CODE_OF_CONDUCT.md).
 
 ## How to Contribute
 
@@ -26,32 +26,17 @@ By participating in this project, you agree to abide by our [Code of Conduct](CO
 
 ### Submitting Code
 
-1. **Fork** the repository
-2. **Create a branch** from `main`:
-   ```bash
-   git checkout -b feature/your-feature-name
-   # or: fix/bug-description
-   ```
-3. **Follow the coding standards** (see below)
-4. **Write/update tests** for your changes
-5. **Run all checks** before submitting:
-   ```bash
-   npx tsc --noEmit    # Type check (must pass with zero errors)
-   pnpm lint           # ESLint (no new warnings)
-   pnpm test           # Unit tests
-   ```
-6. **Commit** with [conventional commits](https://www.conventionalcommits.org/):
-   ```
-   feat(module): add new feature
-   fix(module): fix bug description
-   docs: update documentation
-   chore: maintenance task
-   ```
-   Module names: `notes`, `tasks`, `expenses`, `books`, `flashcards`, `watchlist`, `bookmarks`, `goals`, `analytics`, `insights`
-7. **Open a Pull Request** against `main` with:
-   - Clear description of changes
-   - Link to related issue(s)
-   - Screenshots for UI changes
+The canonical workflow is defined in [/Users/pranav/Pranav_projects/github/no-brainy/AGENTS.md](/Users/pranav/Pranav_projects/github/no-brainy/AGENTS.md), mirrored exactly in [/Users/pranav/Pranav_projects/github/no-brainy/CLAUDE.md](/Users/pranav/Pranav_projects/github/no-brainy/CLAUDE.md). Read it before changing the repository.
+
+1. Create the task branch and record its target/base. Never implement directly on main.
+2. Write a new implementation plan, obtain explicit approval, then append the approved module task entry. Historical plans and task/test-plan ledger sections are immutable.
+3. Write and run failing tests before implementation, following the section test plan. Keep tests under the module/type directories defined in the canonical rules.
+4. Implement and refactor with tests green. Preserve existing assertions, user data and unrelated changes.
+5. Run formatting, strict type checking, ESLint with zero warnings/errors, the full test suite and applicable database/browser/build checks. Record unavailable gates honestly. The test foundation task establishes the executable package scripts.
+6. Use logical, module-scoped imperative commits and the authorized work identity. Dependency changes need explicit approval and their own commit.
+7. Push or open a PR only when instructed. A code review requires its own explicit request; merge only after review approval and explicit merge authorization.
+
+Screenshots are captured only on explicit request. Temporary logs and artifacts belong in the Git-ignored directory `/Users/pranav/Pranav_projects/github/no-brainy/evidences/`. No evidence, secrets or environment files may be committed.
 
 ## Development Setup
 
@@ -96,7 +81,7 @@ pnpm dev
 - **Constants**: `UPPER_SNAKE_CASE`
 
 ### Git
-- Branch naming: `feature/description` or `fix/description`
+- Branch naming: `feature/<module>-<task>`, `bugfix/<module>-<issue>` or `test/<module>-<scope>`
 - Conventional commit messages
 - One logical change per commit
 - Keep PRs focused — one feature/fix per PR
@@ -116,4 +101,4 @@ src/
 
 ## License
 
-By contributing, you agree that your contributions will be licensed under the [GPL-3.0 License](LICENSE).
+By contributing, you agree that your contributions will be licensed under the [GPL-3.0 License](https://github.com/pranavlpin/no-brainy/blob/main/LICENSE).
