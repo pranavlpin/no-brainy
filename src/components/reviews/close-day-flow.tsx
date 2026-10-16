@@ -14,7 +14,9 @@ import {
   type ReflectionFields,
 } from '@/lib/reviews/reflection'
 import { usePrefersReducedMotion } from '@/components/motion/use-prefers-reduced-motion'
+import { formatMinutes } from '@/lib/planner/capacity'
 import { cn } from '@/lib/utils'
+import type { FocusSessionResponse } from '@/lib/types/focus'
 
 export interface CloseDayStats {
   tasksCompleted: number
@@ -22,6 +24,52 @@ export interface CloseDayStats {
   notesCreated: number
   cardsReviewed: number
   focusMinutes?: number | null
+  /** The day's work sessions, with their outcomes, for the stats step. */
+  sessions?: FocusSessionResponse[]
+}
+
+const OUTCOME_LABEL = {
+  completed: { text: 'Completed', tone: 'bg-retro-mint/20 text-retro-dark' },
+  progress: { text: 'Progress', tone: 'bg-retro-blue/10 text-retro-dark' },
+  blocked: { text: 'Blocked', tone: 'bg-retro-orange/20 text-retro-dark' },
+} as const
+
+function SessionsList({ sessions }: { sessions: FocusSessionResponse[] }) {
+  const work = sessions.filter((s) => s.kind === 'work' && s.endedAt && s.durationSec >= 60)
+  if (work.length === 0) return null
+  return (
+    <ul data-testid="close-day-sessions" className="space-y-1">
+      {work.map((s) => {
+        const outcome = s.outcome ? OUTCOME_LABEL[s.outcome] : null
+        return (
+          <li
+            key={s.id}
+            className="flex items-start gap-2 rounded-xl bg-background/60 px-3 py-2 text-sm"
+          >
+            <span className="w-12 shrink-0 font-mono text-[11px] text-retro-dark/50">
+              {formatMinutes(s.durationSec / 60)}
+            </span>
+            <span className="min-w-0 flex-1 text-retro-dark">
+              {s.intention || 'Focus block'}
+              {s.reflection && (
+                <span className="block truncate text-xs text-retro-dark/60">{s.reflection}</span>
+              )}
+            </span>
+            {outcome && (
+              <span
+                className={cn(
+                  'shrink-0 rounded-full px-2 py-0.5 font-mono text-[10px] font-semibold',
+                  outcome.tone
+                )}
+              >
+                {outcome.text}
+              </span>
+            )}
+          </li>
+        )
+      })}
+    </ul>
+  )
 }
 
 export interface CloseDayPayload {
@@ -152,6 +200,7 @@ export function CloseDayFlow({
                     {stats.focusMinutes} minutes of deep work logged.
                   </p>
                 )}
+                {stats.sessions && <SessionsList sessions={stats.sessions} />}
               </div>
             )}
 

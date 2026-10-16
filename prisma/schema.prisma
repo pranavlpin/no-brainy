@@ -186,6 +186,13 @@ model FocusSession {
   endedAt     DateTime?
   durationSec Int       @default(0)
   completed   Boolean   @default(false)
+  /// What this block was for, in the user's words.
+  intention        String  @default("")
+  /// completed | progress | blocked; null while the session is open.
+  outcome          String?
+  reflection       String  @default("") @db.Text
+  nextAction       String?
+  nextActionTaskId String?
   createdAt   DateTime  @default(now())
   user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
   task Task? @relation(fields: [taskId], references: [id], onDelete: SetNull)

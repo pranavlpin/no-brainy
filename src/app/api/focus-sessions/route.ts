@@ -9,6 +9,8 @@ import type { FocusDayResponse } from '@/lib/types/focus'
 const startSchema = z.object({
   taskId: z.string().min(1).nullable().optional(),
   kind: z.enum(['work', 'break']).default('work'),
+  /** What this block is for, in the user's words. */
+  intention: z.string().trim().max(300).default(''),
 })
 
 /** Sessions for one local day plus total work minutes. */
@@ -52,7 +54,12 @@ export const POST = withAuth(async (req: NextRequest, user) => {
   try {
     const body = startSchema.parse(await req.json().catch(() => ({})))
     const session = await prisma.focusSession.create({
-      data: { userId: user.id, taskId: body.taskId ?? null, kind: body.kind },
+      data: {
+        userId: user.id,
+        taskId: body.taskId ?? null,
+        kind: body.kind,
+        intention: body.intention,
+      },
     })
     return NextResponse.json({ success: true, data: formatSession(session) }, { status: 201 })
   } catch (error) {

@@ -20,6 +20,8 @@ interface PersistedFocus {
   taskTitle: string | null
   sessionId: string | null
   pomodoroCount: number
+  /** What the current block is for, in the user's words. */
+  intention: string
 }
 
 interface FocusState extends PersistedFocus {
@@ -30,6 +32,7 @@ interface FocusState extends PersistedFocus {
       taskId?: string | null
       taskTitle?: string | null
       sessionId?: string | null
+      intention?: string
     },
     now?: number
   ) => void
@@ -54,6 +57,7 @@ const initial: PersistedFocus = {
   taskTitle: null,
   sessionId: null,
   pomodoroCount: 0,
+  intention: '',
 }
 
 function load(): PersistedFocus {
@@ -81,6 +85,7 @@ function persist(state: PersistedFocus): void {
       taskTitle,
       sessionId,
       pomodoroCount,
+      intention,
     } = state
     localStorage.setItem(
       STORAGE_KEY,
@@ -94,6 +99,7 @@ function persist(state: PersistedFocus): void {
         taskTitle,
         sessionId,
         pomodoroCount,
+        intention,
       })
     )
   } catch {
@@ -119,6 +125,7 @@ export const useFocusStore = create<FocusState>((set, get) => ({
       taskId: opts.taskId ?? null,
       taskTitle: opts.taskTitle ?? null,
       sessionId: opts.sessionId ?? null,
+      intention: opts.kind === 'work' ? (opts.intention ?? '') : get().intention,
     }
     persist(next)
     set(next)
@@ -151,6 +158,7 @@ export const useFocusStore = create<FocusState>((set, get) => ({
       plannedSec: WORK_SEC,
       kind: 'work',
       sessionId: null,
+      intention: '',
     }
     persist(next)
     set(next)

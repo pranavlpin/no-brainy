@@ -39,3 +39,11 @@ Before starting, an optional intention line. At the end, or on Finish, a dialog 
 ## Risks and open questions
 
 - Next action text creates a task linked to the same goal and project as the session's task, undated. **Ruling applied.**
+
+## Refinements (while the branch was open)
+
+- `PATCH /api/focus-sessions/[id]` keeps its plain `completed` form for breaks and aborts; an `outcome` in the body switches to the transactional finish, and a session that already has an outcome returns the stored result without writing.
+- The `completed` flag (a counted pomodoro) is set for every recorded outcome, including Blocked: the time was spent and the result is honest, so the block counts.
+- At zero the timer pauses and opens the finish dialog; Skip during work also asks for the result; Reset abandons without one. Returning to focus mode with an unresolved block reopens the dialog.
+- The next action task inherits the goal and context of the session's task and stays undated; the planner's triage will surface it when it gets a planned day.
+- Home keeps the deep-work minutes line it already had; a pomodoro count on Home is deferred to T19's evidence view where sessions are cited.
