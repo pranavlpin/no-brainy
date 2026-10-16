@@ -5,6 +5,7 @@ import { createReviewSchema, reviewQuerySchema } from '@/lib/validations/reviews
 import { ZodError } from 'zod'
 import type { DailyReviewResponse } from '@/lib/types/reviews'
 import type { ApiResponse, PaginatedResponse } from '@/lib/types/api'
+import { dateFromKey, localDayBounds, userTimezone } from '@/lib/dates'
 
 function formatReview(review: {
   id: string
@@ -107,7 +108,7 @@ export const POST = withAuth(async (req: NextRequest, user) => {
     const body = await req.json()
     const data = createReviewSchema.parse(body)
 
-    const reviewDate = new Date(data.reviewDate + 'T00:00:00.000Z')
+    const reviewDate = dateFromKey(data.reviewDate)
 
     // Check if review already exists for this date
     const existing = await prisma.dailyReview.findUnique({
@@ -132,9 +133,8 @@ export const POST = withAuth(async (req: NextRequest, user) => {
       )
     }
 
-    // Auto-populate stats for the given date
-    const dayStart = new Date(data.reviewDate + 'T00:00:00.000Z')
-    const dayEnd = new Date(data.reviewDate + 'T23:59:59.999Z')
+    // Auto-populate stats for the user's local day
+    const { start: dayStart, end: dayEnd } = localDayBounds(data.reviewDate, userTimezone(user))
 
     const [tasksCompleted, tasksMissed, notesCreated, reviewSessions] =
       await Promise.all([
@@ -142,7 +142,7 @@ export const POST = withAuth(async (req: NextRequest, user) => {
         prisma.task.count({
           where: {
             userId: user.id,
-            completedAt: { gte: dayStart, lte: dayEnd },
+            completedAt: { gte: dayStart, lt: dayEnd },
           },
         }),
         // Tasks missed: due today but not completed
@@ -157,14 +157,14 @@ export const POST = withAuth(async (req: NextRequest, user) => {
         prisma.note.count({
           where: {
             userId: user.id,
-            createdAt: { gte: dayStart, lte: dayEnd },
+            createdAt: { gte: dayStart, lt: dayEnd },
           },
         }),
         // Review sessions today - sum cardsReviewed
         prisma.reviewSession.aggregate({
           where: {
             userId: user.id,
-            startedAt: { gte: dayStart, lte: dayEnd },
+            startedAt: { gte: dayStart, lt: dayEnd },
           },
           _sum: { cardsReviewed: true },
         }),

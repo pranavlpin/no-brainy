@@ -2,6 +2,9 @@ import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 
+// Tests run as if on the production server (UTC) so day-boundary bugs surface locally.
+process.env.TZ = 'UTC'
+
 export default defineConfig({
   plugins: [react()],
   test: {

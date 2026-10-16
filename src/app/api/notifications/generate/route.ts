@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withAuth } from '@/lib/auth/middleware'
+import { dayBoundsUtc, localDayBounds, todayKey, userTimezone } from '@/lib/dates'
 
 export const POST = withAuth(async (_req: NextRequest, user) => {
   try {
-    const now = new Date()
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    const todayEnd = new Date(todayStart)
-    todayEnd.setDate(todayEnd.getDate() + 1)
+    const key = todayKey(userTimezone(user))
+    // @db.Date columns (dueDate, reviewDate) compare against UTC-midnight keys;
+    // timestamps (createdAt, nextReviewAt) compare against the real local day.
+    const { start: todayStart, end: todayEnd } = dayBoundsUtc(key)
+    const { start: localStart, end: localEnd } = localDayBounds(key, userTimezone(user))
 
     // Load user preferences to check which notification types are enabled
     const prefs = (user.preferences ?? {}) as Record<string, unknown>
@@ -32,7 +34,7 @@ export const POST = withAuth(async (_req: NextRequest, user) => {
             userId: user.id,
             type: 'due_today',
             relatedId: task.id,
-            createdAt: { gte: todayStart, lt: todayEnd },
+            createdAt: { gte: localStart, lt: localEnd },
           },
         })
         if (!exists) {
@@ -67,7 +69,7 @@ export const POST = withAuth(async (_req: NextRequest, user) => {
             userId: user.id,
             type: 'overdue',
             relatedId: task.id,
-            createdAt: { gte: todayStart, lt: todayEnd },
+            createdAt: { gte: localStart, lt: localEnd },
           },
         })
         if (!exists) {
@@ -95,7 +97,7 @@ export const POST = withAuth(async (_req: NextRequest, user) => {
       const dueCards = await prisma.flashcard.findMany({
         where: {
           userId: user.id,
-          nextReviewAt: { lte: todayEnd },
+          nextReviewAt: { lt: localEnd },
         },
         include: { deck: { select: { id: true, name: true } } },
       })
@@ -117,7 +119,7 @@ export const POST = withAuth(async (_req: NextRequest, user) => {
             userId: user.id,
             type: 'flashcard_review',
             relatedId: deckId,
-            createdAt: { gte: todayStart, lt: todayEnd },
+            createdAt: { gte: localStart, lt: localEnd },
           },
         })
         if (!exists) {
@@ -150,7 +152,7 @@ export const POST = withAuth(async (_req: NextRequest, user) => {
           where: {
             userId: user.id,
             type: 'daily_review',
-            createdAt: { gte: todayStart, lt: todayEnd },
+            createdAt: { gte: localStart, lt: localEnd },
           },
         })
         if (!exists) {

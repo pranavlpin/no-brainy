@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils'
 import { QuickCaptureProvider } from '@/components/quick-capture/quick-capture-provider'
 import { Toast } from '@/components/ui/toast'
 import { FocusModeView } from '@/components/focus/focus-mode-view'
+import { TimezoneSync } from '@/components/timezone-sync'
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { sidebarCollapsed, focusMode } = useUIStore()
@@ -37,6 +38,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <main className="flex-1 overflow-y-auto p-4 md:p-6">{children}</main>
       </div>
       <QuickCaptureProvider />
+      <TimezoneSync />
       <Toast />
     </div>
   )

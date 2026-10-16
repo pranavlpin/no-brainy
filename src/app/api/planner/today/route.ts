@@ -6,6 +6,7 @@ import { ZodError } from 'zod'
 import type { Prisma } from '@prisma/client'
 import type { TimeBlock } from '@/lib/types/planner'
 import type { TaskResponse } from '@/lib/types/tasks'
+import { dateFromKey, dayBoundsUtc, todayKey, userTimezone } from '@/lib/dates'
 
 function formatTask(task: {
   id: string
@@ -47,14 +48,11 @@ function formatTask(task: {
   }
 }
 
-function getTodayDate(): Date {
-  const now = new Date()
-  return new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()))
-}
 
 export const GET = withAuth(async (_req: NextRequest, user) => {
   try {
-    const today = getTodayDate()
+    const key = todayKey(userTimezone(user))
+    const today = dateFromKey(key)
 
     let dayPlan = await prisma.dayPlan.findUnique({
       where: {
@@ -88,8 +86,7 @@ export const GET = withAuth(async (_req: NextRequest, user) => {
         : []
 
     // Fetch tasks due today
-    const nextDay = new Date(today)
-    nextDay.setDate(nextDay.getDate() + 1)
+    const { end: nextDay } = dayBoundsUtc(key)
 
     const tasksDueToday = await prisma.task.findMany({
       where: {
@@ -128,7 +125,8 @@ export const PUT = withAuth(async (req: NextRequest, user) => {
   try {
     const body = await req.json()
     const data = updateDayPlanSchema.parse(body)
-    const today = getTodayDate()
+    const key = todayKey(userTimezone(user))
+    const today = dateFromKey(key)
 
     // Validate that focus task IDs belong to the user
     if (data.focusTaskIds && data.focusTaskIds.length > 0) {
@@ -182,8 +180,7 @@ export const PUT = withAuth(async (req: NextRequest, user) => {
         : []
 
     // Fetch tasks due today
-    const nextDay = new Date(today)
-    nextDay.setDate(nextDay.getDate() + 1)
+    const { end: nextDay } = dayBoundsUtc(key)
 
     const tasksDueToday = await prisma.task.findMany({
       where: {

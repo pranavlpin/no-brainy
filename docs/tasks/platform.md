@@ -22,7 +22,7 @@ Ruling recorded for the batch T01–T12 only:
 |---|---|---|---|---|---|
 | T01 | Governance, test layout, formatting gates | 2026-10-16 | feature/platform-daily-loop-overhaul | [plan](../plans/platform/governance-and-test-layout.md) | done — 4 files / 19 tests green, typecheck clean, lint at 5 pre-existing warnings |
 | T02 | Motion system and design system v2 | 2026-10-16 | feature/platform-daily-loop-overhaul | [plan](../plans/platform/motion-and-design-system-v2.md) | done — 10 files / 33 tests green, typecheck clean, dev server renders all dashboard routes |
-| T03 | User-timezone day boundaries | 2026-10-16 | feature/platform-daily-loop-overhaul | [plan](../plans/platform/user-timezone-dates.md) | in progress |
+| T03 | User-timezone day boundaries | 2026-10-16 | feature/platform-daily-loop-overhaul | [plan](../plans/platform/user-timezone-dates.md) | done — 13 files / 48 tests green; tests pinned to TZ=UTC; planner, reviews, notifications, AI routes use user zone |
 
 ## Backlog (registered, not yet planned)
 

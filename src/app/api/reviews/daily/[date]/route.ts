@@ -5,6 +5,7 @@ import { updateReviewSchema } from '@/lib/validations/reviews'
 import { ZodError } from 'zod'
 import type { DailyReviewResponse } from '@/lib/types/reviews'
 import type { ApiResponse } from '@/lib/types/api'
+import { dateFromKey, localDayBounds, userTimezone } from '@/lib/dates'
 
 function formatReview(review: {
   id: string
@@ -76,7 +77,7 @@ export async function GET(req: NextRequest) {
       )
     }
 
-    const reviewDate = new Date(dateStr + 'T00:00:00.000Z')
+    const reviewDate = dateFromKey(dateStr)
 
     const review = await prisma.dailyReview.findUnique({
       where: {
@@ -90,15 +91,14 @@ export async function GET(req: NextRequest) {
     if (!review) return notFoundResponse()
 
     // Recalculate stats live so they reflect current task state
-    const dayStart = new Date(dateStr + 'T00:00:00.000Z')
-    const dayEnd = new Date(dateStr + 'T23:59:59.999Z')
+    const { start: dayStart, end: dayEnd } = localDayBounds(dateStr, userTimezone(user))
 
     const [tasksCompleted, tasksMissed, notesCreated, reviewSessions] =
       await Promise.all([
         prisma.task.count({
           where: {
             userId: user.id,
-            completedAt: { gte: dayStart, lte: dayEnd },
+            completedAt: { gte: dayStart, lt: dayEnd },
           },
         }),
         prisma.task.count({
@@ -111,13 +111,13 @@ export async function GET(req: NextRequest) {
         prisma.note.count({
           where: {
             userId: user.id,
-            createdAt: { gte: dayStart, lte: dayEnd },
+            createdAt: { gte: dayStart, lt: dayEnd },
           },
         }),
         prisma.reviewSession.aggregate({
           where: {
             userId: user.id,
-            startedAt: { gte: dayStart, lte: dayEnd },
+            startedAt: { gte: dayStart, lt: dayEnd },
           },
           _sum: { cardsReviewed: true },
         }),
@@ -177,7 +177,7 @@ export async function PUT(req: NextRequest) {
       )
     }
 
-    const reviewDate = new Date(dateStr + 'T00:00:00.000Z')
+    const reviewDate = dateFromKey(dateStr)
 
     const existing = await prisma.dailyReview.findUnique({
       where: {

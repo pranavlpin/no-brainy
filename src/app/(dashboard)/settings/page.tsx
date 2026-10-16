@@ -17,6 +17,9 @@ import {
 } from '@/hooks/use-settings'
 import { useThemeStore, THEMES, type ThemeName } from '@/stores/theme-store'
 import { useToast } from '@/hooks/use-toast'
+import { useTimezoneSetting } from '@/components/timezone-sync'
+import { browserTimezone } from '@/lib/dates'
+import { Clock } from 'lucide-react'
 
 function ApiKeySection() {
   const { data: status, isLoading } = useApiKeyStatus()
@@ -381,6 +384,39 @@ function ThemeSection() {
   )
 }
 
+function TimezoneSection() {
+  const { data, isLoading } = useTimezoneSetting()
+  const local = browserTimezone()
+  const effective = data?.effective ?? local
+  const mismatch = !!data && data.timezone !== local
+
+  return (
+    <div className="rounded-lg border border-retro-dark/15 bg-card p-6" data-testid="settings-timezone">
+      <div className="flex items-start gap-4">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-retro-blue/10">
+          <Clock className="h-5 w-5 text-retro-blue" />
+        </div>
+        <div className="flex-1">
+          <h3 className="text-lg font-semibold text-retro-dark">Day boundary</h3>
+          <p className="mt-1 text-sm text-retro-dark/60">
+            Today, carry-forward, reviews, and reminders follow this timezone. It is detected from
+            your browser and saved automatically.
+          </p>
+          <p className="mt-3 font-mono text-sm text-retro-dark">
+            {isLoading ? 'Detecting…' : effective}
+            {mismatch && (
+              <span className="ml-2 text-xs text-retro-dark/50">(syncing from {local})</span>
+            )}
+          </p>
+          <p className="mt-1 text-xs text-retro-dark/40">
+            Plans and reviews recorded before this change keep their original dates.
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function SettingsPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-8 py-8">
@@ -397,6 +433,14 @@ export default function SettingsPage() {
           AI Configuration
         </h2>
         <ApiKeySection />
+      </section>
+
+      {/* Day boundary */}
+      <section>
+        <h2 className="font-display mb-4 text-lg font-semibold text-retro-dark">
+          Time
+        </h2>
+        <TimezoneSection />
       </section>
 
       {/* Sidebar Order */}

@@ -9,6 +9,7 @@ import { ReviewCard } from '@/components/reviews/review-card'
 import { WeeklySummary } from '@/components/reviews/weekly-summary'
 import { useDailyReviews, useDailyReview, useWeeklySummary } from '@/hooks/use-reviews'
 import { cn } from '@/lib/utils'
+import { useUserToday } from '@/hooks/use-user-today'
 
 type Tab = 'daily' | 'weekly'
 
@@ -16,8 +17,7 @@ export default function ReviewsPage() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<Tab>('daily')
 
-  // Today's date in YYYY-MM-DD
-  const today = new Date().toISOString().split('T')[0]
+  const { today } = useUserToday()
 
   const { data: todayReview, isLoading: todayLoading } = useDailyReview(today)
   const { data: reviewsData, isLoading: reviewsLoading } = useDailyReviews()

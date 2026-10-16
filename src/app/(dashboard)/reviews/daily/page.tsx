@@ -11,10 +11,11 @@ import { MarkdownPreview } from '@/components/editor/markdown-preview'
 import { useDailyReview, useCreateReview, useUpdateReview } from '@/hooks/use-reviews'
 import { useReviewAISummary } from '@/hooks/use-review-ai'
 import { useAI } from '@/hooks/use-ai'
+import { useUserToday } from '@/hooks/use-user-today'
 
 export default function DailyReviewPage() {
   const router = useRouter()
-  const today = new Date().toISOString().split('T')[0]
+  const { today } = useUserToday()
 
   const { data: existingReview, isLoading, isError } = useDailyReview(today)
   const createReview = useCreateReview()
