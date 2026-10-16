@@ -14,6 +14,15 @@ export const dueDateSchema = z
   )
   .transform((v) => (isValidDateKey(v) ? `${v}T00:00:00.000Z` : new Date(v).toISOString()))
 
+/** Planned days are calendar keys only; they never carry a time. */
+export const dateKeySchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, 'Use YYYY-MM-DD')
+  .refine(isValidDateKey, 'Not a real calendar day')
+
+export const effortSchema = z.enum(['light', 'steady', 'deep'])
+export const contextSchema = z.enum(['work', 'personal'])
+
 export const createTaskSchema = z.object({
   title: z.string().min(1, 'Title is required').max(500),
   descriptionMd: z.string().default(''),
@@ -21,8 +30,12 @@ export const createTaskSchema = z.object({
   status: z.enum(['pending', 'in_progress', 'completed', 'cancelled']).default('pending'),
   tags: z.array(z.string()).default([]),
   dueDate: dueDateSchema.nullable().optional(),
+  plannedDate: dateKeySchema.nullable().optional(),
+  estimatedMinutes: z.number().int().min(1).max(1440).nullable().optional(),
+  effort: effortSchema.nullable().optional(),
+  context: contextSchema.nullable().optional(),
   parentTaskId: z.string().optional(),
-  goalId: z.string().optional(),
+  goalId: z.string().nullable().optional(),
   quadrant: z
     .enum([
       'urgent_important',
@@ -36,21 +49,31 @@ export const createTaskSchema = z.object({
   rrule: z.string().nullable().optional(),
 })
 
-export const updateTaskSchema = createTaskSchema.partial()
+export const updateTaskSchema = createTaskSchema.partial().extend({
+  /** When present, the update is rejected with 409 if the stored row changed since. */
+  expectedUpdatedAt: z.string().datetime().optional(),
+})
 
 export const taskQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(20),
-  status: z.enum(['pending', 'in_progress', 'completed', 'cancelled']).optional(),
+  /** `active` means pending or in progress. */
+  status: z.enum(['active', 'pending', 'in_progress', 'completed', 'cancelled']).optional(),
   priority: z.enum(['urgent', 'high', 'medium', 'low']).optional(),
   quadrant: z.string().optional(),
   tags: z.string().optional(),
   search: z.string().optional(),
-  dueDate: z.string().optional(),
+  dueDate: dateKeySchema.optional(),
+  dueDateFrom: dateKeySchema.optional(),
+  dueDateTo: dateKeySchema.optional(),
+  plannedDate: dateKeySchema.optional(),
+  plannedDateFrom: dateKeySchema.optional(),
+  plannedDateTo: dateKeySchema.optional(),
+  context: contextSchema.optional(),
   parentTaskId: z.string().optional(),
   goalId: z.string().optional(),
   sortBy: z
-    .enum(['createdAt', 'updatedAt', 'dueDate', 'priority', 'orderIndex'])
+    .enum(['createdAt', 'updatedAt', 'dueDate', 'plannedDate', 'priority', 'orderIndex'])
     .default('orderIndex'),
   sortOrder: z.enum(['asc', 'desc']).default('asc'),
 })

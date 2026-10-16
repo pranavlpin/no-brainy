@@ -1,15 +1,18 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { useSetBreadcrumbTitle } from '@/stores/breadcrumb-store'
 import { useParams, useRouter } from 'next/navigation'
 import { ArrowLeft, Pin, PinOff, Trash2, Share2, Link2, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dialog } from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
+import { SaveStatus } from '@/components/ui/save-status'
 import { MarkdownEditor } from '@/components/editor/markdown-editor'
 import { TagInput } from '@/components/notes/tag-input'
-import { useNote, useUpdateNote, useDeleteNote } from '@/hooks/use-notes'
+import { useNote, useDeleteNote } from '@/hooks/use-notes'
+import { useDraftSave } from '@/hooks/use-draft-save'
 import { useNoteLinks, useAddNoteLink, useRemoveNoteLink } from '@/hooks/use-links'
 import { LinkManager } from '@/components/linking/link-manager'
 import { BacklinksPanel } from '@/components/notes/backlinks-panel'
@@ -20,19 +23,22 @@ import { ActionItemsPreview } from '@/components/ai/action-items-preview'
 import { AIActionButton } from '@/components/ai/ai-action-button'
 import { apiClient } from '@/lib/api-client'
 import type { AIActionResponse } from '@/lib/ai/types'
+import type { ApiResponse } from '@/lib/types/api'
+import type { NoteResponse } from '@/lib/types/notes'
 import type { LinkedItemData } from '@/components/linking/linked-item'
 
-type SaveStatus = 'idle' | 'saving' | 'saved'
+/** Fields a draft may send; everything else is server-derived. */
+const DRAFT_FIELDS = new Set(['title', 'contentMd', 'tags', 'isPinned', 'isPublic'])
 
 export default function NoteDetailPage() {
   const params = useParams()
   const router = useRouter()
   const noteId = params.id as string
 
-  const { data: note, isLoading, error } = useNote(noteId)
+  const queryClient = useQueryClient()
+  const { data: note, isLoading, error, refetch } = useNote(noteId)
 
   useSetBreadcrumbTitle(note?.title ?? null)
-  const updateNote = useUpdateNote()
   const deleteNote = useDeleteNote()
   const { data: noteLinks } = useNoteLinks(noteId)
   const addNoteLink = useAddNoteLink(noteId)
@@ -45,11 +51,26 @@ export default function NoteDetailPage() {
     extra: l.extra,
   }))
 
-  const [title, setTitle] = useState('')
-  const [content, setContent] = useState('')
-  const [tags, setTags] = useState<string[]>([])
-  const [isPinned, setIsPinned] = useState(false)
-  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
+  const draft = useDraftSave<NoteResponse>(
+    'note',
+    note,
+    async (patch, version) => {
+      const body: Record<string, unknown> = { expectedUpdatedAt: version }
+      for (const [key, val] of Object.entries(patch)) {
+        if (DRAFT_FIELDS.has(key)) body[key] = val
+      }
+      const res = await apiClient<ApiResponse<NoteResponse>>(`/api/notes/${noteId}`, {
+        method: 'PUT',
+        body: JSON.stringify(body),
+      })
+      queryClient.setQueryData(['notes', 'detail', noteId], res.data)
+      queryClient.invalidateQueries({ queryKey: ['notes', 'list'] })
+      return res.data
+    },
+    async () => (await refetch()).data
+  )
+  const value = draft.value
+
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [isExtractingActions, setIsExtractingActions] = useState(false)
   const [extractedActions, setExtractedActions] = useState<Array<{
@@ -57,73 +78,16 @@ export default function NoteDetailPage() {
     priority: 'urgent' | 'high' | 'medium' | 'low'
     reason: string
   }> | null>(null)
-  const [initialized, setInitialized] = useState(false)
 
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const title = value?.title ?? ''
+  const content = value?.contentMd ?? ''
+  const tags = value?.tags ?? []
+  const isPinned = value?.isPinned ?? false
 
-  // Initialize form when note loads
-  useEffect(() => {
-    if (note && !initialized) {
-      setTitle(note.title)
-      setContent(note.contentMd)
-      setTags(note.tags)
-      setIsPinned(note.isPinned)
-      setInitialized(true)
-    }
-  }, [note, initialized])
-
-  const saveNote = useCallback(
-    (updates: { title?: string; contentMd?: string; tags?: string[]; isPinned?: boolean }) => {
-      setSaveStatus('saving')
-      updateNote.mutate(
-        { id: noteId, ...updates },
-        {
-          onSuccess: () => setSaveStatus('saved'),
-          onError: () => setSaveStatus('idle'),
-        }
-      )
-    },
-    [noteId, updateNote]
-  )
-
-  // Auto-save debounced
-  const debouncedSave = useCallback(
-    (updates: { title?: string; contentMd?: string; tags?: string[]; isPinned?: boolean }) => {
-      if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
-      saveTimerRef.current = setTimeout(() => {
-        saveNote(updates)
-      }, 500)
-    },
-    [saveNote]
-  )
-
-  // Cleanup timer on unmount
-  useEffect(() => {
-    return () => {
-      if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
-    }
-  }, [])
-
-  const handleTitleChange = (newTitle: string) => {
-    setTitle(newTitle)
-    debouncedSave({ title: newTitle, contentMd: content, tags, isPinned })
-  }
-
-  const handleContentChange = (newContent: string) => {
-    setContent(newContent)
-    debouncedSave({ title, contentMd: newContent, tags, isPinned })
-  }
-
-  const handleTagsChange = (newTags: string[]) => {
-    setTags(newTags)
-    saveNote({ title, contentMd: content, tags: newTags, isPinned })
-  }
-
-  const handlePinToggle = () => {
-    const newPinned = !isPinned
-    setIsPinned(newPinned)
-    saveNote({ title, contentMd: content, tags, isPinned: newPinned })
-  }
+  const handleTitleChange = (newTitle: string) => draft.change({ title: newTitle })
+  const handleContentChange = (newContent: string) => draft.change({ contentMd: newContent })
+  const handleTagsChange = (newTags: string[]) => draft.change({ tags: newTags })
+  const handlePinToggle = () => draft.change({ isPinned: !isPinned })
 
   const [shareUrl, setShareUrl] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
@@ -137,8 +101,8 @@ export default function NoteDetailPage() {
   }, [note?.isPublic, note?.shareId])
 
   const handleShareToggle = () => {
-    const newPublic = !note?.isPublic
-    updateNote.mutate({ id: noteId, isPublic: newPublic })
+    draft.change({ isPublic: !value?.isPublic })
+    void draft.flush()
   }
 
   const handleCopyLink = () => {
@@ -154,9 +118,6 @@ export default function NoteDetailPage() {
       onSuccess: () => router.push('/notes'),
     })
   }
-
-  const saveStatusText =
-    saveStatus === 'saving' ? 'Saving...' : saveStatus === 'saved' ? 'Saved just now' : ''
 
   // Loading state
   if (isLoading) {
@@ -195,9 +156,12 @@ export default function NoteDetailPage() {
           Back
         </Button>
         <div className="flex items-center gap-2">
-          {saveStatusText && (
-            <span className="text-xs text-muted-foreground">{saveStatusText}</span>
-          )}
+          <SaveStatus
+            state={draft.state}
+            durable={draft.durable}
+            retry={draft.retry}
+            resolve={draft.resolve}
+          />
           <Button
             variant="ghost"
             size="icon"
@@ -207,10 +171,10 @@ export default function NoteDetailPage() {
             {isPinned ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
           </Button>
           <Button
-            variant={note?.isPublic ? 'secondary' : 'ghost'}
+            variant={value?.isPublic ? 'secondary' : 'ghost'}
             size="icon"
             onClick={handleShareToggle}
-            title={note?.isPublic ? 'Shared (click to unshare)' : 'Share note'}
+            title={value?.isPublic ? 'Shared (click to unshare)' : 'Share note'}
           >
             <Share2 className="h-4 w-4" />
           </Button>

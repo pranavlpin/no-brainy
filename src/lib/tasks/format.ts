@@ -19,6 +19,10 @@ export function formatTask(task: Task): TaskResponse {
     rrule: task.rrule,
     quadrant: task.quadrant as TaskResponse['quadrant'],
     orderIndex: task.orderIndex,
+    plannedDate: task.plannedDate ? task.plannedDate.toISOString().slice(0, 10) : null,
+    estimatedMinutes: task.estimatedMinutes ?? null,
+    effort: (task.effort as TaskResponse['effort']) ?? null,
+    context: (task.context as TaskResponse['context']) ?? null,
     createdAt: task.createdAt.toISOString(),
     updatedAt: task.updatedAt.toISOString(),
   }

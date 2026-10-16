@@ -3,47 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { withAuth } from '@/lib/auth/middleware'
 import { dateParamSchema } from '@/lib/validations/planner'
 import type { TimeBlock } from '@/lib/types/planner'
-import type { TaskResponse } from '@/lib/types/tasks'
-
-function formatTask(task: {
-  id: string
-  userId: string
-  parentTaskId: string | null
-  goalId: string | null
-  title: string
-  descriptionMd: string
-  priority: string
-  status: string
-  tags: string[]
-  dueDate: Date | null
-  completedAt: Date | null
-  isRecurring: boolean
-  rrule: string | null
-  quadrant: string | null
-  orderIndex: number
-  createdAt: Date
-  updatedAt: Date
-}): TaskResponse {
-  return {
-    id: task.id,
-    userId: task.userId,
-    parentTaskId: task.parentTaskId,
-    goalId: task.goalId,
-    title: task.title,
-    descriptionMd: task.descriptionMd,
-    priority: task.priority as TaskResponse['priority'],
-    status: task.status as TaskResponse['status'],
-    tags: task.tags,
-    dueDate: task.dueDate?.toISOString() ?? null,
-    completedAt: task.completedAt?.toISOString() ?? null,
-    isRecurring: task.isRecurring,
-    rrule: task.rrule,
-    quadrant: task.quadrant as TaskResponse['quadrant'],
-    orderIndex: task.orderIndex,
-    createdAt: task.createdAt.toISOString(),
-    updatedAt: task.updatedAt.toISOString(),
-  }
-}
+import { formatTask } from '@/lib/tasks/format'
 
 export const GET = withAuth(async (req: NextRequest, user) => {
   try {

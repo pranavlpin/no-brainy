@@ -1,8 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { Plus, LayoutList, Grid2x2 } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { ChevronLeft, ChevronRight, Plus, LayoutList, Grid2x2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
@@ -11,14 +10,16 @@ import { TaskList } from '@/components/tasks/task-list'
 import { EisenhowerMatrix } from '@/components/tasks/eisenhower-matrix'
 import { TaskForm } from '@/components/tasks/task-form'
 import { TaskAIPanel } from '@/components/tasks/task-ai-panel'
-import { useTasks, useCreateTask } from '@/hooks/use-tasks'
-import type { TaskPriority, CreateTaskRequest } from '@/lib/types/tasks'
+import { useTaskPage, useCreateTask } from '@/hooks/use-tasks'
+import type { TaskPriority, CreateTaskRequest, TaskFilters } from '@/lib/types/tasks'
 
 type ViewMode = 'list' | 'matrix'
 
+const PAGE_SIZE = 20
+
 export default function TasksPage() {
-  const router = useRouter()
   const [view, setView] = useState<ViewMode>('list')
+  const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
   const [showCompleted, setShowCompleted] = useState(false)
   const [priorityFilter, setPriorityFilter] = useState<TaskPriority | ''>('')
@@ -27,18 +28,31 @@ export default function TasksPage() {
 
   const [sortField, sortOrder] = sortBy.split(':') as [string, 'asc' | 'desc']
 
-  const filters = {
+  // Any filter change starts over from the first page.
+  useEffect(() => {
+    setPage(1)
+  }, [search, showCompleted, priorityFilter, sortBy])
+
+  const filters: TaskFilters = {
     ...(search && { search }),
-    ...(!showCompleted && { status: 'pending' as const }),
+    ...(!showCompleted && { status: 'active' as const }),
     ...(priorityFilter && { priority: priorityFilter as TaskPriority }),
-    sortBy: sortField as 'createdAt' | 'updatedAt' | 'dueDate' | 'priority' | 'orderIndex',
+    sortBy: sortField as TaskFilters['sortBy'],
     sortOrder,
+    // The matrix needs the whole set; the list pages.
+    page: view === 'matrix' ? 1 : page,
+    pageSize: view === 'matrix' ? 100 : PAGE_SIZE,
   }
 
-  const { data, isLoading } = useTasks(filters)
+  const { data, isLoading } = useTaskPage(filters)
   const createTask = useCreateTask()
 
-  const tasks = data ?? []
+  const tasks = data?.items ?? []
+  const total = data?.total ?? 0
+  const pageSize = data?.pageSize ?? PAGE_SIZE
+  const currentPage = data?.page ?? page
+  const totalPages = Math.max(1, Math.ceil(total / pageSize))
+  const hasMore = data?.hasMore ?? false
 
   const handleCreate = (formData: CreateTaskRequest) => {
     createTask.mutate(formData, {
@@ -122,7 +136,9 @@ export default function TasksPage() {
             onChange={(e) => setShowCompleted(e.target.checked)}
             className="h-4 w-4 accent-retro-blue cursor-pointer"
           />
-          <span className="font-mono text-xs text-retro-dark/60">Show completed</span>
+          <span className="font-mono text-xs text-retro-dark/60">
+            Include completed and cancelled
+          </span>
         </label>
 
         <div className="flex gap-1 sm:ml-auto">
@@ -156,6 +172,43 @@ export default function TasksPage() {
         <TaskList tasks={tasks} hideCompleted={!showCompleted} />
       ) : (
         <EisenhowerMatrix tasks={tasks} />
+      )}
+
+      {/* Pagination */}
+      {view === 'list' && !isLoading && (total > pageSize || currentPage > 1) && (
+        <nav
+          aria-label="Task pages"
+          className="flex items-center justify-between gap-3 font-mono text-xs text-retro-dark/60"
+        >
+          <span>
+            {total} {total === 1 ? 'task' : 'tasks'}
+          </span>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              data-testid="task-prev-page"
+              disabled={currentPage <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+            >
+              <ChevronLeft className="h-4 w-4" />
+              <span className="sr-only sm:not-sr-only sm:ml-1">Previous</span>
+            </Button>
+            <span aria-current="page">
+              Page {currentPage} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              data-testid="task-next-page"
+              disabled={!hasMore}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              <span className="sr-only sm:not-sr-only sm:mr-1">Next</span>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </nav>
       )}
     </div>
   )

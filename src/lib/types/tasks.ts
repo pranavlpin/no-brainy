@@ -2,7 +2,12 @@ export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent'
 
 export type TaskStatus = 'pending' | 'in_progress' | 'completed' | 'cancelled'
 
-export type TaskQuadrant = 'urgent_important' | 'not_urgent_important' | 'urgent_not_important' | 'not_urgent_not_important'
+export type TaskQuadrant =
+  'urgent_important' | 'not_urgent_important' | 'urgent_not_important' | 'not_urgent_not_important'
+
+export type TaskEffort = 'light' | 'steady' | 'deep'
+
+export type TaskContext = 'work' | 'personal'
 
 export interface TaskResponse {
   id: string
@@ -20,6 +25,11 @@ export interface TaskResponse {
   rrule: string | null
   quadrant: TaskQuadrant | null
   orderIndex: number
+  /** The day you intend to work on it (YYYY-MM-DD); independent of the deadline. */
+  plannedDate: string | null
+  estimatedMinutes: number | null
+  effort: TaskEffort | null
+  context: TaskContext | null
   createdAt: string
   updatedAt: string
   subtasks?: TaskResponse[]
@@ -39,8 +49,12 @@ export interface CreateTaskRequest {
   status?: TaskStatus
   tags?: string[]
   dueDate?: string
+  plannedDate?: string | null
+  estimatedMinutes?: number | null
+  effort?: TaskEffort | null
+  context?: TaskContext | null
   parentTaskId?: string
-  goalId?: string
+  goalId?: string | null
   isRecurring?: boolean
   rrule?: string
   quadrant?: TaskQuadrant
@@ -54,17 +68,24 @@ export interface UpdateTaskRequest {
   status?: TaskStatus
   tags?: string[]
   dueDate?: string | null
+  plannedDate?: string | null
+  estimatedMinutes?: number | null
+  effort?: TaskEffort | null
+  context?: TaskContext | null
   parentTaskId?: string | null
   goalId?: string | null
   isRecurring?: boolean
   rrule?: string | null
   quadrant?: TaskQuadrant | null
   orderIndex?: number
+  /** Optimistic concurrency: reject with 409 if the server row changed since. */
+  expectedUpdatedAt?: string
 }
 
 export interface TaskFilters {
   search?: string
-  status?: TaskStatus | TaskStatus[]
+  /** `active` = pending or in progress. */
+  status?: TaskStatus | 'active' | TaskStatus[]
   priority?: TaskPriority | TaskPriority[]
   quadrant?: TaskQuadrant
   tags?: string[]
@@ -72,6 +93,13 @@ export interface TaskFilters {
   parentTaskId?: string | null
   dueDateFrom?: string
   dueDateTo?: string
-  sortBy?: 'createdAt' | 'updatedAt' | 'dueDate' | 'priority' | 'orderIndex' | 'title'
+  plannedDate?: string
+  plannedDateFrom?: string
+  plannedDateTo?: string
+  context?: TaskContext
+  page?: number
+  pageSize?: number
+  sortBy?:
+    'createdAt' | 'updatedAt' | 'dueDate' | 'plannedDate' | 'priority' | 'orderIndex' | 'title'
   sortOrder?: 'asc' | 'desc'
 }
