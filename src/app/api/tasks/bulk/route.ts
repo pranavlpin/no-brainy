@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withAuth } from '@/lib/auth/middleware'
 import { bulkActionSchema } from '@/lib/validations/tasks'
+import { advanceRoutine } from '@/lib/tasks/routine-service'
+import { todayInTimezone } from '@/lib/dates/calendar'
 import { ZodError } from 'zod'
 
 export const POST = withAuth(async (req: NextRequest, user) => {
@@ -31,11 +33,24 @@ export const POST = withAuth(async (req: NextRequest, user) => {
 
     switch (action) {
       case 'complete': {
-        const result = await prisma.task.updateMany({
-          where: { id: { in: taskIds }, userId: user.id },
-          data: { status: 'completed', completedAt: new Date() },
+        affected = await prisma.$transaction(async (db) => {
+          const tasks = await db.task.findMany({ where: { id: { in: taskIds }, userId: user.id } })
+          const result = await db.task.updateMany({
+            where: { id: { in: taskIds }, userId: user.id },
+            data: { status: 'completed', completedAt: new Date() },
+          })
+          for (const task of tasks)
+            await advanceRoutine(
+              db,
+              { ...task, status: 'completed' },
+              todayInTimezone(user.timezone)
+            )
+          await db.project.updateMany({
+            where: { userId: user.id, nextActionId: { in: taskIds } },
+            data: { nextActionId: null },
+          })
+          return result.count
         })
-        affected = result.count
         break
       }
       case 'delete': {

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withAuth } from '@/lib/auth/middleware'
 import { createTaskSchema, taskQuerySchema } from '@/lib/validations/tasks'
+import { serializeTask } from '@/lib/tasks/serialize'
+import { initializeRoutine, advanceRoutine } from '@/lib/tasks/routine-service'
 import { validTaskRelations } from '@/lib/tasks/relations'
 import { addCalendarDays, todayInTimezone } from '@/lib/dates/calendar'
 import { ZodError } from 'zod'
@@ -23,6 +25,9 @@ export const GET = withAuth(async (req: NextRequest, user) => {
     if (query.status) where.status = { in: query.status }
     if (query.priority) where.priority = { in: query.priority }
     if (query.quadrant) where.quadrant = query.quadrant
+    if (query.projectId) where.projectId = query.projectId
+    if (query.context) where.context = query.context
+    if (query.plannedDate) where.plannedDate = new Date(`${query.plannedDate}T00:00:00Z`)
     if (query.goalId) where.goalId = query.goalId
     if (query.parentTaskId) {
       where.parentTaskId = query.parentTaskId === 'null' ? null : query.parentTaskId
@@ -64,23 +69,7 @@ export const GET = withAuth(async (req: NextRequest, user) => {
         : matching
 
     const items = tasks.map((task) => ({
-      id: task.id,
-      userId: task.userId,
-      parentTaskId: task.parentTaskId,
-      goalId: task.goalId,
-      title: task.title,
-      descriptionMd: task.descriptionMd,
-      priority: task.priority,
-      status: task.status,
-      tags: task.tags,
-      dueDate: task.dueDate?.toISOString() ?? null,
-      completedAt: task.completedAt?.toISOString() ?? null,
-      isRecurring: task.isRecurring,
-      rrule: task.rrule,
-      quadrant: task.quadrant,
-      orderIndex: task.orderIndex,
-      createdAt: task.createdAt.toISOString(),
-      updatedAt: task.updatedAt.toISOString(),
+      ...serializeTask(task),
       subtasksCount: task._count.subtasks,
     }))
 
@@ -141,46 +130,40 @@ export const POST = withAuth(async (req: NextRequest, user) => {
       )
     }
 
-    const task = await prisma.task.create({
-      data: {
-        userId: user.id,
-        title: data.title,
-        descriptionMd: data.descriptionMd,
-        priority: data.priority,
-        status: data.status,
-        tags: data.tags,
-        dueDate: data.dueDate ? new Date(data.dueDate) : null,
-        parentTaskId: data.parentTaskId ?? null,
-        goalId: data.goalId ?? null,
-        quadrant: data.quadrant ?? null,
-        isRecurring: data.isRecurring,
-        rrule: data.rrule ?? null,
-        completedAt: data.status === 'completed' ? new Date() : null,
-      },
+    const task = await prisma.$transaction(async (db) => {
+      const created = await db.task.create({
+        data: {
+          userId: user.id,
+          title: data.title,
+          projectId: data.projectId ?? null,
+          plannedDate: data.plannedDate ? new Date(`${data.plannedDate}T00:00:00Z`) : null,
+          estimatedMinutes: data.estimatedMinutes ?? null,
+          effort: data.effort ?? null,
+          context: data.context ?? null,
+          routinePaused: data.routinePaused ?? false,
+          descriptionMd: data.descriptionMd,
+          priority: data.priority,
+          status: data.status,
+          tags: data.tags,
+          dueDate: data.dueDate ? new Date(data.dueDate) : null,
+          parentTaskId: data.parentTaskId ?? null,
+          goalId: data.goalId ?? null,
+          quadrant: data.quadrant ?? null,
+          isRecurring: data.isRecurring,
+          rrule: data.rrule ?? null,
+          completedAt: data.status === 'completed' ? new Date() : null,
+        },
+      })
+      const initialized = await initializeRoutine(db, created, todayInTimezone(user.timezone))
+      if (initialized.status === 'completed')
+        await advanceRoutine(db, initialized, todayInTimezone(user.timezone))
+      return initialized
     })
 
     return NextResponse.json(
       {
         success: true,
-        data: {
-          id: task.id,
-          userId: task.userId,
-          parentTaskId: task.parentTaskId,
-          goalId: task.goalId,
-          title: task.title,
-          descriptionMd: task.descriptionMd,
-          priority: task.priority,
-          status: task.status,
-          tags: task.tags,
-          dueDate: task.dueDate?.toISOString() ?? null,
-          completedAt: task.completedAt?.toISOString() ?? null,
-          isRecurring: task.isRecurring,
-          rrule: task.rrule,
-          quadrant: task.quadrant,
-          orderIndex: task.orderIndex,
-          createdAt: task.createdAt.toISOString(),
-          updatedAt: task.updatedAt.toISOString(),
-        },
+        data: serializeTask(task),
       },
       { status: 201 }
     )

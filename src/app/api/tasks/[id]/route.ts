@@ -2,89 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withAuth } from '@/lib/auth/middleware'
 import { updateTaskSchema } from '@/lib/validations/tasks'
+import { serializeTask as formatTask } from '@/lib/tasks/serialize'
+import { todayInTimezone } from '@/lib/dates/calendar'
+import { initializeRoutine, advanceRoutine } from '@/lib/tasks/routine-service'
 import { validTaskRelations } from '@/lib/tasks/relations'
 import { ZodError } from 'zod'
 import type { AuthUser } from '@/lib/types/auth'
-
-function formatTask(task: {
-  id: string
-  userId: string
-  parentTaskId: string | null
-  goalId: string | null
-  title: string
-  descriptionMd: string
-  priority: string
-  status: string
-  tags: string[]
-  dueDate: Date | null
-  completedAt: Date | null
-  isRecurring: boolean
-  rrule: string | null
-  quadrant: string | null
-  orderIndex: number
-  createdAt: Date
-  updatedAt: Date
-  subtasks?: Array<{
-    id: string
-    userId: string
-    parentTaskId: string | null
-    goalId: string | null
-    title: string
-    descriptionMd: string
-    priority: string
-    status: string
-    tags: string[]
-    dueDate: Date | null
-    completedAt: Date | null
-    isRecurring: boolean
-    rrule: string | null
-    quadrant: string | null
-    orderIndex: number
-    createdAt: Date
-    updatedAt: Date
-  }>
-  taskLinks?: Array<{ taskId: string; linkedType: string; linkedId: string }>
-}) {
-  return {
-    id: task.id,
-    userId: task.userId,
-    parentTaskId: task.parentTaskId,
-    goalId: task.goalId,
-    title: task.title,
-    descriptionMd: task.descriptionMd,
-    priority: task.priority,
-    status: task.status,
-    tags: task.tags,
-    dueDate: task.dueDate?.toISOString() ?? null,
-    completedAt: task.completedAt?.toISOString() ?? null,
-    isRecurring: task.isRecurring,
-    rrule: task.rrule,
-    quadrant: task.quadrant,
-    orderIndex: task.orderIndex,
-    createdAt: task.createdAt.toISOString(),
-    updatedAt: task.updatedAt.toISOString(),
-    subtasks: task.subtasks?.map((s) => ({
-      id: s.id,
-      userId: s.userId,
-      parentTaskId: s.parentTaskId,
-      goalId: s.goalId,
-      title: s.title,
-      descriptionMd: s.descriptionMd,
-      priority: s.priority,
-      status: s.status,
-      tags: s.tags,
-      dueDate: s.dueDate?.toISOString() ?? null,
-      completedAt: s.completedAt?.toISOString() ?? null,
-      isRecurring: s.isRecurring,
-      rrule: s.rrule,
-      quadrant: s.quadrant,
-      orderIndex: s.orderIndex,
-      createdAt: s.createdAt.toISOString(),
-      updatedAt: s.updatedAt.toISOString(),
-    })),
-    taskLinks: task.taskLinks,
-  }
-}
 
 async function handleGet(req: NextRequest, user: AuthUser, id: string): Promise<NextResponse> {
   const task = await prisma.task.findFirst({
@@ -157,6 +80,14 @@ async function handlePut(req: NextRequest, user: AuthUser, id: string): Promise<
         ...(data.expectedUpdatedAt && { updatedAt: new Date(data.expectedUpdatedAt) }),
       },
       data: {
+        ...(data.projectId !== undefined && { projectId: data.projectId }),
+        ...(data.plannedDate !== undefined && {
+          plannedDate: data.plannedDate ? new Date(`${data.plannedDate}T00:00:00Z`) : null,
+        }),
+        ...(data.context !== undefined && { context: data.context }),
+        ...(data.estimatedMinutes !== undefined && { estimatedMinutes: data.estimatedMinutes }),
+        ...(data.effort !== undefined && { effort: data.effort }),
+        ...(data.routinePaused !== undefined && { routinePaused: data.routinePaused }),
         ...(data.title !== undefined && { title: data.title }),
         ...(data.descriptionMd !== undefined && { descriptionMd: data.descriptionMd }),
         ...(data.priority !== undefined && { priority: data.priority }),
@@ -175,6 +106,63 @@ async function handlePut(req: NextRequest, user: AuthUser, id: string): Promise<
       },
     })
     if (!changed.count) return null
+    const updated = await initializeRoutine(
+      db,
+      await db.task.findUniqueOrThrow({ where: { id } }),
+      todayInTimezone(user.timezone)
+    )
+    if (
+      updated.routineId &&
+      (data.routinePaused !== undefined ||
+        data.isRecurring !== undefined ||
+        data.rrule !== undefined)
+    ) {
+      await db.task.update({
+        where: { id: updated.routineId },
+        data: {
+          ...(data.routinePaused !== undefined && { routinePaused: data.routinePaused }),
+          ...(data.isRecurring !== undefined && { isRecurring: data.isRecurring }),
+          ...(data.rrule !== undefined && { rrule: data.rrule }),
+        },
+      })
+      if (data.routinePaused !== undefined)
+        await db.task.updateMany({
+          where: { routineId: updated.routineId, userId: user.id },
+          data: { routinePaused: data.routinePaused },
+        })
+    }
+    if (
+      data.plannedDate !== undefined &&
+      (existing.plannedDate?.toISOString().slice(0, 10) ?? null) !== data.plannedDate
+    ) {
+      await db.taskPlanEvent.create({
+        data: {
+          userId: user.id,
+          taskId: id,
+          taskTitle: updated.title,
+          fromDate: existing.plannedDate,
+          toDate: updated.plannedDate,
+        },
+      })
+    }
+    if (
+      data.projectId !== undefined ||
+      data.status === 'completed' ||
+      data.status === 'cancelled'
+    ) {
+      await db.project.updateMany({
+        where: {
+          userId: user.id,
+          nextActionId: id,
+          ...(data.status !== 'completed' &&
+            data.status !== 'cancelled' &&
+            updated.projectId && { id: { not: updated.projectId } }),
+        },
+        data: { nextActionId: null },
+      })
+    }
+    if (data.status === 'completed')
+      await advanceRoutine(db, updated, todayInTimezone(user.timezone))
     return db.task.findUniqueOrThrow({
       where: { id },
       include: {

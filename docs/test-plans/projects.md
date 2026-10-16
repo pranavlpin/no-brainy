@@ -41,3 +41,13 @@ Final results: PENDING — no tests have run for this task.
 ## Approval — 2026-10-16
 
 The owner’s conversation message “approved.” approves the parent package, this section’s linked task plan, and the six developer packages listed in NB-02. The proposed section above is retained as the pre-approval record. Tests have not run at this approval checkpoint.
+
+---
+
+## NB-05 execution — 2026-10-16
+
+The approved task was activated on `feature/projects-outcomes-and-routines`, based on `e96b1e56dd4db5493af490025a5f69abbd80a615`, before tests/implementation. Behavioral red logs cover metadata, calendar recurrence, API creation/owner checks, routine controls, atomic retry-safe actions, optional form fields, context filtering and the missing project route. Unsupported legacy rules are preserved and editable.
+
+All NB-05 acceptance behaviors pass: deterministic daily/weekly/month-end/leap-year calculations; concurrent completion generates one next occurrence; a populated pre-migration task survives; cross-owner links fail; title-only creation remains supported; schedule/deadline separation and archive preservation persist through a real browser reload. Additional browser coverage includes project creation/outcome/next action/archive and successful navigation into the task editor. Existing component mocks gained new hook dependencies without removing prior assertions.
+
+Verified suites: 23 Node + 58 Vitest unit/component tests, 13 PostgreSQL integration tests and 5 Chromium journeys. Browser artifacts remain under the ignored evidence directory; no screenshots/video/traces. Final static/build results are recorded in the new task entry at `/Users/pranav/Pranav_projects/github/no-brainy/docs/tasks/projects.md`. Evidence: `/Users/pranav/Pranav_projects/github/no-brainy/evidences/projects/outcomes-and-routines/`.

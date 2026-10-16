@@ -22,6 +22,8 @@ model User {
   preferences   Json      @default("{}")
   createdAt     DateTime  @default(now())
   lastActiveAt  DateTime  @default(now())
+  projects      Project[]
+  taskPlanEvents TaskPlanEvent[]
   notes         Note[]
   books         Book[]
   tasks         Task[]
@@ -71,6 +73,7 @@ model Note {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectNotes ProjectNote[]
   noteLinks   NoteLink[] @relation("SourceNote")
   linkedFrom  NoteLink[] @relation("TargetNote")
   @@index([userId, isDeleted])
@@ -119,6 +122,15 @@ model Task {
   id            String    @id @default(cuid())
   userId        String
   parentTaskId  String?
+  projectId     String?
+  plannedDate   DateTime? @db.Date
+  estimatedMinutes Int?
+  effort        String?
+  context       String?
+  routineId     String?
+  occurrenceDate DateTime? @db.Date
+  recurrenceAnchor DateTime? @db.Date
+  routinePaused Boolean @default(false)
   goalId        String?
   title         String
   descriptionMd String    @default("") @db.Text
@@ -138,6 +150,14 @@ model Task {
   subtasks   Task[]  @relation("Subtasks")
   goal       Goal?   @relation(fields: [goalId], references: [id], onDelete: SetNull)
   taskLinks  TaskLink[]
+  project Project? @relation("ProjectTasks", fields: [projectId], references: [id], onDelete: SetNull)
+  nextActionFor Project[] @relation("ProjectNextAction")
+  routine Task? @relation("RoutineOccurrences", fields: [routineId], references: [id], onDelete: SetNull)
+  occurrences Task[] @relation("RoutineOccurrences")
+  planEvents TaskPlanEvent[]
+  @@unique([routineId, occurrenceDate])
+  @@index([userId, plannedDate])
+  @@index([projectId])
   @@index([userId, status])
   @@index([userId, dueDate])
   @@index([userId, quadrant])
@@ -260,6 +280,7 @@ model Goal {
   updatedAt         DateTime  @updatedAt
   user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   tasks           Task[]
+  projects        Project[]
   expenseCategory ExpenseCategory? @relation(fields: [expenseCategoryId], references: [id], onDelete: SetNull)
   @@index([userId, status])
   @@map("goals")
@@ -502,4 +523,48 @@ model WatchlistItem {
   @@index([genre], type: Gin)
   @@index([tags], type: Gin)
   @@map("watchlist_items")
+}
+
+
+model Project {
+  id String @id @default(cuid())
+  userId String
+  title String
+  outcome String @default("") @db.Text
+  context String @default("personal")
+  status String @default("active")
+  goalId String?
+  nextActionId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  goal Goal? @relation(fields: [goalId], references: [id], onDelete: SetNull)
+  tasks Task[] @relation("ProjectTasks")
+  nextAction Task? @relation("ProjectNextAction", fields: [nextActionId], references: [id], onDelete: SetNull)
+  notes ProjectNote[]
+  @@index([userId, status])
+  @@map("projects")
+}
+
+model ProjectNote {
+  projectId String
+  noteId String
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  note Note @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  @@id([projectId, noteId])
+  @@map("project_notes")
+}
+
+model TaskPlanEvent {
+  id String @id @default(cuid())
+  userId String
+  taskId String?
+  taskTitle String
+  fromDate DateTime? @db.Date
+  toDate DateTime? @db.Date
+  createdAt DateTime @default(now())
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task Task? @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  @@index([userId, createdAt])
+  @@map("task_plan_events")
 }

@@ -6,6 +6,16 @@ export type TaskQuadrant =
   'urgent_important' | 'not_urgent_important' | 'urgent_not_important' | 'not_urgent_not_important'
 
 export interface TaskResponse {
+  routineId?: string | null
+  occurrenceDate?: string | null
+  recurrenceAnchor?: string | null
+  projectId?: string | null
+  plannedDate?: string | null
+  estimatedMinutes?: number | null
+  effort?: 'light' | 'steady' | 'deep' | null
+  context?: 'work' | 'personal' | null
+  routinePaused?: boolean
+
   id: string
   userId: string
   parentTaskId: string | null
@@ -34,6 +44,13 @@ export interface TaskLinkResponse {
 }
 
 export interface CreateTaskRequest {
+  projectId?: string | null
+  plannedDate?: string | null
+  estimatedMinutes?: number | null
+  effort?: 'light' | 'steady' | 'deep' | null
+  context?: 'work' | 'personal' | null
+  routinePaused?: boolean
+
   title: string
   descriptionMd?: string
   priority?: TaskPriority
@@ -49,6 +66,13 @@ export interface CreateTaskRequest {
 }
 
 export interface UpdateTaskRequest {
+  projectId?: string | null
+  plannedDate?: string | null
+  estimatedMinutes?: number | null
+  effort?: 'light' | 'steady' | 'deep' | null
+  context?: 'work' | 'personal' | null
+  routinePaused?: boolean
+
   expectedUpdatedAt?: string
   title?: string
   descriptionMd?: string
@@ -65,6 +89,9 @@ export interface UpdateTaskRequest {
 }
 
 export interface TaskFilters {
+  projectId?: string
+  context?: 'work' | 'personal'
+  plannedDate?: string
   page?: number
   pageSize?: number
   search?: string

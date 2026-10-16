@@ -10,6 +10,12 @@ const priorities = z.enum(['urgent', 'high', 'medium', 'low'])
 
 export const createTaskSchema = z.object({
   title: z.string().trim().min(1, 'Title is required').max(500),
+  projectId: z.string().nullable().optional(),
+  plannedDate: deadline.nullable().optional(),
+  estimatedMinutes: z.number().int().min(1).max(1440).nullable().optional(),
+  effort: z.enum(['light', 'steady', 'deep']).nullable().optional(),
+  context: z.enum(['work', 'personal']).nullable().optional(),
+  routinePaused: z.boolean().optional(),
   descriptionMd: z.string().default(''),
   priority: z.enum(['urgent', 'high', 'medium', 'low']).default('medium'),
   status: z.enum(['pending', 'in_progress', 'completed', 'cancelled']).default('pending'),
@@ -56,6 +62,9 @@ export const taskQuerySchema = z
     dueDateTo: deadline.optional(),
     parentTaskId: z.string().optional(),
     goalId: z.string().optional(),
+    projectId: z.string().optional(),
+    context: z.enum(['work', 'personal']).optional(),
+    plannedDate: deadline.optional(),
     sortBy: z
       .enum(['createdAt', 'updatedAt', 'dueDate', 'priority', 'orderIndex', 'title'])
       .default('orderIndex'),
