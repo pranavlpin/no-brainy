@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useUIStore } from '@/stores/ui-store'
 import { Plus, LayoutList, Grid2x2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -15,6 +16,7 @@ import type { TaskPriority, CreateTaskRequest } from '@/lib/types/tasks'
 type ViewMode = 'list' | 'matrix'
 
 export default function TasksPage() {
+  const context = useUIStore((state) => state.context)
   const [view, setView] = useState<ViewMode>('list')
   const [search, setSearch] = useState('')
   const [showCompleted, setShowCompleted] = useState(false)
@@ -22,10 +24,12 @@ export default function TasksPage() {
   const [sortBy, setSortBy] = useState<string>('orderIndex:asc')
   const [page, setPage] = useState(1)
   const [showNewForm, setShowNewForm] = useState(false)
+  useEffect(() => setPage(1), [context])
 
   const [sortField, sortOrder] = sortBy.split(':') as [string, 'asc' | 'desc']
 
   const filters = {
+    ...(context !== 'all' && { context }),
     page,
     ...(search && { search }),
     ...(!showCompleted && { status: 'active' as const }),

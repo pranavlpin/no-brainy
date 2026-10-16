@@ -41,7 +41,10 @@ vi.mock('@/hooks/use-tasks', () => ({
   useTask: () => ({ data: mocks.task }),
   useUpdateTask: () => ({ mutate: mocks.save, mutateAsync: mocks.save }),
   useDeleteTask: () => ({ mutate: vi.fn() }),
+  useRoutineAction: () => ({ mutate: vi.fn(), isPending: false }),
 }))
+vi.mock('@/hooks/use-projects', () => ({ useProjects: () => ({ data: [] }) }))
+vi.mock('@/hooks/use-goals', () => ({ useGoals: () => ({ data: [] }) }))
 vi.mock('@/hooks/use-links', () => ({
   useTaskLinks: () => ({ data: [] }),
   useAddTaskLink: () => ({}),

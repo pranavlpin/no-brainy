@@ -1,19 +1,17 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Button } from "@/components/ui/button"
-import { Select } from "@/components/ui/select"
-import { MarkdownEditor } from "@/components/editor/markdown-editor"
-import { cn } from "@/lib/utils"
-import { ChevronDown, ChevronRight } from "lucide-react"
-import type {
-  TaskPriority,
-  TaskStatus,
-  TaskQuadrant,
-  CreateTaskRequest,
-} from "@/lib/types/tasks"
+import { useState } from 'react'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Button } from '@/components/ui/button'
+import { Select } from '@/components/ui/select'
+import { MarkdownEditor } from '@/components/editor/markdown-editor'
+import { TaskPlanningFields } from './task-planning-fields'
+import type { UpdateTaskRequest } from '@/lib/types/tasks'
+import { supportedRecurrence } from '@/lib/tasks/recurrence'
+import { cn } from '@/lib/utils'
+import { ChevronDown, ChevronRight } from 'lucide-react'
+import type { TaskPriority, TaskStatus, TaskQuadrant, CreateTaskRequest } from '@/lib/types/tasks'
 
 interface TaskFormProps {
   initialData?: Partial<CreateTaskRequest>
@@ -23,27 +21,52 @@ interface TaskFormProps {
 }
 
 const quadrantOptions: { value: TaskQuadrant; label: string; color: string }[] = [
-  { value: "urgent_important", label: "Do First", color: "bg-red-100 border-red-300 dark:bg-red-950/30 dark:border-red-800" },
-  { value: "not_urgent_important", label: "Schedule", color: "bg-blue-100 border-blue-300 dark:bg-blue-950/30 dark:border-blue-800" },
-  { value: "urgent_not_important", label: "Delegate", color: "bg-yellow-100 border-yellow-300 dark:bg-yellow-950/30 dark:border-yellow-800" },
-  { value: "not_urgent_not_important", label: "Eliminate", color: "bg-gray-100 border-gray-300 dark:bg-gray-800 dark:border-gray-700" },
+  {
+    value: 'urgent_important',
+    label: 'Do First',
+    color: 'bg-red-100 border-red-300 dark:bg-red-950/30 dark:border-red-800',
+  },
+  {
+    value: 'not_urgent_important',
+    label: 'Schedule',
+    color: 'bg-blue-100 border-blue-300 dark:bg-blue-950/30 dark:border-blue-800',
+  },
+  {
+    value: 'urgent_not_important',
+    label: 'Delegate',
+    color: 'bg-yellow-100 border-yellow-300 dark:bg-yellow-950/30 dark:border-yellow-800',
+  },
+  {
+    value: 'not_urgent_not_important',
+    label: 'Eliminate',
+    color: 'bg-gray-100 border-gray-300 dark:bg-gray-800 dark:border-gray-700',
+  },
 ]
 
 export function TaskForm({
   initialData,
   onSubmit,
   isPending,
-  submitLabel = "Save",
+  submitLabel = 'Save',
 }: TaskFormProps) {
-  const [title, setTitle] = useState(initialData?.title ?? "")
-  const [descriptionMd, setDescriptionMd] = useState(initialData?.descriptionMd ?? "")
-  const [priority, setPriority] = useState<TaskPriority>(initialData?.priority ?? "medium")
-  const [status, setStatus] = useState<TaskStatus>(initialData?.status ?? "pending")
-  const [dueDate, setDueDate] = useState(initialData?.dueDate ?? "")
-  const [tagsInput, setTagsInput] = useState((initialData?.tags ?? []).join(", "))
-  const [quadrant, setQuadrant] = useState<TaskQuadrant | "">(initialData?.quadrant ?? "")
+  const [planning, setPlanning] = useState<UpdateTaskRequest>({
+    projectId: initialData?.projectId,
+    goalId: initialData?.goalId,
+    plannedDate: initialData?.plannedDate,
+    estimatedMinutes: initialData?.estimatedMinutes,
+    effort: initialData?.effort,
+    context: initialData?.context,
+  })
+  const [showPlanning, setShowPlanning] = useState(!!initialData?.projectId)
+  const [title, setTitle] = useState(initialData?.title ?? '')
+  const [descriptionMd, setDescriptionMd] = useState(initialData?.descriptionMd ?? '')
+  const [priority, setPriority] = useState<TaskPriority>(initialData?.priority ?? 'medium')
+  const [status, setStatus] = useState<TaskStatus>(initialData?.status ?? 'pending')
+  const [dueDate, setDueDate] = useState(initialData?.dueDate ?? '')
+  const [tagsInput, setTagsInput] = useState((initialData?.tags ?? []).join(', '))
+  const [quadrant, setQuadrant] = useState<TaskQuadrant | ''>(initialData?.quadrant ?? '')
   const [isRecurring, setIsRecurring] = useState(initialData?.isRecurring ?? false)
-  const [rrule, setRrule] = useState(initialData?.rrule ?? "")
+  const [rrule, setRrule] = useState(initialData?.rrule ?? '')
   const [showDescription, setShowDescription] = useState(!!initialData?.descriptionMd)
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -51,11 +74,17 @@ export function TaskForm({
     if (!title.trim()) return
 
     const tags = tagsInput
-      .split(",")
+      .split(',')
       .map((t) => t.trim())
       .filter(Boolean)
 
     const data: CreateTaskRequest = {
+      projectId: planning.projectId,
+      goalId: planning.goalId ?? undefined,
+      plannedDate: planning.plannedDate,
+      estimatedMinutes: planning.estimatedMinutes,
+      effort: planning.effort,
+      context: planning.context,
       title: title.trim(),
       priority,
       status,
@@ -147,9 +176,31 @@ export function TaskForm({
         <Input
           id="dueDate"
           type="date"
-          value={dueDate ? dueDate.split("T")[0] : ""}
-          onChange={(e) => setDueDate(e.target.value ? new Date(e.target.value).toISOString() : "")}
+          value={dueDate ? dueDate.split('T')[0] : ''}
+          onChange={(e) => setDueDate(e.target.value)}
         />
+      </div>
+
+      <div className="space-y-4 rounded-2xl border border-border/70 p-4">
+        <button
+          type="button"
+          aria-expanded={showPlanning}
+          onClick={() => setShowPlanning((value) => !value)}
+          className="flex w-full items-center gap-2 text-left text-sm font-medium"
+        >
+          {showPlanning ? (
+            <ChevronDown className="h-4 w-4" />
+          ) : (
+            <ChevronRight className="h-4 w-4" />
+          )}
+          Planning details
+        </button>
+        {showPlanning && (
+          <TaskPlanningFields
+            value={planning}
+            onChange={(patch) => setPlanning((value) => ({ ...value, ...patch }))}
+          />
+        )}
       </div>
 
       {/* Tags */}
@@ -172,15 +223,13 @@ export function TaskForm({
               key={opt.value}
               type="button"
               className={cn(
-                "rounded-md border px-3 py-2 text-sm text-left transition-colors",
+                'rounded-md border px-3 py-2 text-sm text-left transition-colors',
                 opt.color,
                 quadrant === opt.value
-                  ? "ring-2 ring-ring ring-offset-1"
-                  : "opacity-60 hover:opacity-100"
+                  ? 'ring-2 ring-ring ring-offset-1'
+                  : 'opacity-60 hover:opacity-100'
               )}
-              onClick={() =>
-                setQuadrant(quadrant === opt.value ? "" : opt.value)
-              }
+              onClick={() => setQuadrant(quadrant === opt.value ? '' : opt.value)}
             >
               {opt.label}
             </button>
@@ -203,8 +252,12 @@ export function TaskForm({
         {isRecurring && (
           <Select
             value={rrule}
+            aria-label="Repeat frequency"
             onChange={(e) => setRrule(e.target.value)}
           >
+            {rrule && !supportedRecurrence(rrule) && (
+              <option value={rrule}>Unsupported: {rrule}</option>
+            )}
             <option value="">Select frequency...</option>
             <option value="FREQ=DAILY">Daily</option>
             <option value="FREQ=WEEKLY">Weekly</option>
@@ -214,9 +267,24 @@ export function TaskForm({
       </div>
 
       {/* Submit */}
+      {isRecurring && rrule && !supportedRecurrence(rrule) && (
+        <div className="space-y-2">
+          <Label htmlFor="task-recurrence-rule">Recurrence rule</Label>
+          <Input
+            id="task-recurrence-rule"
+            value={rrule}
+            onChange={(event) => setRrule(event.target.value)}
+          />
+          <p className="text-sm text-muted-foreground">
+            This rule is preserved; automatic repeats support daily, weekly or monthly schedules
+            only.
+          </p>
+        </div>
+      )}
+
       <div className="flex justify-end gap-2 pt-2">
         <Button type="submit" disabled={isPending || !title.trim()}>
-          {isPending ? "Saving..." : submitLabel}
+          {isPending ? 'Saving...' : submitLabel}
         </Button>
       </div>
     </form>

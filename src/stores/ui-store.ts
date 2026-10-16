@@ -4,6 +4,7 @@ export const DEFAULT_NAV_ORDER = [
   '/today',
   '/planner',
   '/tasks',
+  '/projects',
   '/goals',
   '/library',
   '/reviews',

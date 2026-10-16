@@ -150,3 +150,16 @@ export function useReorderTasks() {
     onSuccess: () => refresh(client),
   })
 }
+
+/** Explicit routine controls retain completed and skipped occurrences as history. */
+export function useRoutineAction() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, action }: { id: string; action: 'pause' | 'resume' | 'skip' }) =>
+      apiClient<ApiResponse<TaskResponse>>(`/api/tasks/${id}/routine`, {
+        method: 'POST',
+        body: JSON.stringify({ action }),
+      }),
+    onSuccess: () => refresh(client),
+  })
+}

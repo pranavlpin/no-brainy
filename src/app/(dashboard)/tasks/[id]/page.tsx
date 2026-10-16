@@ -10,13 +10,15 @@ import { Select } from '@/components/ui/select'
 import { MarkdownEditor } from '@/components/editor/markdown-editor'
 import { SubtaskList } from '@/components/tasks/subtask-list'
 import { PriorityBadge } from '@/components/tasks/priority-badge'
-import { useTask, useUpdateTask, useDeleteTask } from '@/hooks/use-tasks'
+import { useTask, useUpdateTask, useDeleteTask, useRoutineAction } from '@/hooks/use-tasks'
 import { useTaskLinks, useAddTaskLink, useRemoveTaskLink } from '@/hooks/use-links'
 import { useUIStore } from '@/stores/ui-store'
 import { LinkManager } from '@/components/linking/link-manager'
 import type { LinkedItemData } from '@/components/linking/linked-item'
 import { useDraftSave } from '@/hooks/use-draft-save'
 import { SaveStatus } from '@/components/ui/save-status'
+import { TaskPlanningFields } from '@/components/tasks/task-planning-fields'
+import { supportedRecurrence } from '@/lib/tasks/recurrence'
 import { cn } from '@/lib/utils'
 import type { TaskPriority, TaskStatus, TaskQuadrant } from '@/lib/types/tasks'
 
@@ -51,6 +53,7 @@ export default function TaskDetailPage() {
   const { data: task, isLoading, refetch } = useTask(id)
   const updateTask = useUpdateTask()
   const deleteTask = useDeleteTask()
+  const routineAction = useRoutineAction()
   const enterFocusMode = useUIStore((s) => s.enterFocusMode)
   const { data: taskLinks } = useTaskLinks(id)
   const addTaskLink = useAddTaskLink(id)
@@ -235,6 +238,11 @@ export default function TaskDetailPage() {
         </div>
       </div>
 
+      <section className="surface p-5">
+        <h2 className="mb-4 text-sm font-semibold">Connect this action to your plan</h2>
+        <TaskPlanningFields value={value ?? {}} onChange={draft.change} />
+      </section>
+
       {/* Tags */}
       <div className="space-y-1">
         <Label htmlFor="detail-tags">Tags</Label>
@@ -293,7 +301,14 @@ export default function TaskDetailPage() {
           <Label htmlFor="detail-recurring">Recurring task</Label>
         </div>
         {isRecurring && (
-          <Select value={rrule} onChange={(e) => handleRruleChange(e.target.value)}>
+          <Select
+            aria-label="Repeat frequency"
+            value={rrule}
+            onChange={(e) => handleRruleChange(e.target.value)}
+          >
+            {rrule && !supportedRecurrence(rrule) && (
+              <option value={rrule}>Unsupported: {rrule}</option>
+            )}
             <option value="">Select frequency...</option>
             <option value="FREQ=DAILY">Daily</option>
             <option value="FREQ=WEEKLY">Weekly</option>
@@ -301,6 +316,58 @@ export default function TaskDetailPage() {
           </Select>
         )}
       </div>
+
+      {isRecurring && (
+        <div className="space-y-3">
+          {!supportedRecurrence(rrule) ? (
+            <div className="space-y-2">
+              <Label htmlFor="detail-recurrence-rule">Recurrence rule</Label>
+              <Input
+                id="detail-recurrence-rule"
+                value={rrule}
+                onChange={(event) => handleRruleChange(event.target.value)}
+              />
+              <p role="status" className="text-sm text-muted-foreground">
+                This rule is preserved, but automatic repeats support daily, weekly or monthly
+                schedules only.
+              </p>
+            </div>
+          ) : (
+            <>
+              <p className="text-xs text-muted-foreground">
+                {value?.routinePaused
+                  ? 'Routine paused. Resume whenever it feels right.'
+                  : 'Completing or skipping creates one next occurrence. Missed days do not pile up.'}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="outline"
+                  disabled={routineAction.isPending || draft.state !== 'saved'}
+                  onClick={() =>
+                    routineAction.mutate({ id, action: value?.routinePaused ? 'resume' : 'pause' })
+                  }
+                >
+                  {value?.routinePaused ? 'Resume routine' : 'Pause routine'}
+                </Button>
+                {status !== 'completed' && status !== 'cancelled' && (
+                  <Button
+                    variant="ghost"
+                    disabled={routineAction.isPending || draft.state !== 'saved'}
+                    onClick={() => routineAction.mutate({ id, action: 'skip' })}
+                  >
+                    Skip this occurrence
+                  </Button>
+                )}
+              </div>
+              {routineAction.isError && (
+                <p role="alert" className="text-sm text-destructive">
+                  Could not update this routine. Please try again.
+                </p>
+              )}
+            </>
+          )}
+        </div>
+      )}
 
       {/* Subtasks */}
       <SubtaskList parentTaskId={id} subtasks={task.subtasks ?? []} />
