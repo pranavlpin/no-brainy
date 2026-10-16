@@ -32,17 +32,27 @@ If stopped, start it:
 /opt/homebrew/opt/postgresql@16/bin/pg_ctl -D /Users/pranav/Pranav_projects/github/no-brainy/evidences/platform/react-tdd-foundation/postgres/data -l /Users/pranav/Pranav_projects/github/no-brainy/evidences/platform/react-tdd-foundation/postgres/server.log -w start
 ```
 
-Run the app in a terminal:
+The handoff app runs in the background. Its PID is recorded at /Users/pranav/Pranav_projects/github/no-brainy/evidences/product/final-acceptance/app-server.pid. Before starting another instance, inspect that process; if it is still the handoff Next.js server, stop it:
+
+```sh
+ps -p "$(cat /Users/pranav/Pranav_projects/github/no-brainy/evidences/product/final-acceptance/app-server.pid)" -o pid=,command=
+kill -TERM "$(cat /Users/pranav/Pranav_projects/github/no-brainy/evidences/product/final-acceptance/app-server.pid)"
+```
+
+Run the packaged app in a terminal. This repository builds a standalone Next.js server; copy its static assets before starting it:
 
 ```sh
 cd /Users/pranav/Pranav_projects/github/no-brainy
 npm run db:generate
 npx prisma migrate deploy
 npm run build
-npm run start -- --hostname 127.0.0.1
+mkdir -p /Users/pranav/Pranav_projects/github/no-brainy/.next/standalone/.next/static
+cp -R /Users/pranav/Pranav_projects/github/no-brainy/public /Users/pranav/Pranav_projects/github/no-brainy/.next/standalone/
+cp -R /Users/pranav/Pranav_projects/github/no-brainy/.next/static/. /Users/pranav/Pranav_projects/github/no-brainy/.next/standalone/.next/static/
+HOSTNAME=127.0.0.1 PORT=3000 node --env-file=/Users/pranav/Pranav_projects/github/no-brainy/.env /Users/pranav/Pranav_projects/github/no-brainy/.next/standalone/server.js
 ```
 
-Open http://localhost:3000. Stop that terminal's app with Ctrl+C. For development, use `npm run dev -- --hostname 127.0.0.1` instead of the build/start steps. Do not run both on the same port. If needed, stop this isolated PostgreSQL cluster after stopping the app:
+Open http://localhost:3000. Stop that terminal's app with Ctrl+C. For development, use `npm run dev -- --hostname 127.0.0.1` instead of the build/package/start steps. Do not run both on the same port. If needed, stop this isolated PostgreSQL cluster after stopping the app:
 
 ```sh
 /opt/homebrew/opt/postgresql@16/bin/pg_ctl -D /Users/pranav/Pranav_projects/github/no-brainy/evidences/platform/react-tdd-foundation/postgres/data -m fast -w stop
