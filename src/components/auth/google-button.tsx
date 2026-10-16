@@ -7,7 +7,7 @@ export function GoogleButton() {
     <button
       type="button"
       className="flex w-full items-center justify-center gap-2 border-2 border-retro-dark bg-white py-2.5 font-mono text-sm font-medium text-retro-dark hover-shadow-grow"
-      onClick={() => signIn('google', { callbackUrl: '/notes' })}
+      onClick={() => signIn('google', { callbackUrl: '/' })}
     >
       <svg
         className="h-4 w-4"

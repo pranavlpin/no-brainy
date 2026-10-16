@@ -52,7 +52,7 @@ export function LoginForm() {
         return
       }
 
-      router.push('/notes')
+      router.push('/')
     } catch {
       setServerError('An unexpected error occurred')
     } finally {

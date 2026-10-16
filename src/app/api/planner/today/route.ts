@@ -1,97 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { ZodError } from 'zod'
-import type { DayPlan, Prisma } from '@prisma/client'
+import type { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { withAuth } from '@/lib/auth/middleware'
 import { updateDayPlanSchema } from '@/lib/validations/planner'
-import { addDays, dateFromKey, dayBoundsUtc, todayKey, userTimezone } from '@/lib/dates'
-import { formatTask } from '@/lib/tasks/format'
-import type { AuthUser } from '@/lib/types/auth'
-import type { TimeBlock } from '@/lib/types/planner'
-
-const OPEN_STATUSES: Prisma.StringFilter = { notIn: ['completed', 'cancelled'] }
-
-/**
- * Assemble the full Today payload: the plan, focus tasks, tasks due today,
- * yesterday's leftovers for triage, and active goals for chips.
- */
-async function buildTodayPayload(user: AuthUser, key: string, dayPlan: DayPlan) {
-  const { start: today, end: nextDay } = dayBoundsUtc(key)
-  const yesterdayKey = addDays(key, -1)
-  const yesterday = dateFromKey(yesterdayKey)
-
-  const tasksDueToday = await prisma.task.findMany({
-    where: { userId: user.id, dueDate: { gte: today, lt: nextDay } },
-    orderBy: { orderIndex: 'asc' },
-  })
-
-  const leftoversDue = await prisma.task.findMany({
-    where: { userId: user.id, dueDate: { gte: yesterday, lt: today }, status: OPEN_STATUSES },
-    orderBy: { orderIndex: 'asc' },
-  })
-
-  const yesterdayPlan = await prisma.dayPlan.findUnique({
-    where: { userId_planDate: { userId: user.id, planDate: yesterday } },
-  })
-  const leftoverFocusIds = (yesterdayPlan?.focusTaskIds ?? []).filter(
-    (id) => !leftoversDue.some((t) => t.id === id) && !dayPlan.focusTaskIds.includes(id)
-  )
-  const leftoverFocus =
-    leftoverFocusIds.length > 0
-      ? await prisma.task.findMany({
-          where: { id: { in: leftoverFocusIds }, userId: user.id, status: OPEN_STATUSES },
-        })
-      : []
-
-  const focusTasks =
-    dayPlan.focusTaskIds.length > 0
-      ? await prisma.task.findMany({ where: { id: { in: dayPlan.focusTaskIds }, userId: user.id } })
-      : []
-  // Preserve the user's slot order.
-  focusTasks.sort((a, b) => dayPlan.focusTaskIds.indexOf(a.id) - dayPlan.focusTaskIds.indexOf(b.id))
-
-  const goals = await prisma.goal.findMany({
-    where: { userId: user.id, status: 'active' },
-    select: { id: true, title: true, category: true },
-    orderBy: { updatedAt: 'desc' },
-  })
-
-  const carryForward = [...leftoversDue, ...leftoverFocus].filter(
-    (t) => !dayPlan.focusTaskIds.includes(t.id)
-  )
-
-  return {
-    id: dayPlan.id,
-    userId: dayPlan.userId,
-    planDate: dayPlan.planDate.toISOString(),
-    focusTaskIds: dayPlan.focusTaskIds,
-    timeBlocks: dayPlan.timeBlocks as unknown as TimeBlock[],
-    aiBriefMd: dayPlan.aiBriefMd,
-    intentMd: dayPlan.intentMd ?? null,
-    createdAt: dayPlan.createdAt.toISOString(),
-    focusTasks: focusTasks.map(formatTask),
-    tasksDueToday: tasksDueToday.map(formatTask),
-    carryForward: carryForward.map(formatTask),
-    goals,
-  }
-}
-
-async function getOrCreatePlan(user: AuthUser, key: string): Promise<DayPlan> {
-  const planDate = dateFromKey(key)
-  const existing = await prisma.dayPlan.findUnique({
-    where: { userId_planDate: { userId: user.id, planDate } },
-  })
-  if (existing) return existing
-  // First visit of the day: carry in last night's "one thing for tomorrow".
-  const yesterdayReview = await prisma.dailyReview.findUnique({
-    where: { userId_reviewDate: { userId: user.id, reviewDate: dateFromKey(addDays(key, -1)) } },
-    select: { tomorrowIntent: true },
-  })
-  const intentMd = yesterdayReview?.tomorrowIntent?.trim() || null
-  return prisma.dayPlan.create({
-    data: { userId: user.id, planDate, focusTaskIds: [], timeBlocks: [], intentMd },
-  })
-}
+import { dateFromKey, todayKey, userTimezone } from '@/lib/dates'
+import { buildTodayPayload, getOrCreatePlan } from '@/lib/planner/today'
 
 function internalError() {
   return NextResponse.json(

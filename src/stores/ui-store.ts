@@ -2,9 +2,22 @@ import { create } from 'zustand'
 
 // Default sidebar nav order
 export const DEFAULT_NAV_ORDER = [
-  '/notes', '/stash', '/tasks', '/planner', '/expenses', '/budgets', '/reviews',
-  '/books', '/watchlist', '/bookmarks', '/goals',
-  '/search', '/analytics', '/insights', '/ai',
+  '/',
+  '/notes',
+  '/stash',
+  '/tasks',
+  '/planner',
+  '/expenses',
+  '/budgets',
+  '/reviews',
+  '/books',
+  '/watchlist',
+  '/bookmarks',
+  '/goals',
+  '/search',
+  '/analytics',
+  '/insights',
+  '/ai',
 ]
 
 function loadNavOrder(): string[] {
@@ -16,9 +29,13 @@ function loadNavOrder(): string[] {
       // Merge: keep stored order but add any new items not in stored
       const storedSet = new Set(parsed)
       const missing = DEFAULT_NAV_ORDER.filter((href) => !storedSet.has(href))
-      return [...parsed, ...missing]
+      // Today always leads, even for users with a saved order from before it existed.
+      const merged = [...parsed, ...missing].filter((href) => href !== '/')
+      return ['/', ...merged]
     }
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
   return DEFAULT_NAV_ORDER
 }
 
@@ -64,22 +81,24 @@ export const useUIStore = create<UIState>((set) => ({
     }
     set({ navOrder: DEFAULT_NAV_ORDER, hiddenNavItems: [] })
   },
-  hiddenNavItems: typeof window !== 'undefined'
-    ? JSON.parse(localStorage.getItem('nobrainy-hidden-nav') || '[]')
-    : [],
+  hiddenNavItems:
+    typeof window !== 'undefined'
+      ? JSON.parse(localStorage.getItem('nobrainy-hidden-nav') || '[]')
+      : [],
   setHiddenNavItems: (items) => {
     if (typeof window !== 'undefined') {
       localStorage.setItem('nobrainy-hidden-nav', JSON.stringify(items))
     }
     set({ hiddenNavItems: items })
   },
-  toggleNavItem: (href) => set((s) => {
-    const hidden = s.hiddenNavItems.includes(href)
-      ? s.hiddenNavItems.filter((h) => h !== href)
-      : [...s.hiddenNavItems, href]
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('nobrainy-hidden-nav', JSON.stringify(hidden))
-    }
-    return { hiddenNavItems: hidden }
-  }),
+  toggleNavItem: (href) =>
+    set((s) => {
+      const hidden = s.hiddenNavItems.includes(href)
+        ? s.hiddenNavItems.filter((h) => h !== href)
+        : [...s.hiddenNavItems, href]
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('nobrainy-hidden-nav', JSON.stringify(hidden))
+      }
+      return { hiddenNavItems: hidden }
+    }),
 }))

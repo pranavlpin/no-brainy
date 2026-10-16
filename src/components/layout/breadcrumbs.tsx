@@ -22,7 +22,7 @@ export function Breadcrumbs() {
   const segments = pathname.split('/').filter(Boolean)
 
   if (segments.length === 0) {
-    return <span className="text-sm text-muted-foreground">Home</span>
+    return <span className="text-sm font-medium text-foreground">Today</span>
   }
 
   return (

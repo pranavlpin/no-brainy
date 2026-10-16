@@ -17,6 +17,7 @@ import {
   Bookmark,
   Film,
   Archive,
+  Sun,
   PanelLeftClose,
   PanelLeftOpen,
   X,
@@ -26,6 +27,7 @@ import { useUIStore } from '@/stores/ui-store'
 import { SidebarNavItem, type NavItem } from './sidebar-nav'
 
 const NAV_ITEMS_MAP: Record<string, NavItem> = {
+  '/': { label: 'Today', href: '/', icon: Sun },
   '/notes': { label: 'Notes', href: '/notes', icon: FileText },
   '/stash': { label: 'Stash', href: '/stash', icon: Archive },
   '/tasks': { label: 'Tasks', href: '/tasks', icon: CheckSquare },
@@ -45,6 +47,7 @@ const NAV_ITEMS_MAP: Record<string, NavItem> = {
 }
 
 const NAV_GROUPS: Record<string, string> = {
+  '/': 'today',
   '/notes': 'core',
   '/stash': 'core',
   '/tasks': 'core',
@@ -66,8 +69,14 @@ const NAV_GROUPS: Record<string, string> = {
 export { NAV_ITEMS_MAP, NAV_GROUPS }
 
 export function Sidebar() {
-  const { sidebarCollapsed, toggleSidebar, mobileSidebarOpen, setMobileSidebarOpen, navOrder, hiddenNavItems } =
-    useUIStore()
+  const {
+    sidebarCollapsed,
+    toggleSidebar,
+    mobileSidebarOpen,
+    setMobileSidebarOpen,
+    navOrder,
+    hiddenNavItems,
+  } = useUIStore()
 
   const navItems = navOrder
     .filter((href) => !hiddenNavItems.includes(href))
