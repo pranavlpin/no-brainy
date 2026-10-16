@@ -2,7 +2,8 @@ export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent'
 
 export type TaskStatus = 'pending' | 'in_progress' | 'completed' | 'cancelled'
 
-export type TaskQuadrant = 'urgent_important' | 'not_urgent_important' | 'urgent_not_important' | 'not_urgent_not_important'
+export type TaskQuadrant =
+  'urgent_important' | 'not_urgent_important' | 'urgent_not_important' | 'not_urgent_not_important'
 
 export interface TaskResponse {
   id: string
@@ -48,6 +49,7 @@ export interface CreateTaskRequest {
 }
 
 export interface UpdateTaskRequest {
+  expectedUpdatedAt?: string
   title?: string
   descriptionMd?: string
   priority?: TaskPriority
@@ -63,8 +65,10 @@ export interface UpdateTaskRequest {
 }
 
 export interface TaskFilters {
+  page?: number
+  pageSize?: number
   search?: string
-  status?: TaskStatus | TaskStatus[]
+  status?: TaskStatus | TaskStatus[] | 'active'
   priority?: TaskPriority | TaskPriority[]
   quadrant?: TaskQuadrant
   tags?: string[]

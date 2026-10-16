@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { todayInTimezone } from '@/lib/dates/calendar'
 import { prisma } from '@/lib/prisma'
 import { withAI } from '@/lib/ai/middleware'
 import { callAI } from '@/lib/ai/call-ai'
@@ -6,9 +7,8 @@ import { handleAIError } from '@/lib/ai/error-handler'
 import { dailyPlanSuggestPrompt } from '@/lib/ai/prompts'
 import type { DailyPlanSuggestion } from '@/lib/ai/types'
 
-function getTodayDate(): Date {
-  const now = new Date()
-  return new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()))
+function getTodayDate(timezone: string): Date {
+  return new Date(`${todayInTimezone(timezone)}T00:00:00.000Z`)
 }
 
 export const POST = withAI(async (_req: NextRequest, { user, apiKey }) => {
@@ -37,7 +37,7 @@ export const POST = withAI(async (_req: NextRequest, { user, apiKey }) => {
     }
 
     // Fetch today's plan to know what's already planned
-    const today = getTodayDate()
+    const today = getTodayDate(user.timezone)
     const existingPlan = await prisma.dayPlan.findUnique({
       where: {
         userId_planDate: {

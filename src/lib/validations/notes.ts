@@ -8,6 +8,7 @@ export const createNoteSchema = z.object({
 })
 
 export const updateNoteSchema = z.object({
+  expectedUpdatedAt: z.string().datetime().optional(),
   title: z.string().max(500).optional(),
   contentMd: z.string().optional(),
   tags: z.array(z.string()).optional(),

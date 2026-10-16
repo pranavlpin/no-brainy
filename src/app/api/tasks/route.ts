@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withAuth } from '@/lib/auth/middleware'
 import { createTaskSchema, taskQuerySchema } from '@/lib/validations/tasks'
+import { validTaskRelations } from '@/lib/tasks/relations'
+import { addCalendarDays, todayInTimezone } from '@/lib/dates/calendar'
 import { ZodError } from 'zod'
 import type { Prisma } from '@prisma/client'
 
@@ -18,12 +20,12 @@ export const GET = withAuth(async (req: NextRequest, user) => {
 
     const where: Prisma.TaskWhereInput = { userId: user.id }
 
-    if (query.status) where.status = query.status
-    if (query.priority) where.priority = query.priority
+    if (query.status) where.status = { in: query.status }
+    if (query.priority) where.priority = { in: query.priority }
     if (query.quadrant) where.quadrant = query.quadrant
     if (query.goalId) where.goalId = query.goalId
     if (query.parentTaskId) {
-      where.parentTaskId = query.parentTaskId
+      where.parentTaskId = query.parentTaskId === 'null' ? null : query.parentTaskId
     }
     if (query.tags) {
       where.tags = { hasSome: query.tags.split(',') }
@@ -31,25 +33,35 @@ export const GET = withAuth(async (req: NextRequest, user) => {
     if (query.search) {
       where.title = { contains: query.search, mode: 'insensitive' }
     }
-    if (query.dueDate) {
-      const date = new Date(query.dueDate)
-      const nextDay = new Date(date)
-      nextDay.setDate(nextDay.getDate() + 1)
-      where.dueDate = { gte: date, lt: nextDay }
-    }
+    const from = query.dueDate ?? query.dueDateFrom
+    const to = query.dueDate ?? query.dueDateTo
+    if (from || to)
+      where.dueDate = {
+        ...(from && { gte: new Date(`${from}T00:00:00.000Z`) }),
+        ...(to && { lt: new Date(`${addCalendarDays(to, 1)}T00:00:00.000Z`) }),
+      }
 
-    const [tasks, total] = await Promise.all([
+    // Priority is a domain rank, not alphabetical order. Sort before paginating.
+    const rank: Record<string, number> = { low: 1, medium: 2, high: 3, urgent: 4 }
+    const [matching, total] = await Promise.all([
       prisma.task.findMany({
         where,
-        orderBy: { [sortBy]: sortOrder },
-        skip: (page - 1) * pageSize,
-        take: pageSize,
-        include: {
-          _count: { select: { subtasks: true } },
-        },
+        orderBy: sortBy === 'priority' ? [{ id: 'asc' }] : [{ [sortBy]: sortOrder }, { id: 'asc' }],
+        ...(sortBy !== 'priority' && { skip: (page - 1) * pageSize, take: pageSize }),
+        include: { _count: { select: { subtasks: { where: { userId: user.id } } } } },
       }),
       prisma.task.count({ where }),
     ])
+    const tasks =
+      sortBy === 'priority'
+        ? matching
+            .sort(
+              (a, b) =>
+                ((rank[a.priority] ?? 0) - (rank[b.priority] ?? 0)) *
+                  (sortOrder === 'asc' ? 1 : -1) || a.id.localeCompare(b.id)
+            )
+            .slice((page - 1) * pageSize, page * pageSize)
+        : matching
 
     const items = tasks.map((task) => ({
       id: task.id,
@@ -80,6 +92,8 @@ export const GET = withAuth(async (req: NextRequest, user) => {
         page,
         pageSize,
         hasMore: page * pageSize < total,
+        today: todayInTimezone(user.timezone),
+        timezone: user.timezone,
       },
     })
   } catch (error) {
@@ -113,6 +127,19 @@ export const POST = withAuth(async (req: NextRequest, user) => {
   try {
     const body = await req.json()
     const data = createTaskSchema.parse(body)
+
+    if (!(await validTaskRelations(prisma, user.id, data))) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: 'INVALID_RELATION',
+            message: 'Choose a task and goal from your own workspace',
+          },
+        },
+        { status: 400 }
+      )
+    }
 
     const task = await prisma.task.create({
       data: {

@@ -24,8 +24,20 @@ type NoteWithLinks = {
   wordCount: number
   createdAt: Date
   updatedAt: Date
-  noteLinks?: { id: string; sourceId: string; targetType: string; targetId: string; createdAt: Date }[]
-  linkedFrom?: { id: string; sourceId: string; targetType: string; targetId: string; createdAt: Date }[]
+  noteLinks?: {
+    id: string
+    sourceId: string
+    targetType: string
+    targetId: string
+    createdAt: Date
+  }[]
+  linkedFrom?: {
+    id: string
+    sourceId: string
+    targetType: string
+    targetId: string
+    createdAt: Date
+  }[]
 }
 
 function formatNote(note: NoteWithLinks): NoteResponse {
@@ -160,7 +172,7 @@ export async function PUT(req: NextRequest) {
     if (!existing) return notFoundResponse()
 
     const body = await req.json()
-    const data = updateNoteSchema.parse(body)
+    const { expectedUpdatedAt, ...data } = updateNoteSchema.parse(body)
 
     const updateData: Record<string, unknown> = { ...data }
 
@@ -173,10 +185,32 @@ export async function PUT(req: NextRequest) {
       updateData.shareId = crypto.randomUUID().replace(/-/g, '').slice(0, 12)
     }
 
-    const note = await prisma.note.update({
-      where: { id: noteId },
-      data: updateData,
+    const note = await prisma.$transaction(async (db) => {
+      const changed = await db.note.updateMany({
+        where: {
+          id: noteId,
+          userId: user.id,
+          isDeleted: false,
+          ...(expectedUpdatedAt && { updatedAt: new Date(expectedUpdatedAt) }),
+        },
+        data: {
+          ...updateData,
+          updatedAt: new Date(Math.max(Date.now(), existing.updatedAt.getTime() + 1)),
+        },
+      })
+      return changed.count ? db.note.findUniqueOrThrow({ where: { id: noteId } }) : null
     })
+    if (!note)
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: 'CONFLICT',
+            message: 'This note changed elsewhere. Keep your draft or load the current version.',
+          },
+        },
+        { status: 409 }
+      )
 
     const response: ApiResponse<NoteResponse> = {
       success: true,

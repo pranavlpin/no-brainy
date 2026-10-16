@@ -41,3 +41,10 @@ Final results: PENDING — no tests have run for this task.
 ## Approval — 2026-10-16
 
 The owner’s conversation message “approved.” approves the parent package, this section’s linked task plan, and the six developer packages listed in NB-02. The proposed section above is retained as the pre-approval record. Tests have not run at this approval checkpoint.
+
+
+---
+
+## NB-03 execution checkpoint — 2026-10-16
+
+All six acceptance areas have executable unit/component/database coverage. Red/green logs are in `/Users/pranav/Pranav_projects/github/no-brainy/evidences/tasks/persistence-and-discovery/`. The full suite passes 23 Node and 38 Vitest tests; PostgreSQL integration passes 6 tests. Typecheck, formatting and production build pass. Four inherited image lint warnings remain for NB-12. The real-browser persistence journey currently fails at the existing root layout hydration/navigation defect and is retained for NB-04 remediation. Browser acceptance and the global zero-warning gate remain open; no tests were weakened or removed.

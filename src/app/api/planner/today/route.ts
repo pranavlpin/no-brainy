@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { todayInTimezone } from '@/lib/dates/calendar'
 import { prisma } from '@/lib/prisma'
 import { withAuth } from '@/lib/auth/middleware'
 import { updateDayPlanSchema } from '@/lib/validations/planner'
@@ -47,14 +48,13 @@ function formatTask(task: {
   }
 }
 
-function getTodayDate(): Date {
-  const now = new Date()
-  return new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()))
+function getTodayDate(timezone: string): Date {
+  return new Date(`${todayInTimezone(timezone)}T00:00:00.000Z`)
 }
 
 export const GET = withAuth(async (_req: NextRequest, user) => {
   try {
-    const today = getTodayDate()
+    const today = getTodayDate(user.timezone)
 
     let dayPlan = await prisma.dayPlan.findUnique({
       where: {
@@ -89,7 +89,7 @@ export const GET = withAuth(async (_req: NextRequest, user) => {
 
     // Fetch tasks due today
     const nextDay = new Date(today)
-    nextDay.setDate(nextDay.getDate() + 1)
+    nextDay.setUTCDate(nextDay.getUTCDate() + 1)
 
     const tasksDueToday = await prisma.task.findMany({
       where: {
@@ -128,7 +128,7 @@ export const PUT = withAuth(async (req: NextRequest, user) => {
   try {
     const body = await req.json()
     const data = updateDayPlanSchema.parse(body)
-    const today = getTodayDate()
+    const today = getTodayDate(user.timezone)
 
     // Validate that focus task IDs belong to the user
     if (data.focusTaskIds && data.focusTaskIds.length > 0) {
@@ -158,7 +158,9 @@ export const PUT = withAuth(async (req: NextRequest, user) => {
       },
       update: {
         ...(data.focusTaskIds !== undefined && { focusTaskIds: data.focusTaskIds }),
-        ...(data.timeBlocks !== undefined && { timeBlocks: data.timeBlocks as Prisma.InputJsonValue }),
+        ...(data.timeBlocks !== undefined && {
+          timeBlocks: data.timeBlocks as Prisma.InputJsonValue,
+        }),
         ...(data.aiBriefMd !== undefined && { aiBriefMd: data.aiBriefMd }),
       },
       create: {
@@ -183,7 +185,7 @@ export const PUT = withAuth(async (req: NextRequest, user) => {
 
     // Fetch tasks due today
     const nextDay = new Date(today)
-    nextDay.setDate(nextDay.getDate() + 1)
+    nextDay.setUTCDate(nextDay.getUTCDate() + 1)
 
     const tasksDueToday = await prisma.task.findMany({
       where: {
