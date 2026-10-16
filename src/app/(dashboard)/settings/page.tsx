@@ -11,6 +11,8 @@ import { useApiKeyStatus, useSaveApiKey, useRemoveApiKey } from '@/hooks/use-set
 import { useThemeStore, THEMES, type ThemeName } from '@/stores/theme-store'
 import { NotificationPreferencesSection } from '@/components/reviews/reminder-preferences'
 import { useToast } from '@/hooks/use-toast'
+import { PersonalSetup } from '@/components/settings/personal-setup'
+import { CoreBackupSection } from '@/components/settings/core-backup'
 
 function ApiKeySection() {
   const { data: status, isLoading } = useApiKeyStatus()
@@ -302,6 +304,11 @@ export default function SettingsPage() {
           Manage your account and application preferences.
         </p>
       </div>
+
+      <section id="personal-setup">
+        <PersonalSetup />
+      </section>
+      <CoreBackupSection />
 
       {/* AI Configuration */}
       <section>

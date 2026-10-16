@@ -12,10 +12,12 @@ import { Toast } from '@/components/ui/toast'
 import { FocusModeView } from '@/components/focus/focus-mode-view'
 import { CompactFocusTimer } from '@/components/focus/compact-focus-timer'
 import { FocusProvider } from '@/hooks/use-focus'
+import { PersonalPreferences, SetupNudge } from '@/components/settings/personal-setup'
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <FocusProvider>
+      <PersonalPreferences />
       <WorkspaceShell>{children}</WorkspaceShell>
     </FocusProvider>
   )
@@ -54,6 +56,7 @@ function WorkspaceShell({ children }: { children: React.ReactNode }) {
               data-testid="page-content"
               className="motion-page mx-auto w-full max-w-[1400px]"
             >
+              {pathname === '/today' && <SetupNudge />}
               {children}
             </div>
           </main>

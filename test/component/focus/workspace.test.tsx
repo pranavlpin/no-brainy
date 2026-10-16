@@ -20,6 +20,9 @@ vi.mock('@/hooks/use-focus', () => ({
   useFocus: () => focus,
 }))
 vi.mock('next/navigation', () => ({ usePathname: () => '/today' }))
+vi.mock('@/hooks/use-personal-settings', () => ({
+  usePersonalSettings: () => ({ data: undefined }),
+}))
 vi.mock('@/components/layout/sidebar', () => ({ Sidebar: () => null }))
 vi.mock('@/components/layout/top-bar', () => ({ TopBar: () => null }))
 vi.mock('@/components/ui/toast', () => ({ Toast: () => null }))

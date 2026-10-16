@@ -13,6 +13,7 @@ import {
   type FocusSetup,
 } from '@/lib/focus/checkpoint'
 import { elapsedSeconds } from '@/lib/focus/clock'
+import { usePersonalSettings } from '@/hooks/use-personal-settings'
 
 function message(error: unknown): string {
   const value = error as { error?: { message?: string } }
@@ -22,6 +23,7 @@ function message(error: unknown): string {
   )
 }
 function useFocusState(owner: string) {
+  const preferences = usePersonalSettings()
   const cache = useQueryClient()
   const [recovery, setRecovery] = useState<FocusRecovery>({
     version: 1,
@@ -30,6 +32,7 @@ function useFocusState(owner: string) {
     setup: defaultSetup,
   })
   const recoveryRef = useRef(recovery)
+  const setupChosen = useRef(false)
   const [ready, setReady] = useState(false)
   const [durable, setDurable] = useState(true)
   const [busy, setBusy] = useState(false)
@@ -49,11 +52,21 @@ function useFocusState(owner: string) {
   useEffect(() => {
     const saved = owner ? readFocusCheckpoint(owner) : null
     if (saved) {
+      setupChosen.current = true
       recoveryRef.current = saved
       setRecovery(saved)
     }
     setReady(true)
   }, [owner])
+  useEffect(() => {
+    if (preferences.data && !setupChosen.current) {
+      setupChosen.current = true
+      persist({
+        ...recoveryRef.current,
+        setup: { ...recoveryRef.current.setup, sound: preferences.data.sound },
+      })
+    }
+  }, [owner, preferences.data, persist])
   const query = useQuery({
     queryKey: ['focus', owner],
     enabled: !!owner && ready,
@@ -116,8 +129,10 @@ function useFocusState(owner: string) {
     [owner, persist, cache, query]
   )
   const setSetup = useCallback(
-    (patch: Partial<FocusSetup>) =>
-      persist({ ...recoveryRef.current, setup: { ...recoveryRef.current.setup, ...patch } }),
+    (patch: Partial<FocusSetup>) => {
+      setupChosen.current = true
+      persist({ ...recoveryRef.current, setup: { ...recoveryRef.current.setup, ...patch } })
+    },
     [persist]
   )
   const start = (taskId: string | null) => {
