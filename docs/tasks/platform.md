@@ -20,8 +20,8 @@ Ruling recorded for the batch T01–T12 only:
 
 | ID | Task | Date | Branch | Plan | Status |
 |---|---|---|---|---|---|
-| T01 | Governance, test layout, formatting gates | 2026-10-16 | feature/platform-daily-loop-overhaul | [plan](../plans/platform/governance-and-test-layout.md) | in progress |
-| T02 | Motion system and design system v2 | 2026-10-16 | feature/platform-daily-loop-overhaul | [plan](../plans/platform/motion-and-design-system-v2.md) | planned |
+| T01 | Governance, test layout, formatting gates | 2026-10-16 | feature/platform-daily-loop-overhaul | [plan](../plans/platform/governance-and-test-layout.md) | done — 4 files / 19 tests green, typecheck clean, lint at 5 pre-existing warnings |
+| T02 | Motion system and design system v2 | 2026-10-16 | feature/platform-daily-loop-overhaul | [plan](../plans/platform/motion-and-design-system-v2.md) | in progress |
 | T03 | User-timezone day boundaries | 2026-10-16 | feature/platform-daily-loop-overhaul | [plan](../plans/platform/user-timezone-dates.md) | planned |
 
 ## Backlog (registered, not yet planned)

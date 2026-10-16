@@ -1,9 +1,10 @@
 import { describe, it, expect, beforeAll } from 'vitest'
-import { encryptContent, decryptContent } from './encrypt-message'
+import { encryptContent, decryptContent } from '@/lib/stash/encrypt-message'
 
 describe('encryptContent / decryptContent', () => {
   beforeAll(() => {
-    process.env.NEXTAUTH_SECRET = process.env.NEXTAUTH_SECRET || 'test-secret-for-encryption-tests-only'
+    process.env.NEXTAUTH_SECRET =
+      process.env.NEXTAUTH_SECRET || 'test-secret-for-encryption-tests-only'
   })
 
   it('bypasses encryption when channel is not sensitive', () => {
