@@ -18,7 +18,10 @@ export const reviewQuerySchema = z.object({
 })
 
 export const weeklyQuerySchema = z.object({
-  week: z.string().regex(/^\d{4}-W\d{2}$/, 'Must be ISO week format YYYY-Www').optional(),
+  week: z
+    .string()
+    .regex(/^\d{4}-W\d{2}$/, 'Must be ISO week format YYYY-Www')
+    .optional(),
 })
 
 export type CreateReviewInput = z.infer<typeof createReviewSchema>

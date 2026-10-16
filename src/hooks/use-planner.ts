@@ -1,12 +1,21 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api-client'
+import { dateFromKey } from '@/lib/dates'
 import type { ApiResponse } from '@/lib/types/api'
-import type { DayPlanResponse, UpdateDayPlanRequest } from '@/lib/types/planner'
+import type {
+  DayPlanResponse,
+  PlannerGoal,
+  TriageRequest,
+  UpdateDayPlanRequest,
+} from '@/lib/types/planner'
 import type { TaskResponse } from '@/lib/types/tasks'
 
 export interface TodayPlanData extends DayPlanResponse {
   focusTasks: TaskResponse[]
   tasksDueToday: TaskResponse[]
+  /** Yesterday's open tasks awaiting a keep / move / drop decision. */
+  carryForward: TaskResponse[]
+  goals: PlannerGoal[]
 }
 
 export interface DatePlanData extends DayPlanResponse {
@@ -20,6 +29,8 @@ export interface CarryForwardData {
 }
 
 export const TODAY_PLAN_KEY = ['planner', 'today'] as const
+
+type TodayCache = ApiResponse<TodayPlanData> | undefined
 
 export function useTodayPlan() {
   return useQuery({
@@ -53,13 +64,19 @@ function knownTasks(queryClient: ReturnType<typeof useQueryClient>): Map<string,
   return map
 }
 
+function invalidatePlanner(queryClient: ReturnType<typeof useQueryClient>) {
+  queryClient.invalidateQueries({ queryKey: ['planner'] })
+  queryClient.invalidateQueries({ queryKey: ['tasks'] })
+  queryClient.invalidateQueries({ queryKey: ['home'] })
+}
+
 export function useUpdatePlan() {
   const queryClient = useQueryClient()
   return useMutation<
     ApiResponse<TodayPlanData>,
     unknown,
     UpdateDayPlanRequest,
-    { previous: ApiResponse<TodayPlanData> | undefined }
+    { previous: TodayCache }
   >({
     mutationFn: (data) =>
       apiClient<ApiResponse<TodayPlanData>>('/api/planner/today', {
@@ -81,8 +98,10 @@ export function useUpdatePlan() {
             ...previous.data,
             ...(data.timeBlocks !== undefined && { timeBlocks: data.timeBlocks }),
             ...(data.aiBriefMd !== undefined && { aiBriefMd: data.aiBriefMd }),
+            ...(data.intentMd !== undefined && { intentMd: data.intentMd }),
             focusTaskIds,
             focusTasks,
+            carryForward: previous.data.carryForward.filter((t) => !focusTaskIds.includes(t.id)),
           },
         })
       }
@@ -91,10 +110,41 @@ export function useUpdatePlan() {
     onError: (_error, _vars, context) => {
       if (context?.previous) queryClient.setQueryData(TODAY_PLAN_KEY, context.previous)
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['planner'] })
-      queryClient.invalidateQueries({ queryKey: ['home'] })
+    onSettled: () => invalidatePlanner(queryClient),
+  })
+}
+
+/** Keep / move / drop a leftover task, optimistically removing it from triage. */
+export function useTriageTask() {
+  const queryClient = useQueryClient()
+  return useMutation<ApiResponse<TaskResponse>, unknown, TriageRequest, { previous: TodayCache }>({
+    mutationFn: (body) =>
+      apiClient<ApiResponse<TaskResponse>>('/api/planner/triage', {
+        method: 'POST',
+        body: JSON.stringify(body),
+      }),
+    onMutate: async (body) => {
+      await queryClient.cancelQueries({ queryKey: TODAY_PLAN_KEY })
+      const previous = queryClient.getQueryData<ApiResponse<TodayPlanData>>(TODAY_PLAN_KEY)
+      if (previous?.data) {
+        const moving = previous.data.carryForward.find((t) => t.id === body.taskId)
+        const carryForward = previous.data.carryForward.filter((t) => t.id !== body.taskId)
+        let tasksDueToday = previous.data.tasksDueToday
+        if (body.action === 'keep' && moving) {
+          const todayIso = dateFromKey(previous.data.planDate.slice(0, 10)).toISOString()
+          tasksDueToday = [...tasksDueToday, { ...moving, dueDate: todayIso }]
+        }
+        queryClient.setQueryData<ApiResponse<TodayPlanData>>(TODAY_PLAN_KEY, {
+          ...previous,
+          data: { ...previous.data, carryForward, tasksDueToday },
+        })
+      }
+      return { previous }
     },
+    onError: (_error, _vars, context) => {
+      if (context?.previous) queryClient.setQueryData(TODAY_PLAN_KEY, context.previous)
+    },
+    onSettled: () => invalidatePlanner(queryClient),
   })
 }
 

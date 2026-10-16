@@ -32,3 +32,9 @@ if (typeof window !== 'undefined' && !('ResizeObserver' in window)) {
   }
   Object.defineProperty(window, 'ResizeObserver', { writable: true, value: ResizeObserverStub })
 }
+
+// jsdom does not implement scrolling; Radix focus management calls it.
+if (typeof window !== 'undefined') {
+  window.scrollTo = () => {}
+  Element.prototype.scrollIntoView = () => {}
+}

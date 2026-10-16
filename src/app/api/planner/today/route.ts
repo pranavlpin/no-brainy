@@ -1,140 +1,119 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { ZodError } from 'zod'
+import type { DayPlan, Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { withAuth } from '@/lib/auth/middleware'
 import { updateDayPlanSchema } from '@/lib/validations/planner'
-import { ZodError } from 'zod'
-import type { Prisma } from '@prisma/client'
+import { addDays, dateFromKey, dayBoundsUtc, todayKey, userTimezone } from '@/lib/dates'
+import { formatTask } from '@/lib/tasks/format'
+import type { AuthUser } from '@/lib/types/auth'
 import type { TimeBlock } from '@/lib/types/planner'
-import type { TaskResponse } from '@/lib/types/tasks'
-import { dateFromKey, dayBoundsUtc, todayKey, userTimezone } from '@/lib/dates'
 
-function formatTask(task: {
-  id: string
-  userId: string
-  parentTaskId: string | null
-  goalId: string | null
-  title: string
-  descriptionMd: string
-  priority: string
-  status: string
-  tags: string[]
-  dueDate: Date | null
-  completedAt: Date | null
-  isRecurring: boolean
-  rrule: string | null
-  quadrant: string | null
-  orderIndex: number
-  createdAt: Date
-  updatedAt: Date
-}): TaskResponse {
+const OPEN_STATUSES: Prisma.StringFilter = { notIn: ['completed', 'cancelled'] }
+
+/**
+ * Assemble the full Today payload: the plan, focus tasks, tasks due today,
+ * yesterday's leftovers for triage, and active goals for chips.
+ */
+async function buildTodayPayload(user: AuthUser, key: string, dayPlan: DayPlan) {
+  const { start: today, end: nextDay } = dayBoundsUtc(key)
+  const yesterdayKey = addDays(key, -1)
+  const yesterday = dateFromKey(yesterdayKey)
+
+  const tasksDueToday = await prisma.task.findMany({
+    where: { userId: user.id, dueDate: { gte: today, lt: nextDay } },
+    orderBy: { orderIndex: 'asc' },
+  })
+
+  const leftoversDue = await prisma.task.findMany({
+    where: { userId: user.id, dueDate: { gte: yesterday, lt: today }, status: OPEN_STATUSES },
+    orderBy: { orderIndex: 'asc' },
+  })
+
+  const yesterdayPlan = await prisma.dayPlan.findUnique({
+    where: { userId_planDate: { userId: user.id, planDate: yesterday } },
+  })
+  const leftoverFocusIds = (yesterdayPlan?.focusTaskIds ?? []).filter(
+    (id) => !leftoversDue.some((t) => t.id === id) && !dayPlan.focusTaskIds.includes(id)
+  )
+  const leftoverFocus =
+    leftoverFocusIds.length > 0
+      ? await prisma.task.findMany({
+          where: { id: { in: leftoverFocusIds }, userId: user.id, status: OPEN_STATUSES },
+        })
+      : []
+
+  const focusTasks =
+    dayPlan.focusTaskIds.length > 0
+      ? await prisma.task.findMany({ where: { id: { in: dayPlan.focusTaskIds }, userId: user.id } })
+      : []
+  // Preserve the user's slot order.
+  focusTasks.sort((a, b) => dayPlan.focusTaskIds.indexOf(a.id) - dayPlan.focusTaskIds.indexOf(b.id))
+
+  const goals = await prisma.goal.findMany({
+    where: { userId: user.id, status: 'active' },
+    select: { id: true, title: true, category: true },
+    orderBy: { updatedAt: 'desc' },
+  })
+
+  const carryForward = [...leftoversDue, ...leftoverFocus].filter(
+    (t) => !dayPlan.focusTaskIds.includes(t.id)
+  )
+
   return {
-    id: task.id,
-    userId: task.userId,
-    parentTaskId: task.parentTaskId,
-    goalId: task.goalId,
-    title: task.title,
-    descriptionMd: task.descriptionMd,
-    priority: task.priority as TaskResponse['priority'],
-    status: task.status as TaskResponse['status'],
-    tags: task.tags,
-    dueDate: task.dueDate?.toISOString() ?? null,
-    completedAt: task.completedAt?.toISOString() ?? null,
-    isRecurring: task.isRecurring,
-    rrule: task.rrule,
-    quadrant: task.quadrant as TaskResponse['quadrant'],
-    orderIndex: task.orderIndex,
-    createdAt: task.createdAt.toISOString(),
-    updatedAt: task.updatedAt.toISOString(),
+    id: dayPlan.id,
+    userId: dayPlan.userId,
+    planDate: dayPlan.planDate.toISOString(),
+    focusTaskIds: dayPlan.focusTaskIds,
+    timeBlocks: dayPlan.timeBlocks as unknown as TimeBlock[],
+    aiBriefMd: dayPlan.aiBriefMd,
+    intentMd: dayPlan.intentMd ?? null,
+    createdAt: dayPlan.createdAt.toISOString(),
+    focusTasks: focusTasks.map(formatTask),
+    tasksDueToday: tasksDueToday.map(formatTask),
+    carryForward: carryForward.map(formatTask),
+    goals,
   }
 }
 
+async function getOrCreatePlan(user: AuthUser, key: string): Promise<DayPlan> {
+  const planDate = dateFromKey(key)
+  const existing = await prisma.dayPlan.findUnique({
+    where: { userId_planDate: { userId: user.id, planDate } },
+  })
+  if (existing) return existing
+  return prisma.dayPlan.create({
+    data: { userId: user.id, planDate, focusTaskIds: [], timeBlocks: [] },
+  })
+}
+
+function internalError() {
+  return NextResponse.json(
+    { success: false, error: { code: 'INTERNAL_ERROR', message: 'An unexpected error occurred' } },
+    { status: 500 }
+  )
+}
 
 export const GET = withAuth(async (_req: NextRequest, user) => {
   try {
     const key = todayKey(userTimezone(user))
-    const today = dateFromKey(key)
-
-    let dayPlan = await prisma.dayPlan.findUnique({
-      where: {
-        userId_planDate: {
-          userId: user.id,
-          planDate: today,
-        },
-      },
-    })
-
-    if (!dayPlan) {
-      dayPlan = await prisma.dayPlan.create({
-        data: {
-          userId: user.id,
-          planDate: today,
-          focusTaskIds: [],
-          timeBlocks: [],
-        },
-      })
-    }
-
-    // Fetch focus tasks
-    const focusTasks =
-      dayPlan.focusTaskIds.length > 0
-        ? await prisma.task.findMany({
-            where: {
-              id: { in: dayPlan.focusTaskIds },
-              userId: user.id,
-            },
-          })
-        : []
-
-    // Fetch tasks due today
-    const { end: nextDay } = dayBoundsUtc(key)
-
-    const tasksDueToday = await prisma.task.findMany({
-      where: {
-        userId: user.id,
-        dueDate: { gte: today, lt: nextDay },
-      },
-      orderBy: { orderIndex: 'asc' },
-    })
-
-    return NextResponse.json({
-      success: true,
-      data: {
-        id: dayPlan.id,
-        userId: dayPlan.userId,
-        planDate: dayPlan.planDate.toISOString(),
-        focusTaskIds: dayPlan.focusTaskIds,
-        timeBlocks: dayPlan.timeBlocks as unknown as TimeBlock[],
-        aiBriefMd: dayPlan.aiBriefMd,
-        createdAt: dayPlan.createdAt.toISOString(),
-        focusTasks: focusTasks.map(formatTask),
-        tasksDueToday: tasksDueToday.map(formatTask),
-      },
-    })
-  } catch {
-    return NextResponse.json(
-      {
-        success: false,
-        error: { code: 'INTERNAL_ERROR', message: 'An unexpected error occurred' },
-      },
-      { status: 500 }
-    )
+    const dayPlan = await getOrCreatePlan(user, key)
+    return NextResponse.json({ success: true, data: await buildTodayPayload(user, key, dayPlan) })
+  } catch (error) {
+    console.error('[planner/today GET]', error)
+    return internalError()
   }
 })
 
 export const PUT = withAuth(async (req: NextRequest, user) => {
   try {
-    const body = await req.json()
-    const data = updateDayPlanSchema.parse(body)
+    const data = updateDayPlanSchema.parse(await req.json())
     const key = todayKey(userTimezone(user))
-    const today = dateFromKey(key)
+    const planDate = dateFromKey(key)
 
-    // Validate that focus task IDs belong to the user
     if (data.focusTaskIds && data.focusTaskIds.length > 0) {
       const validTasks = await prisma.task.count({
-        where: {
-          id: { in: data.focusTaskIds },
-          userId: user.id,
-        },
+        where: { id: { in: data.focusTaskIds }, userId: user.id },
       })
       if (validTasks !== data.focusTaskIds.length) {
         return NextResponse.json(
@@ -148,62 +127,26 @@ export const PUT = withAuth(async (req: NextRequest, user) => {
     }
 
     const dayPlan = await prisma.dayPlan.upsert({
-      where: {
-        userId_planDate: {
-          userId: user.id,
-          planDate: today,
-        },
-      },
+      where: { userId_planDate: { userId: user.id, planDate } },
       update: {
         ...(data.focusTaskIds !== undefined && { focusTaskIds: data.focusTaskIds }),
-        ...(data.timeBlocks !== undefined && { timeBlocks: data.timeBlocks as Prisma.InputJsonValue }),
+        ...(data.timeBlocks !== undefined && {
+          timeBlocks: data.timeBlocks as unknown as Prisma.InputJsonValue,
+        }),
         ...(data.aiBriefMd !== undefined && { aiBriefMd: data.aiBriefMd }),
+        ...(data.intentMd !== undefined && { intentMd: data.intentMd }),
       },
       create: {
         userId: user.id,
-        planDate: today,
+        planDate,
         focusTaskIds: data.focusTaskIds ?? [],
-        timeBlocks: (data.timeBlocks ?? []) as Prisma.InputJsonValue,
+        timeBlocks: (data.timeBlocks ?? []) as unknown as Prisma.InputJsonValue,
         aiBriefMd: data.aiBriefMd ?? null,
+        intentMd: data.intentMd ?? null,
       },
     })
 
-    // Fetch focus tasks
-    const focusTasks =
-      dayPlan.focusTaskIds.length > 0
-        ? await prisma.task.findMany({
-            where: {
-              id: { in: dayPlan.focusTaskIds },
-              userId: user.id,
-            },
-          })
-        : []
-
-    // Fetch tasks due today
-    const { end: nextDay } = dayBoundsUtc(key)
-
-    const tasksDueToday = await prisma.task.findMany({
-      where: {
-        userId: user.id,
-        dueDate: { gte: today, lt: nextDay },
-      },
-      orderBy: { orderIndex: 'asc' },
-    })
-
-    return NextResponse.json({
-      success: true,
-      data: {
-        id: dayPlan.id,
-        userId: dayPlan.userId,
-        planDate: dayPlan.planDate.toISOString(),
-        focusTaskIds: dayPlan.focusTaskIds,
-        timeBlocks: dayPlan.timeBlocks as unknown as TimeBlock[],
-        aiBriefMd: dayPlan.aiBriefMd,
-        createdAt: dayPlan.createdAt.toISOString(),
-        focusTasks: focusTasks.map(formatTask),
-        tasksDueToday: tasksDueToday.map(formatTask),
-      },
-    })
+    return NextResponse.json({ success: true, data: await buildTodayPayload(user, key, dayPlan) })
   } catch (error) {
     if (error instanceof ZodError) {
       const details: Record<string, string[]> = {}
@@ -213,20 +156,11 @@ export const PUT = withAuth(async (req: NextRequest, user) => {
         details[field].push(issue.message)
       }
       return NextResponse.json(
-        {
-          success: false,
-          error: { code: 'VALIDATION_ERROR', message: 'Invalid input', details },
-        },
+        { success: false, error: { code: 'VALIDATION_ERROR', message: 'Invalid input', details } },
         { status: 400 }
       )
     }
-
-    return NextResponse.json(
-      {
-        success: false,
-        error: { code: 'INTERNAL_ERROR', message: 'An unexpected error occurred' },
-      },
-      { status: 500 }
-    )
+    console.error('[planner/today PUT]', error)
+    return internalError()
   }
 })

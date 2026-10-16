@@ -1,11 +1,11 @@
-"use client"
+'use client'
 
-import { Button } from "@/components/ui/button"
-import { MarkdownPreview } from "@/components/editor/markdown-preview"
-import { CheckCircle2, X, Sparkles } from "lucide-react"
-import { PriorityBadge } from "@/components/tasks/priority-badge"
-import type { DailyPlanSuggestion } from "@/lib/ai/types"
-import type { TaskResponse } from "@/lib/types/tasks"
+import { Button } from '@/components/ui/button'
+import { MarkdownPreview } from '@/components/editor/markdown-preview'
+import { CheckCircle2, X, Sparkles } from 'lucide-react'
+import { PriorityBadge } from '@/components/tasks/priority-badge'
+import type { DailyPlanSuggestion } from '@/lib/ai/types'
+import type { TaskResponse } from '@/lib/types/tasks'
 
 interface AISuggestPanelProps {
   suggestion: DailyPlanSuggestion
@@ -14,12 +14,7 @@ interface AISuggestPanelProps {
   onDismiss: () => void
 }
 
-export function AISuggestPanel({
-  suggestion,
-  allTasks,
-  onAccept,
-  onDismiss,
-}: AISuggestPanelProps) {
+export function AISuggestPanel({ suggestion, allTasks, onAccept, onDismiss }: AISuggestPanelProps) {
   // Resolve suggested task IDs to full task objects
   const suggestedTasks = suggestion.suggestedTaskIds
     .map((id) => allTasks.find((t) => t.id === id))
@@ -32,10 +27,7 @@ export function AISuggestPanel({
           <Sparkles className="h-4 w-4 text-primary" />
           <h3 className="font-semibold text-sm">AI Suggestion</h3>
         </div>
-        <button
-          onClick={onDismiss}
-          className="text-muted-foreground hover:text-foreground"
-        >
+        <button onClick={onDismiss} className="text-muted-foreground hover:text-foreground">
           <X className="h-4 w-4" />
         </button>
       </div>
@@ -53,10 +45,7 @@ export function AISuggestPanel({
           </p>
           <div className="space-y-2">
             {suggestedTasks.map((task) => (
-              <div
-                key={task.id}
-                className="flex items-center gap-3 rounded-md border bg-card p-3"
-              >
+              <div key={task.id} className="flex items-center gap-3 rounded-md border bg-card p-3">
                 <CheckCircle2 className="h-4 w-4 shrink-0 text-primary" />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium">{task.title}</p>
@@ -80,12 +69,7 @@ export function AISuggestPanel({
 
       {/* Actions */}
       <div className="flex items-center gap-2 pt-1">
-        <Button
-          size="sm"
-          onClick={() =>
-            onAccept(suggestion.suggestedTaskIds, suggestion.briefMd)
-          }
-        >
+        <Button size="sm" onClick={() => onAccept(suggestion.suggestedTaskIds, suggestion.briefMd)}>
           Accept Suggestions
         </Button>
         <Button size="sm" variant="outline" onClick={onDismiss}>

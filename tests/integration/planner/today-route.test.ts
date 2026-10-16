@@ -45,4 +45,45 @@ describe('GET /api/planner/today honors the user timezone', () => {
     const json = await res.json()
     expect(json.data.planDate.startsWith('2026-10-17')).toBe(true)
   })
+
+  it('returns intent, carry-forward leftovers, and goal chips', async () => {
+    dayPlan.findUnique.mockResolvedValue({
+      id: 'p1',
+      userId: 'u1',
+      planDate: new Date('2026-10-17T00:00:00.000Z'),
+      focusTaskIds: [],
+      timeBlocks: [],
+      aiBriefMd: null,
+      intentMd: 'Finish the Today page',
+      createdAt: new Date(),
+    })
+    const leftover = {
+      id: 't9',
+      userId: 'u1',
+      parentTaskId: null,
+      goalId: 'g1',
+      title: 'Leftover from yesterday',
+      descriptionMd: '',
+      priority: 'high',
+      status: 'pending',
+      tags: [],
+      dueDate: new Date('2026-10-16T00:00:00.000Z'),
+      completedAt: null,
+      isRecurring: false,
+      rrule: null,
+      quadrant: null,
+      orderIndex: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }
+    // First findMany: tasks due today (none). Second: yesterday's leftovers.
+    task.findMany.mockResolvedValueOnce([]).mockResolvedValueOnce([leftover])
+    goal.findMany.mockResolvedValue([{ id: 'g1', title: 'Ship NoBrainy', category: 'work' }])
+    const { GET } = await import('@/app/api/planner/today/route')
+    const res = await GET(new NextRequest('http://localhost/api/planner/today'))
+    const json = await res.json()
+    expect(json.data.intentMd).toBe('Finish the Today page')
+    expect(json.data.carryForward.map((t: { id: string }) => t.id)).toEqual(['t9'])
+    expect(json.data.goals).toEqual([{ id: 'g1', title: 'Ship NoBrainy', category: 'work' }])
+  })
 })

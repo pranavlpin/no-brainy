@@ -161,6 +161,7 @@ model DayPlan {
   focusTaskIds String[] @default([])
   timeBlocks   Json     @default("[]")
   aiBriefMd    String?  @db.Text
+  intentMd     String?  @db.Text
   createdAt    DateTime @default(now())
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   @@unique([userId, planDate])

@@ -23,7 +23,12 @@ export const createMessageSchema = z.object({
   linkDescription: z.string().max(5000).optional(),
   linkImageUrl: z.string().url().max(2048).optional(),
   fileName: z.string().max(255).optional(),
-  fileSize: z.number().int().nonnegative().max(10 * 1024 * 1024).optional(),
+  fileSize: z
+    .number()
+    .int()
+    .nonnegative()
+    .max(10 * 1024 * 1024)
+    .optional(),
   fileMimeType: z.string().max(127).optional(),
   fileGcsObject: z.string().max(1024).optional(),
 })
@@ -43,7 +48,11 @@ export const uploadUrlSchema = z.object({
   channelId: z.string().min(1).max(40),
   filename: z.string().min(1).max(255),
   mimeType: z.string().min(1).max(127),
-  sizeBytes: z.number().int().positive().max(10 * 1024 * 1024),
+  sizeBytes: z
+    .number()
+    .int()
+    .positive()
+    .max(10 * 1024 * 1024),
 })
 
 export const searchSchema = z.object({

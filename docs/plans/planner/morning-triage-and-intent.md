@@ -49,3 +49,9 @@ T02 (motion, dialog), T03 (dates), T04 (optimistic helper).
 
 - Dropping sets `cancelled` rather than deleting, so nothing is lost. **Ruling applied.**
 - Recurring tasks: triage acts on the current instance only. **Ruling applied.**
+
+## Refinements while on the task branch (2026-10-16)
+
+- Seeding `intentMd` from the previous evening's review needs the `tomorrowIntent` column that T07 introduces, so the seeding logic lands with T07. T06 adds the column, exposes and accepts `intentMd` on the today plan, and lets the intent be edited inline so it is usable immediately.
+- `createTaskSchema` / `updateTaskSchema` currently require a full ISO datetime for `dueDate`, which rejects the `YYYY-MM-DD` values the triage actions and the date inputs send. T06 widens both to accept a date key (normalized to UTC midnight) or an ISO datetime.
+- The today route now returns `carryForward` (yesterday's leftovers) and `goals` (id, title, category for chips), so the planner no longer POSTs carry-forward on every mount.
