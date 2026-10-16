@@ -12,14 +12,14 @@ Repo-level rules and guardrails for contributors working in this repository. Rea
 
 ## 2. Repository layout rules
 
-| Absolute location | Purpose and rules |
-|---|---|
-| `/Users/pranav/Pranav_projects/github/no-brainy/docs/tasks/<module>.md` | One append-only task ledger per module. An approved task gets an entry before tests or implementation. |
-| `/Users/pranav/Pranav_projects/github/no-brainy/docs/plans/<module>/<task-name>.md` | One written implementation plan per task. Obtain explicit approval before implementation. |
-| `/Users/pranav/Pranav_projects/github/no-brainy/docs/test-plans/<section>.md` | Append-only section test plans, written before tests for the section. |
-| `/Users/pranav/Pranav_projects/github/no-brainy/test/` | All automated tests, separated by type and module as defined below. |
-| `/Users/pranav/Pranav_projects/github/no-brainy/evidences/` | Logs, red/green results, scratch work, temporary files and authorized review reports. Verify Git ignores this directory before writing anything in it. Never commit its contents. |
-| `/Users/pranav/Pranav_projects/github/no-brainy/docs/screenshots/<task-slug>/` | Committed screenshots only when explicitly requested. Width at most approximately 480 px. Include a README with viewport/device/browser, account context without secrets, and per-image feature/defect mapping. Link the folder from the task plan and section test plan. |
+| Absolute location                                                                   | Purpose and rules                                                                                                                                                                                                                                                         |
+| ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/Users/pranav/Pranav_projects/github/no-brainy/docs/tasks/<module>.md`             | One append-only task ledger per module. An approved task gets an entry before tests or implementation.                                                                                                                                                                    |
+| `/Users/pranav/Pranav_projects/github/no-brainy/docs/plans/<module>/<task-name>.md` | One written implementation plan per task. Obtain explicit approval before implementation.                                                                                                                                                                                 |
+| `/Users/pranav/Pranav_projects/github/no-brainy/docs/test-plans/<section>.md`       | Append-only section test plans, written before tests for the section.                                                                                                                                                                                                     |
+| `/Users/pranav/Pranav_projects/github/no-brainy/test/`                              | All automated tests, separated by type and module as defined below.                                                                                                                                                                                                       |
+| `/Users/pranav/Pranav_projects/github/no-brainy/evidences/`                         | Logs, red/green results, scratch work, temporary files and authorized review reports. Verify Git ignores this directory before writing anything in it. Never commit its contents.                                                                                         |
+| `/Users/pranav/Pranav_projects/github/no-brainy/docs/screenshots/<task-slug>/`      | Committed screenshots only when explicitly requested. Width at most approximately 480 px. Include a README with viewport/device/browser, account context without secrets, and per-image feature/defect mapping. Link the folder from the task plan and section test plan. |
 
 Do not place task notes, plans, or scratch evidence elsewhere in the repository. No ad-hoc scratch files in the source tree or root. Screenshot records are not test fixtures and are never required by default. Functional browser verification can run without creating screenshots. Temporary browser artifacts, downloads and reports belong in the ignored evidence directory.
 
@@ -34,12 +34,12 @@ Do not place task notes, plans, or scratch evidence elsewhere in the repository.
 
 ## 3. Test organization and TDD
 
-| Test type | Absolute location |
-|---|---|
-| Unit/domain | `/Users/pranav/Pranav_projects/github/no-brainy/test/unit/<module>/` |
-| React components/hooks | `/Users/pranav/Pranav_projects/github/no-brainy/test/component/<module>/` |
+| Test type                | Absolute location                                                           |
+| ------------------------ | --------------------------------------------------------------------------- |
+| Unit/domain              | `/Users/pranav/Pranav_projects/github/no-brainy/test/unit/<module>/`        |
+| React components/hooks   | `/Users/pranav/Pranav_projects/github/no-brainy/test/component/<module>/`   |
 | API/database/integration | `/Users/pranav/Pranav_projects/github/no-brainy/test/integration/<module>/` |
-| Browser journeys | `/Users/pranav/Pranav_projects/github/no-brainy/test/e2e/<module>/` |
+| Browser journeys         | `/Users/pranav/Pranav_projects/github/no-brainy/test/e2e/<module>/`         |
 
 - Test filenames mirror the source behavior: `/Users/pranav/Pranav_projects/github/no-brainy/src/lib/tasks/recurrence.ts` maps to `/Users/pranav/Pranav_projects/github/no-brainy/test/unit/tasks/recurrence.test.ts`.
 - No loose test scripts at the test root. Shared harnesses/fixtures belong in a named platform/shared module directory.

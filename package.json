@@ -12,12 +12,19 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "test": "vitest run",
+    "lint": "eslint --ext .js,.mjs,.ts,.tsx src test scripts *.config.* --max-warnings=0",
+    "test": "npm run test:node && vitest run",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "typecheck": "tsc --noEmit",
+    "test:node": "node scripts/run-node-tests.mjs",
+    "test:integration": "node scripts/run-isolated-tests.mjs integration",
+    "test:e2e": "node scripts/run-isolated-tests.mjs e2e",
+    "doctor": "node scripts/check-environment.mjs --test",
+    "format:check": "node scripts/check-format.mjs",
+    "format": "node scripts/check-format.mjs --write"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.20.1",

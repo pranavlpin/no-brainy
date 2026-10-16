@@ -65,22 +65,26 @@ pnpm dev
 ## Coding Standards
 
 ### TypeScript
+
 - Strict mode — no `any` types
 - All functions must have explicit return types
 - Interfaces preferred over type aliases for object shapes
 
 ### React
+
 - Functional components only
 - Custom hooks for shared logic (prefix with `use`)
 - Props interfaces named `{ComponentName}Props`
 
 ### Naming
+
 - **Files**: `kebab-case.ts` / `kebab-case.tsx`
 - **Components**: `PascalCase`
 - **Functions/Variables**: `camelCase`
 - **Constants**: `UPPER_SNAKE_CASE`
 
 ### Git
+
 - Branch naming: `feature/<module>-<task>`, `bugfix/<module>-<issue>` or `test/<module>-<scope>`
 - Conventional commit messages
 - One logical change per commit

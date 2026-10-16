@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { isHttpUrl, getHostname } from './url'
+import { isHttpUrl, getHostname } from '@/lib/stash/url'
 
 describe('isHttpUrl', () => {
   it('accepts https URLs', () => {
