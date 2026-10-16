@@ -17,3 +17,10 @@
 - Implementation choices: calendar labels retain the date portion of legacy ISO values; explicit priority rank sorts matching personal-workspace tasks before pagination; optional version checks retain legacy API compatibility while both detail editors send expected versions. Saves serialize per user/entity, persist drafts before debounce, flush on navigation, and require a choice on remote conflict.
 - Evidence: `/Users/pranav/Pranav_projects/github/no-brainy/evidences/tasks/persistence-and-discovery/` (ignored).
 - No dependency, schema, remote Git, deployment or review action.
+
+
+---
+
+## NB-04 successor verification — 2026-10-16
+
+The shared startup/layout changes in [/Users/pranav/Pranav_projects/github/no-brainy/docs/plans/design/personal-workspace.md](/Users/pranav/Pranav_projects/github/no-brainy/docs/plans/design/personal-workspace.md) resolve the browser blocker recorded above. The retained NB-03 real browser journey now passes: task date/title/priority survive reload and note edits save when navigating immediately. The full four-test browser suite passes. Evidence: `/Users/pranav/Pranav_projects/github/no-brainy/evidences/design/personal-workspace/browser-final.log`. Earlier NB-03 records remain unchanged; the global four inherited image warnings are still assigned to NB-12.

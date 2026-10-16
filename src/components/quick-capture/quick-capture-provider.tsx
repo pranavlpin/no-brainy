@@ -13,8 +13,13 @@ export function QuickCaptureProvider() {
         setOpen(true)
       }
     }
+    const openCapture = () => setOpen(true)
+    window.addEventListener('nobrainy:capture', openCapture)
     window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
+    return () => {
+      window.removeEventListener('keydown', handler)
+      window.removeEventListener('nobrainy:capture', openCapture)
+    }
   }, [])
 
   return <QuickCaptureModal open={open} onClose={() => setOpen(false)} />

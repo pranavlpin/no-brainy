@@ -48,3 +48,10 @@ The owner’s conversation message “approved.” approves the parent package, 
 ## NB-03 execution checkpoint — 2026-10-16
 
 All six acceptance areas have executable unit/component/database coverage. Red/green logs are in `/Users/pranav/Pranav_projects/github/no-brainy/evidences/tasks/persistence-and-discovery/`. The full suite passes 23 Node and 38 Vitest tests; PostgreSQL integration passes 6 tests. Typecheck, formatting and production build pass. Four inherited image lint warnings remain for NB-12. The real-browser persistence journey currently fails at the existing root layout hydration/navigation defect and is retained for NB-04 remediation. Browser acceptance and the global zero-warning gate remain open; no tests were weakened or removed.
+
+
+---
+
+## NB-04 successor verification — 2026-10-16
+
+The shared startup/layout changes in [/Users/pranav/Pranav_projects/github/no-brainy/docs/plans/design/personal-workspace.md](/Users/pranav/Pranav_projects/github/no-brainy/docs/plans/design/personal-workspace.md) resolve the browser blocker recorded above. The retained NB-03 real browser journey now passes: task date/title/priority survive reload and note edits save when navigating immediately. The full four-test browser suite passes. Evidence: `/Users/pranav/Pranav_projects/github/no-brainy/evidences/design/personal-workspace/browser-final.log`. Earlier NB-03 records remain unchanged; the global four inherited image warnings are still assigned to NB-12.
