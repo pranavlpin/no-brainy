@@ -60,6 +60,12 @@ export interface HomeData {
     active: HomeGoal[]
     staleCount: number
   }
+  /** The current week and whether its adjustment has been saved. */
+  week: {
+    weekStart: string
+    adjusted: boolean
+    isWeekend: boolean
+  }
   /** Consecutive days with a closed review. */
   streak: number
   overdueCount: number

@@ -44,6 +44,7 @@ const base: HomeData = {
     reading: [],
   },
   goals: { active: [], staleCount: 0 },
+  week: { weekStart: '2026-10-12', adjusted: false, isWeekend: false },
   streak: 3,
   overdueCount: 1,
   focusMinutesToday: null,

@@ -47,6 +47,7 @@ model User {
   captures          Capture[]
   projects          Project[]
   growthEvidence    GrowthEvidence[]
+  weeklyReviews     WeeklyReview[]
   @@map("users")
 }
 
@@ -128,6 +129,27 @@ model GrowthEvidence {
   @@index([goalId, observedAt])
   @@index([userId, observedAt])
   @@map("growth_evidence")
+}
+
+/// One adjustment per week, keyed by its Monday: Stop / Keep / Try, next-week outcomes, first action.
+model WeeklyReview {
+  id           String    @id @default(cuid())
+  userId       String
+  weekStart    DateTime  @db.Date
+  stopDoing    String    @default("") @db.Text
+  keepDoing    String    @default("") @db.Text
+  startTrying  String    @default("") @db.Text
+  reflectionMd String    @default("") @db.Text
+  /// Up to three { id, text } lines for next week.
+  outcomes     Json      @default("[]")
+  nextTaskId   String?
+  closedAt     DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  user     User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  nextTask Task? @relation("NextWeekAction", fields: [nextTaskId], references: [id], onDelete: SetNull)
+  @@unique([userId, weekStart])
+  @@map("weekly_reviews")
 }
 
 model UserSession {
@@ -230,6 +252,7 @@ model Task {
   goal       Goal?   @relation(fields: [goalId], references: [id], onDelete: SetNull)
   project    Project? @relation("ProjectTasks", fields: [projectId], references: [id], onDelete: SetNull)
   nextActionFor Project[] @relation("ProjectNextAction")
+  nextWeekFor   WeeklyReview[] @relation("NextWeekAction")
   taskLinks  TaskLink[]
   focusSessions FocusSession[]
   @@index([userId, status])

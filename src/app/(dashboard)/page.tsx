@@ -61,6 +61,7 @@ export default function TodayPage() {
           phase={data.phase}
           streak={data.streak}
           overdueCount={data.overdueCount}
+          week={data.week}
         />
       </StaggerBlock>
 

@@ -16,6 +16,7 @@ import { buildTodayPayload, getOrCreatePlan } from '@/lib/planner/today'
 import { planCapacity } from '@/lib/planner/capacity'
 import { outcomePercent } from '@/lib/growth/progress'
 import { practiceCountsForGoals } from '@/lib/goals/serialize'
+import { weekStartFor } from '@/lib/reviews/weeks'
 import { localDayBounds } from '@/lib/dates'
 import type { HomeData, HomeGoal } from '@/lib/types/home'
 
@@ -145,6 +146,13 @@ export const GET = withAuth(async (_req: NextRequest, user) => {
       key
     )
 
+    const weekStart = weekStartFor(key)
+    const weekly = await prisma.weeklyReview.findUnique({
+      where: { userId_weekStart: { userId: user.id, weekStart: dateFromKey(weekStart) } },
+      select: { closedAt: true },
+    })
+    const dow = dateFromKey(key).getUTCDay()
+
     const practice = await practiceCountsForGoals(
       user.id,
       goals.map((g) => g.id),
@@ -200,6 +208,7 @@ export const GET = withAuth(async (_req: NextRequest, user) => {
       },
       learn: { cardsDue, decksDue, reading: readingBooks },
       goals: { active, staleCount },
+      week: { weekStart, adjusted: !!weekly?.closedAt, isWeekend: dow === 0 || dow === 6 },
       streak,
       overdueCount,
       focusMinutesToday: Math.round((focusAgg._sum.durationSec ?? 0) / 60),

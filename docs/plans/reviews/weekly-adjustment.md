@@ -39,3 +39,11 @@ Activity summary at the top (reuses the existing weekly stats), goals and practi
 ## Risks and open questions
 
 - Only Mondays are valid week keys; other dates redirect to their Monday. **Ruling applied.**
+
+## Refinements (while the branch was open)
+
+- The weekly route lives at `/api/reviews/weekly/[weekStart]` beside the existing weekly summary at `/api/reviews/weekly`; the summary keeps its ISO-week query and the adjustment is keyed by the Monday date.
+- `PUT` uses the unchecked update shape so the next action is written as a plain `nextTaskId`; the chosen task is planned onto the following Monday only when it is not already there, and its deadline is never touched.
+- The editor saves through the draft queue (same as tasks and notes) and the Save button records `closedAt`; later edits keep the original close time.
+- Non-Monday `?week=` values redirect to their Monday so a week has one address; the next-week arrow is disabled for weeks that have not started.
+- Home carries a `week` block (Monday, adjusted, isWeekend) and the hero shows "Adjust the week" on weekends until the adjustment is saved; the reviews index's Weekly tab leads with the adjustment card.

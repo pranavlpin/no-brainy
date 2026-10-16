@@ -11,8 +11,20 @@ const deck = { findMany: vi.fn() }
 const book = { findMany: vi.fn() }
 const focusSession = { aggregate: vi.fn(), findMany: vi.fn(async () => []) }
 const growthEvidence = { findMany: vi.fn(async () => []) }
+const weeklyReview = { findUnique: vi.fn(async () => null) }
 vi.mock('@/lib/prisma', () => ({
-  prisma: { dayPlan, task, dailyReview, goal, flashcard, deck, book, focusSession, growthEvidence },
+  prisma: {
+    dayPlan,
+    task,
+    dailyReview,
+    goal,
+    flashcard,
+    deck,
+    book,
+    focusSession,
+    growthEvidence,
+    weeklyReview,
+  },
 }))
 vi.mock('@/lib/auth/middleware', () => ({
   withAuth:

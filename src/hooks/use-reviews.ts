@@ -6,6 +6,8 @@ import type {
   DailyReviewResponse,
   CreateReviewRequest,
   UpdateReviewRequest,
+  WeeklyReviewResponse,
+  WeeklyReviewUpdate,
   WeeklySummaryResponse,
 } from '@/lib/types/reviews'
 import type { ApiResponse, PaginatedResponse } from '@/lib/types/api'
@@ -89,4 +91,35 @@ export function useWeeklySummary(week?: string) {
       return res.data
     },
   })
+}
+
+export const WEEKLY_REVIEW_KEY = [...REVIEWS_KEY, 'weekly-review'] as const
+
+/** The week's adjustment, created on first read. `weekStart` is a Monday key. */
+export function useWeeklyReview(weekStart: string | undefined) {
+  return useQuery({
+    queryKey: [...WEEKLY_REVIEW_KEY, weekStart],
+    queryFn: async () => {
+      const res = await apiClient<ApiResponse<WeeklyReviewResponse>>(
+        `/api/reviews/weekly/${weekStart}`
+      )
+      return res.data
+    },
+    enabled: !!weekStart,
+  })
+}
+
+/** Save a weekly patch; the caller supplies the version it is editing. */
+export async function saveWeeklyReview(
+  weekStart: string,
+  patch: WeeklyReviewUpdate
+): Promise<WeeklyReviewResponse> {
+  const res = await apiClient<ApiResponse<WeeklyReviewResponse>>(
+    `/api/reviews/weekly/${weekStart}`,
+    {
+      method: 'PUT',
+      body: JSON.stringify(patch),
+    }
+  )
+  return res.data
 }

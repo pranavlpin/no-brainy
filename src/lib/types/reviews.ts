@@ -56,3 +56,38 @@ export interface WeeklySummaryResponse {
     hasReview: boolean
   }[]
 }
+
+export interface WeeklyOutcome {
+  id: string
+  text: string
+}
+
+export interface WeeklyReviewResponse {
+  id: string
+  userId: string
+  /** Monday key. */
+  weekStart: string
+  /** Sunday key. */
+  weekEnd: string
+  stopDoing: string
+  keepDoing: string
+  startTrying: string
+  reflectionMd: string
+  outcomes: WeeklyOutcome[]
+  nextTaskId: string | null
+  nextTask: { id: string; title: string; plannedDate: string | null; status: string } | null
+  closedAt: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface WeeklyReviewUpdate {
+  stopDoing?: string
+  keepDoing?: string
+  startTrying?: string
+  reflectionMd?: string
+  outcomes?: WeeklyOutcome[]
+  nextTaskId?: string | null
+  closeReview?: boolean
+  expectedUpdatedAt?: string
+}
