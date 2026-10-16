@@ -38,7 +38,7 @@ export default function NotesPage() {
   const { data, isLoading } = useNotes(activeFilters)
   const updateNote = useUpdateNote()
 
-  const notes = data ?? []
+  const notes = useMemo(() => data ?? [], [data])
 
   const handleTogglePin = (noteId: string, isPinned: boolean): void => {
     updateNote.mutate({ id: noteId, isPinned })
@@ -113,9 +113,7 @@ export default function NotesPage() {
         <div
           className={cn(
             'gap-4',
-            viewMode === 'grid'
-              ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
-              : 'flex flex-col'
+            viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : 'flex flex-col'
           )}
         >
           {Array.from({ length: 6 }).map((_, i) => (
@@ -153,9 +151,7 @@ export default function NotesPage() {
         <div
           className={cn(
             'gap-4',
-            viewMode === 'grid'
-              ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
-              : 'flex flex-col'
+            viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : 'flex flex-col'
           )}
         >
           {notes.map((note) => (

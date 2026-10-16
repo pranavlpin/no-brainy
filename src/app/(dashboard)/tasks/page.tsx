@@ -1,46 +1,43 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { Plus, LayoutList, Grid2x2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Select } from "@/components/ui/select"
-import { TaskList } from "@/components/tasks/task-list"
-import { EisenhowerMatrix } from "@/components/tasks/eisenhower-matrix"
-import { TaskForm } from "@/components/tasks/task-form"
-import { TaskAIPanel } from "@/components/tasks/task-ai-panel"
-import { useTasks, useCreateTask } from "@/hooks/use-tasks"
-import type {
-  TaskPriority,
-  CreateTaskRequest,
-} from "@/lib/types/tasks"
+import { useState } from 'react'
+import { Plus, LayoutList, Grid2x2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
+import { TaskList } from '@/components/tasks/task-list'
+import { EisenhowerMatrix } from '@/components/tasks/eisenhower-matrix'
+import { TaskForm } from '@/components/tasks/task-form'
+import { TaskAIPanel } from '@/components/tasks/task-ai-panel'
+import { useTaskPage, useCreateTask } from '@/hooks/use-tasks'
+import type { TaskPriority, CreateTaskRequest } from '@/lib/types/tasks'
 
-type ViewMode = "list" | "matrix"
+type ViewMode = 'list' | 'matrix'
 
 export default function TasksPage() {
-  const router = useRouter()
-  const [view, setView] = useState<ViewMode>("list")
-  const [search, setSearch] = useState("")
+  const [view, setView] = useState<ViewMode>('list')
+  const [search, setSearch] = useState('')
   const [showCompleted, setShowCompleted] = useState(false)
-  const [priorityFilter, setPriorityFilter] = useState<TaskPriority | "">("")
-  const [sortBy, setSortBy] = useState<string>("orderIndex:asc")
+  const [priorityFilter, setPriorityFilter] = useState<TaskPriority | ''>('')
+  const [sortBy, setSortBy] = useState<string>('orderIndex:asc')
+  const [page, setPage] = useState(1)
   const [showNewForm, setShowNewForm] = useState(false)
 
-  const [sortField, sortOrder] = sortBy.split(":") as [string, "asc" | "desc"]
+  const [sortField, sortOrder] = sortBy.split(':') as [string, 'asc' | 'desc']
 
   const filters = {
+    page,
     ...(search && { search }),
-    ...(!showCompleted && { status: "pending" as const }),
+    ...(!showCompleted && { status: 'active' as const }),
     ...(priorityFilter && { priority: priorityFilter as TaskPriority }),
-    sortBy: sortField as "createdAt" | "updatedAt" | "dueDate" | "priority" | "orderIndex",
+    sortBy: sortField as 'createdAt' | 'updatedAt' | 'dueDate' | 'priority' | 'orderIndex',
     sortOrder,
   }
 
-  const { data, isLoading } = useTasks(filters)
+  const { data, isLoading, error, refetch } = useTaskPage(filters)
   const createTask = useCreateTask()
 
-  const tasks = data ?? []
+  const tasks = data?.items ?? []
 
   const handleCreate = (formData: CreateTaskRequest) => {
     createTask.mutate(formData, {
@@ -72,11 +69,7 @@ export default function TasksPage() {
         <div className="rounded-lg border border-border bg-background p-6">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="font-display text-lg font-semibold">New Task</h2>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowNewForm(false)}
-            >
+            <Button variant="ghost" size="sm" onClick={() => setShowNewForm(false)}>
               Cancel
             </Button>
           </div>
@@ -91,14 +84,22 @@ export default function TasksPage() {
       {/* Filters + view toggle */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 flex-wrap">
         <Input
+          aria-label="Search tasks"
           placeholder="Search tasks..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => {
+            setSearch(e.target.value)
+            setPage(1)
+          }}
           className="w-full sm:w-52"
         />
         <Select
+          aria-label="Filter priority"
           value={priorityFilter}
-          onChange={(e) => setPriorityFilter(e.target.value as TaskPriority | "")}
+          onChange={(e) => {
+            setPriorityFilter(e.target.value as TaskPriority | '')
+            setPage(1)
+          }}
           className="w-full sm:w-40"
         >
           <option value="">All priorities</option>
@@ -108,8 +109,12 @@ export default function TasksPage() {
           <option value="low">Low</option>
         </Select>
         <Select
+          aria-label="Sort tasks"
           value={sortBy}
-          onChange={(e) => setSortBy(e.target.value)}
+          onChange={(e) => {
+            setSortBy(e.target.value)
+            setPage(1)
+          }}
           className="w-full sm:w-44"
         >
           <option value="orderIndex:asc">Manual order</option>
@@ -125,25 +130,30 @@ export default function TasksPage() {
           <input
             type="checkbox"
             checked={showCompleted}
-            onChange={(e) => setShowCompleted(e.target.checked)}
+            onChange={(e) => {
+              setShowCompleted(e.target.checked)
+              setPage(1)
+            }}
             className="h-4 w-4 accent-retro-blue cursor-pointer"
           />
-          <span className="font-mono text-xs text-retro-dark/60">Show completed</span>
+          <span className="font-mono text-xs text-retro-dark/60">
+            Include completed and cancelled
+          </span>
         </label>
 
         <div className="flex gap-1 sm:ml-auto">
           <Button
-            variant={view === "list" ? "default" : "outline"}
+            variant={view === 'list' ? 'default' : 'outline'}
             size="icon"
-            onClick={() => setView("list")}
+            onClick={() => setView('list')}
             title="List view"
           >
             <LayoutList className="h-4 w-4" />
           </Button>
           <Button
-            variant={view === "matrix" ? "default" : "outline"}
+            variant={view === 'matrix' ? 'default' : 'outline'}
             size="icon"
-            onClick={() => setView("matrix")}
+            onClick={() => setView('matrix')}
             title="Eisenhower Matrix view"
           >
             <Grid2x2 className="h-4 w-4" />
@@ -151,15 +161,45 @@ export default function TasksPage() {
         </div>
       </div>
 
+      {createTask.isError && (
+        <p role="alert" className="text-sm text-destructive">
+          Could not create this task. Your entries are kept; please try again.
+        </p>
+      )}
       {/* Content */}
-      {isLoading ? (
-        <div className="py-12 text-center text-muted-foreground">
-          Loading tasks...
+      {error ? (
+        <div role="alert">
+          Could not load tasks. <Button onClick={() => void refetch()}>Retry</Button>
         </div>
-      ) : view === "list" ? (
-        <TaskList tasks={tasks} />
+      ) : isLoading ? (
+        <div className="py-12 text-center text-muted-foreground">Loading tasks...</div>
+      ) : view === 'list' ? (
+        <TaskList tasks={tasks} today={data?.today} />
       ) : (
         <EisenhowerMatrix tasks={tasks} />
+      )}
+      {data && (
+        <nav aria-label="Task pages" className="flex items-center justify-between gap-3">
+          <span className="text-sm text-muted-foreground">
+            {data.total} tasks · Page {page} of {Math.max(1, Math.ceil(data.total / data.pageSize))}
+          </span>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              disabled={page === 1 || isLoading}
+              onClick={() => setPage((value) => value - 1)}
+            >
+              Previous page
+            </Button>
+            <Button
+              variant="outline"
+              disabled={!data.hasMore || isLoading}
+              onClick={() => setPage((value) => value + 1)}
+            >
+              Next page
+            </Button>
+          </div>
+        </nav>
       )}
     </div>
   )

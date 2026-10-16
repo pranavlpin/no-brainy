@@ -27,6 +27,7 @@ export function QuickCaptureModal({ open, onClose }: QuickCaptureModalProps) {
   const [content, setContent] = useState('')
   const [priority, setPriority] = useState<TaskPriority>('medium')
   const [dueDate, setDueDate] = useState('')
+  const submitting = useRef(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   const createNote = useCreateNote()
@@ -67,7 +68,8 @@ export function QuickCaptureModal({ open, onClose }: QuickCaptureModalProps) {
 
   const handleSubmit = useCallback(async () => {
     const trimmed = content.trim()
-    if (!trimmed) return
+    if (!trimmed || submitting.current) return
+    submitting.current = true
 
     try {
       if (type === 'note') {
@@ -84,6 +86,8 @@ export function QuickCaptureModal({ open, onClose }: QuickCaptureModalProps) {
       handleClose()
     } catch {
       toast.show('Failed to create. Please try again.', 'error')
+    } finally {
+      submitting.current = false
     }
   }, [content, type, priority, dueDate, createNote, createTask, toast, handleClose])
 
@@ -190,14 +194,17 @@ export function QuickCaptureModal({ open, onClose }: QuickCaptureModalProps) {
           {/* Footer */}
           <div className="flex items-center justify-between border-t border-gray-100 pt-3">
             <p className="text-xs text-gray-400">
-              Press <kbd className="rounded border border-gray-200 bg-gray-50 px-1 py-0.5 text-[10px] font-mono">Enter</kbd> to submit,{' '}
-              <kbd className="rounded border border-gray-200 bg-gray-50 px-1 py-0.5 text-[10px] font-mono">Esc</kbd> to close
+              Press{' '}
+              <kbd className="rounded border border-gray-200 bg-gray-50 px-1 py-0.5 text-[10px] font-mono">
+                Enter
+              </kbd>{' '}
+              to submit,{' '}
+              <kbd className="rounded border border-gray-200 bg-gray-50 px-1 py-0.5 text-[10px] font-mono">
+                Esc
+              </kbd>{' '}
+              to close
             </p>
-            <Button
-              size="sm"
-              onClick={handleSubmit}
-              disabled={!content.trim() || isSubmitting}
-            >
+            <Button size="sm" onClick={handleSubmit} disabled={!content.trim() || isSubmitting}>
               {isSubmitting ? 'Creating...' : 'Create'}
             </Button>
           </div>
