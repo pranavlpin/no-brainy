@@ -11,11 +11,14 @@ export function TaskAIPanel() {
   const prioritize = useTaskPrioritize()
 
   const handlePrioritize = () => {
-    prioritize.mutate({}, {
-      onSuccess: (response) => {
-        setResult(response.data)
-      },
-    })
+    prioritize.mutate(
+      {},
+      {
+        onSuccess: (response) => {
+          setResult(response.data)
+        },
+      }
+    )
   }
 
   return (
@@ -26,12 +29,7 @@ export function TaskAIPanel() {
         isLoading={prioritize.isPending}
       />
 
-      {result && (
-        <TaskPrioritizeDialog
-          result={result}
-          onClose={() => setResult(null)}
-        />
-      )}
+      {result && <TaskPrioritizeDialog result={result} onClose={() => setResult(null)} />}
     </>
   )
 }

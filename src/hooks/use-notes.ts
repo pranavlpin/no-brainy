@@ -2,8 +2,14 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api-client'
-import type { NoteResponse, CreateNoteRequest, UpdateNoteRequest, NoteFilters } from '@/lib/types/notes'
+import type {
+  NoteResponse,
+  CreateNoteRequest,
+  UpdateNoteRequest,
+  NoteFilters,
+} from '@/lib/types/notes'
 import type { ApiResponse, PaginatedResponse } from '@/lib/types/api'
+import { patchCaches, restoreCaches, type CacheSnapshot } from '@/lib/query/optimistic'
 
 const NOTES_KEY = ['notes'] as const
 
@@ -54,16 +60,34 @@ export function useCreateNote() {
 
 export function useUpdateNote() {
   const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: async ({ id, ...data }: UpdateNoteRequest & { id: string }) => {
+  return useMutation<
+    NoteResponse,
+    unknown,
+    UpdateNoteRequest & { id: string },
+    { snapshots: CacheSnapshot[] }
+  >({
+    mutationFn: async ({ id, ...data }) => {
       const res = await apiClient<ApiResponse<NoteResponse>>(`/api/notes/${id}`, {
         method: 'PUT',
         body: JSON.stringify(data),
       })
       return res.data
     },
+    onMutate: async ({ id, ...data }) => {
+      await queryClient.cancelQueries({ queryKey: NOTES_KEY })
+      const snapshots = patchCaches<NoteResponse>(
+        queryClient,
+        [...NOTES_KEY],
+        (n) => n.id === id,
+        (n) => ({ ...n, ...data, updatedAt: new Date().toISOString() }) as NoteResponse
+      )
+      return { snapshots }
+    },
+    onError: (_error, _vars, context) => restoreCaches(queryClient, context?.snapshots),
     onSuccess: (data) => {
       queryClient.setQueryData([...NOTES_KEY, 'detail', data.id], data)
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: [...NOTES_KEY, 'list'] })
     },
   })

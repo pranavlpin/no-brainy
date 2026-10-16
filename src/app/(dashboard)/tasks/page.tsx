@@ -1,39 +1,37 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { Plus, LayoutList, Grid2x2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Select } from "@/components/ui/select"
-import { TaskList } from "@/components/tasks/task-list"
-import { EisenhowerMatrix } from "@/components/tasks/eisenhower-matrix"
-import { TaskForm } from "@/components/tasks/task-form"
-import { TaskAIPanel } from "@/components/tasks/task-ai-panel"
-import { useTasks, useCreateTask } from "@/hooks/use-tasks"
-import type {
-  TaskPriority,
-  CreateTaskRequest,
-} from "@/lib/types/tasks"
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { Plus, LayoutList, Grid2x2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
+import { Skeleton } from '@/components/ui/skeleton'
+import { TaskList } from '@/components/tasks/task-list'
+import { EisenhowerMatrix } from '@/components/tasks/eisenhower-matrix'
+import { TaskForm } from '@/components/tasks/task-form'
+import { TaskAIPanel } from '@/components/tasks/task-ai-panel'
+import { useTasks, useCreateTask } from '@/hooks/use-tasks'
+import type { TaskPriority, CreateTaskRequest } from '@/lib/types/tasks'
 
-type ViewMode = "list" | "matrix"
+type ViewMode = 'list' | 'matrix'
 
 export default function TasksPage() {
   const router = useRouter()
-  const [view, setView] = useState<ViewMode>("list")
-  const [search, setSearch] = useState("")
+  const [view, setView] = useState<ViewMode>('list')
+  const [search, setSearch] = useState('')
   const [showCompleted, setShowCompleted] = useState(false)
-  const [priorityFilter, setPriorityFilter] = useState<TaskPriority | "">("")
-  const [sortBy, setSortBy] = useState<string>("orderIndex:asc")
+  const [priorityFilter, setPriorityFilter] = useState<TaskPriority | ''>('')
+  const [sortBy, setSortBy] = useState<string>('orderIndex:asc')
   const [showNewForm, setShowNewForm] = useState(false)
 
-  const [sortField, sortOrder] = sortBy.split(":") as [string, "asc" | "desc"]
+  const [sortField, sortOrder] = sortBy.split(':') as [string, 'asc' | 'desc']
 
   const filters = {
     ...(search && { search }),
-    ...(!showCompleted && { status: "pending" as const }),
+    ...(!showCompleted && { status: 'pending' as const }),
     ...(priorityFilter && { priority: priorityFilter as TaskPriority }),
-    sortBy: sortField as "createdAt" | "updatedAt" | "dueDate" | "priority" | "orderIndex",
+    sortBy: sortField as 'createdAt' | 'updatedAt' | 'dueDate' | 'priority' | 'orderIndex',
     sortOrder,
   }
 
@@ -72,11 +70,7 @@ export default function TasksPage() {
         <div className="rounded-lg border border-border bg-background p-6">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="font-display text-lg font-semibold">New Task</h2>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowNewForm(false)}
-            >
+            <Button variant="ghost" size="sm" onClick={() => setShowNewForm(false)}>
               Cancel
             </Button>
           </div>
@@ -98,7 +92,7 @@ export default function TasksPage() {
         />
         <Select
           value={priorityFilter}
-          onChange={(e) => setPriorityFilter(e.target.value as TaskPriority | "")}
+          onChange={(e) => setPriorityFilter(e.target.value as TaskPriority | '')}
           className="w-full sm:w-40"
         >
           <option value="">All priorities</option>
@@ -133,17 +127,17 @@ export default function TasksPage() {
 
         <div className="flex gap-1 sm:ml-auto">
           <Button
-            variant={view === "list" ? "default" : "outline"}
+            variant={view === 'list' ? 'default' : 'outline'}
             size="icon"
-            onClick={() => setView("list")}
+            onClick={() => setView('list')}
             title="List view"
           >
             <LayoutList className="h-4 w-4" />
           </Button>
           <Button
-            variant={view === "matrix" ? "default" : "outline"}
+            variant={view === 'matrix' ? 'default' : 'outline'}
             size="icon"
-            onClick={() => setView("matrix")}
+            onClick={() => setView('matrix')}
             title="Eisenhower Matrix view"
           >
             <Grid2x2 className="h-4 w-4" />
@@ -153,11 +147,13 @@ export default function TasksPage() {
 
       {/* Content */}
       {isLoading ? (
-        <div className="py-12 text-center text-muted-foreground">
-          Loading tasks...
+        <div className="space-y-2" data-testid="tasks-loading">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-12 w-full rounded-xl" />
+          ))}
         </div>
-      ) : view === "list" ? (
-        <TaskList tasks={tasks} />
+      ) : view === 'list' ? (
+        <TaskList tasks={tasks} hideCompleted={!showCompleted} />
       ) : (
         <EisenhowerMatrix tasks={tasks} />
       )}
