@@ -12,7 +12,7 @@ import type {
 interface TaskListItem extends TaskResponse {
   subtasksCount?: number
 }
-const affected = ['tasks', 'planner', 'goals', 'reviews', 'projects']
+const affected = ['tasks', 'planner', 'goals', 'growth', 'reviews', 'projects']
 const relevant = (key: readonly unknown[]) => affected.includes(String(key[0]))
 const refresh = (client: QueryClient) =>
   client.invalidateQueries({ predicate: (query) => relevant(query.queryKey) })

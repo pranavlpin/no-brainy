@@ -103,7 +103,7 @@ function useFocusState(owner: string) {
           serverNow: new Date().toISOString(),
         }))
         if (finished) setResult(response.data)
-        for (const key of ['focus', 'tasks', 'planner', 'projects', 'goals', 'reviews'])
+        for (const key of ['focus', 'tasks', 'planner', 'projects', 'goals', 'growth', 'reviews'])
           void cache.invalidateQueries({ queryKey: [key] })
       } catch (e) {
         setError(message(e))
