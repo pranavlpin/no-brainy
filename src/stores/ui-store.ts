@@ -1,27 +1,56 @@
 import { create } from 'zustand'
 
-// Default sidebar nav order
 export const DEFAULT_NAV_ORDER = [
-  '/notes', '/stash', '/tasks', '/planner', '/expenses', '/budgets', '/reviews',
-  '/books', '/watchlist', '/bookmarks', '/goals',
-  '/search', '/analytics', '/insights', '/ai',
+  '/today',
+  '/planner',
+  '/tasks',
+  '/goals',
+  '/library',
+  '/reviews',
+  '/notes',
+  '/stash',
+  '/books',
+  '/flashcards',
+  '/expenses',
+  '/budgets',
+  '/watchlist',
+  '/bookmarks',
+  '/search',
+  '/analytics',
+  '/insights',
+  '/ai',
 ]
+export type WorkspaceContext = 'all' | 'work' | 'personal'
 
-function loadNavOrder(): string[] {
-  if (typeof window === 'undefined') return DEFAULT_NAV_ORDER
+function readList(key: string): string[] {
   try {
-    const stored = localStorage.getItem('nobrainy-nav-order')
-    if (stored) {
-      const parsed = JSON.parse(stored) as string[]
-      // Merge: keep stored order but add any new items not in stored
-      const storedSet = new Set(parsed)
-      const missing = DEFAULT_NAV_ORDER.filter((href) => !storedSet.has(href))
-      return [...parsed, ...missing]
-    }
-  } catch { /* ignore */ }
-  return DEFAULT_NAV_ORDER
+    const value: unknown = JSON.parse(localStorage.getItem(key) ?? '[]')
+    return Array.isArray(value)
+      ? [
+          ...new Set(
+            value.filter(
+              (item): item is string => typeof item === 'string' && DEFAULT_NAV_ORDER.includes(item)
+            )
+          ),
+        ]
+      : []
+  } catch {
+    return []
+  }
 }
-
+function persist(key: string, value: string | null) {
+  try {
+    if (value === null) localStorage.removeItem(key)
+    else localStorage.setItem(key, value)
+  } catch {
+    /* UI preferences remain usable in memory. */
+  }
+}
+function orderWithDefaults(order: string[]) {
+  return [
+    ...new Set([...order.filter((href) => DEFAULT_NAV_ORDER.includes(href)), ...DEFAULT_NAV_ORDER]),
+  ]
+}
 interface UIState {
   sidebarCollapsed: boolean
   toggleSidebar: () => void
@@ -38,48 +67,72 @@ interface UIState {
   hiddenNavItems: string[]
   setHiddenNavItems: (items: string[]) => void
   toggleNavItem: (href: string) => void
+  context: WorkspaceContext
+  setContext: (context: WorkspaceContext) => void
+  hydratePreferences: () => void
 }
 
+/** UI preferences hydrate after SSR and migrate legacy navigation without losing valid choices. */
 export const useUIStore = create<UIState>((set) => ({
   sidebarCollapsed: false,
-  toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
-  setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
+  toggleSidebar: () =>
+    set((s) => {
+      persist('nobrainy-sidebar-collapsed', String(!s.sidebarCollapsed))
+      return { sidebarCollapsed: !s.sidebarCollapsed }
+    }),
+  setSidebarCollapsed: (sidebarCollapsed) => {
+    persist('nobrainy-sidebar-collapsed', String(sidebarCollapsed))
+    set({ sidebarCollapsed })
+  },
   mobileSidebarOpen: false,
-  setMobileSidebarOpen: (open) => set({ mobileSidebarOpen: open }),
+  setMobileSidebarOpen: (mobileSidebarOpen) => set({ mobileSidebarOpen }),
   focusMode: false,
   focusTaskId: null,
-  enterFocusMode: (taskId) => set({ focusMode: true, focusTaskId: taskId }),
+  enterFocusMode: (focusTaskId) => set({ focusMode: true, focusTaskId }),
   exitFocusMode: () => set({ focusMode: false, focusTaskId: null }),
-  navOrder: loadNavOrder(),
-  setNavOrder: (order) => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('nobrainy-nav-order', JSON.stringify(order))
+  navOrder: DEFAULT_NAV_ORDER,
+  hiddenNavItems: [],
+  context: 'all',
+  setContext: (context) => {
+    persist('nobrainy-context', context)
+    set({ context })
+  },
+  hydratePreferences: () => {
+    const navOrder = orderWithDefaults(readList('nobrainy-nav-order'))
+    const hiddenNavItems = readList('nobrainy-hidden-nav')
+    let context: WorkspaceContext = 'all'
+    let sidebarCollapsed = false
+    try {
+      const stored = localStorage.getItem('nobrainy-context')
+      if (stored === 'work' || stored === 'personal') context = stored
+      sidebarCollapsed = localStorage.getItem('nobrainy-sidebar-collapsed') === 'true'
+    } catch {
+      /* Keep recoverable defaults. */
     }
-    set({ navOrder: order })
+    persist('nobrainy-ui-version', '2')
+    set({ navOrder, hiddenNavItems, context, sidebarCollapsed })
+  },
+  setNavOrder: (order) => {
+    const navOrder = orderWithDefaults(order)
+    persist('nobrainy-nav-order', JSON.stringify(navOrder))
+    set({ navOrder })
   },
   resetNavOrder: () => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('nobrainy-nav-order')
-      localStorage.removeItem('nobrainy-hidden-nav')
-    }
+    persist('nobrainy-nav-order', null)
+    persist('nobrainy-hidden-nav', null)
     set({ navOrder: DEFAULT_NAV_ORDER, hiddenNavItems: [] })
   },
-  hiddenNavItems: typeof window !== 'undefined'
-    ? JSON.parse(localStorage.getItem('nobrainy-hidden-nav') || '[]')
-    : [],
   setHiddenNavItems: (items) => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('nobrainy-hidden-nav', JSON.stringify(items))
-    }
-    set({ hiddenNavItems: items })
+    const hiddenNavItems = items.filter((item) => DEFAULT_NAV_ORDER.includes(item))
+    persist('nobrainy-hidden-nav', JSON.stringify(hiddenNavItems))
+    set({ hiddenNavItems })
   },
-  toggleNavItem: (href) => set((s) => {
-    const hidden = s.hiddenNavItems.includes(href)
-      ? s.hiddenNavItems.filter((h) => h !== href)
-      : [...s.hiddenNavItems, href]
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('nobrainy-hidden-nav', JSON.stringify(hidden))
-    }
-    return { hiddenNavItems: hidden }
-  }),
+  toggleNavItem: (href) =>
+    set((s) => {
+      const hiddenNavItems = s.hiddenNavItems.includes(href)
+        ? s.hiddenNavItems.filter((item) => item !== href)
+        : [...s.hiddenNavItems, href]
+      persist('nobrainy-hidden-nav', JSON.stringify(hiddenNavItems))
+      return { hiddenNavItems }
+    }),
 }))

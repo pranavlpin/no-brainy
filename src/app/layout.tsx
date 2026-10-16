@@ -1,52 +1,58 @@
-import type { Metadata } from "next"
-import Script from "next/script"
-import { Inter } from "next/font/google"
-import { Providers } from "@/components/providers"
-import "./globals.css"
-
-const inter = Inter({ subsets: ["latin"] })
+import type { Metadata } from 'next'
+import Script from 'next/script'
+import { Providers } from '@/components/providers'
+import './globals.css'
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID
 
 export const metadata: Metadata = {
   title: {
-    default: "NoBrainy — Personal Productivity & Learning Hub",
-    template: "%s | NoBrainy",
+    default: 'NoBrainy — Personal Productivity & Learning Hub',
+    template: '%s | NoBrainy',
   },
-  description: "Your second brain for notes, tasks, expenses, books, and learning. Markdown editor, expense tracker, flashcards, daily planner, AI insights — all in one workspace.",
-  keywords: ["productivity", "notes", "tasks", "expense tracker", "flashcards", "spaced repetition", "daily planner", "habit tracker", "markdown editor", "personal knowledge management"],
-  authors: [{ name: "NoBrainy" }],
-  metadataBase: new URL("https://nobrainy.com"),
+  description:
+    'Your second brain for notes, tasks, expenses, books, and learning. Markdown editor, expense tracker, flashcards, daily planner, AI insights — all in one workspace.',
+  keywords: [
+    'productivity',
+    'notes',
+    'tasks',
+    'expense tracker',
+    'flashcards',
+    'spaced repetition',
+    'daily planner',
+    'habit tracker',
+    'markdown editor',
+    'personal knowledge management',
+  ],
+  authors: [{ name: 'NoBrainy' }],
+  metadataBase: new URL('https://nobrainy.com'),
   openGraph: {
-    title: "NoBrainy — Personal Productivity & Learning Hub",
-    description: "Your second brain for notes, tasks, expenses, books, and learning. All in one workspace.",
-    url: "https://nobrainy.com",
-    siteName: "NoBrainy",
-    type: "website",
-    locale: "en_US",
+    title: 'NoBrainy — Personal Productivity & Learning Hub',
+    description:
+      'Your second brain for notes, tasks, expenses, books, and learning. All in one workspace.',
+    url: 'https://nobrainy.com',
+    siteName: 'NoBrainy',
+    type: 'website',
+    locale: 'en_US',
   },
   twitter: {
-    card: "summary_large_image",
-    title: "NoBrainy — Personal Productivity & Learning Hub",
-    description: "Your second brain for notes, tasks, expenses, books, and learning.",
+    card: 'summary_large_image',
+    title: 'NoBrainy — Personal Productivity & Learning Hub',
+    description: 'Your second brain for notes, tasks, expenses, books, and learning.',
   },
   robots: {
     index: true,
     follow: true,
   },
   icons: {
-    icon: "/icon.svg",
+    icon: '/icon.svg',
   },
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
+      <body>
         {GA_ID && (
           <>
             <Script
@@ -63,9 +69,10 @@ export default function RootLayout({
             </Script>
           </>
         )}
-      </head>
-      <body className={inter.className} suppressHydrationWarning>
-        <script dangerouslySetInnerHTML={{ __html: `
+
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
           (function() {
             try {
               var dm = localStorage.getItem('nobrainy-dark-mode');
@@ -92,7 +99,9 @@ export default function RootLayout({
               }
             } catch(e) {}
           })()
-        `}} />
+        `,
+          }}
+        />
         <Providers>{children}</Providers>
       </body>
     </html>
