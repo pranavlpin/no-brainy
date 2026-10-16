@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z, ZodError } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { withAuth } from '@/lib/auth/middleware'
-import { formatSession } from '../route'
+import { formatSession } from '@/lib/focus/sessions'
 
 const endSchema = z.object({
   completed: z.boolean().default(false),

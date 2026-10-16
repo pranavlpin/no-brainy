@@ -44,3 +44,7 @@ New table `focus_sessions` indexed on `(userId, startedAt)`.
 ## Risks and open questions
 
 - Sessions left open on tab close. **Ruling applied:** on next load, an open session older than 2 h is closed at `startedAt + 25 min`.
+
+## Refinements while on the task branch (2026-10-16)
+
+- Next.js route modules may only export HTTP handlers; `formatSession` and `closeStaleSessions` moved from `src/app/api/focus-sessions/route.ts` to `src/lib/focus/sessions.ts` after the generated route types flagged the extra exports. Behavior unchanged.
