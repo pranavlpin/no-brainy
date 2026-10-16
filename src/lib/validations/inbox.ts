@@ -36,6 +36,7 @@ export const processCaptureSchema = z
     priority: z.enum(['low', 'medium', 'high', 'urgent']).default('medium'),
     plannedDate: dateKeySchema.nullable().optional(),
     dueDate: dateKeySchema.nullable().optional(),
+    projectId: z.string().nullable().optional(),
     url: webUrl.optional(),
   })
   .refine((v) => v.kind !== 'bookmark' || !!v.url, {

@@ -8,6 +8,7 @@ export function formatTask(task: Task): TaskResponse {
     userId: task.userId,
     parentTaskId: task.parentTaskId,
     goalId: task.goalId,
+    projectId: task.projectId ?? null,
     title: task.title,
     descriptionMd: task.descriptionMd,
     priority: task.priority as TaskResponse['priority'],

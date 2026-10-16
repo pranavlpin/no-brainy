@@ -255,6 +255,7 @@ export default function TaskDetailPage() {
             estimatedMinutes: value.estimatedMinutes,
             effort: value.effort,
             context: value.context,
+            projectId: value.projectId,
           }}
           onChange={(patch) => draft.change(patch)}
         />

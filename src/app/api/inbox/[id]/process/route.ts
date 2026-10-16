@@ -11,9 +11,14 @@ export const POST = withAuth(async (req: NextRequest, user) => {
     const input = processCaptureSchema.parse(await req.json())
     const result = await prisma.$transaction((db) => processCapture(db, user.id, id, input))
     if ('error' in result) {
-      return result.error === 'not-found'
-        ? inboxError('NOT_FOUND', 'Capture not found', 404)
-        : inboxError('VALIDATION_ERROR', 'Add a web link to save this as a bookmark', 400)
+      if (result.error === 'not-found') return inboxError('NOT_FOUND', 'Capture not found', 404)
+      return inboxError(
+        'VALIDATION_ERROR',
+        result.error === 'project'
+          ? 'Choose a project from your own workspace'
+          : 'Add a web link to save this as a bookmark',
+        400
+      )
     }
     return NextResponse.json({ success: true, data: result.capture })
   } catch (error) {

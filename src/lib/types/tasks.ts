@@ -14,6 +14,7 @@ export interface TaskResponse {
   userId: string
   parentTaskId: string | null
   goalId: string | null
+  projectId: string | null
   title: string
   descriptionMd: string
   priority: TaskPriority
@@ -55,6 +56,7 @@ export interface CreateTaskRequest {
   context?: TaskContext | null
   parentTaskId?: string
   goalId?: string | null
+  projectId?: string | null
   isRecurring?: boolean
   rrule?: string
   quadrant?: TaskQuadrant
@@ -74,6 +76,7 @@ export interface UpdateTaskRequest {
   context?: TaskContext | null
   parentTaskId?: string | null
   goalId?: string | null
+  projectId?: string | null
   isRecurring?: boolean
   rrule?: string | null
   quadrant?: TaskQuadrant | null
@@ -97,6 +100,7 @@ export interface TaskFilters {
   plannedDateFrom?: string
   plannedDateTo?: string
   context?: TaskContext
+  projectId?: string
   page?: number
   pageSize?: number
   sortBy?:

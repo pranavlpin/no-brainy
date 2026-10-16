@@ -45,6 +45,7 @@ model User {
   stashMessages     StashMessage[]
   focusSessions     FocusSession[]
   captures          Capture[]
+  projects          Project[]
   @@map("users")
 }
 
@@ -68,6 +69,38 @@ model Capture {
   @@unique([userId, clientRequestId])
   @@index([userId, state, createdAt])
   @@map("captures")
+}
+
+/// An outcome with one explicit next action; the layer between goals and tasks.
+model Project {
+  id           String   @id @default(cuid())
+  userId       String
+  title        String
+  outcome      String   @default("") @db.Text
+  /// work | personal
+  context      String   @default("personal")
+  /// active | paused | completed | archived
+  status       String   @default("active")
+  goalId       String?
+  nextActionId String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user       User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  goal       Goal? @relation(fields: [goalId], references: [id], onDelete: SetNull)
+  tasks      Task[] @relation("ProjectTasks")
+  nextAction Task? @relation("ProjectNextAction", fields: [nextActionId], references: [id], onDelete: SetNull)
+  notes      ProjectNote[]
+  @@index([userId, status])
+  @@map("projects")
+}
+
+model ProjectNote {
+  projectId String
+  noteId    String
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  note    Note    @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  @@id([projectId, noteId])
+  @@map("project_notes")
 }
 
 model UserSession {
@@ -97,6 +130,7 @@ model Note {
   user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   noteLinks   NoteLink[] @relation("SourceNote")
   linkedFrom  NoteLink[] @relation("TargetNote")
+  projectNotes ProjectNote[]
   @@index([userId, isDeleted])
   @@index([userId, isPinned])
   @@index([tags], type: Gin)
@@ -144,6 +178,7 @@ model Task {
   userId        String
   parentTaskId  String?
   goalId        String?
+  projectId     String?
   title         String
   descriptionMd String    @default("") @db.Text
   priority      String    @default("medium")
@@ -166,9 +201,12 @@ model Task {
   parentTask Task?   @relation("Subtasks", fields: [parentTaskId], references: [id], onDelete: Cascade)
   subtasks   Task[]  @relation("Subtasks")
   goal       Goal?   @relation(fields: [goalId], references: [id], onDelete: SetNull)
+  project    Project? @relation("ProjectTasks", fields: [projectId], references: [id], onDelete: SetNull)
+  nextActionFor Project[] @relation("ProjectNextAction")
   taskLinks  TaskLink[]
   focusSessions FocusSession[]
   @@index([userId, status])
+  @@index([userId, projectId])
   @@index([userId, dueDate])
   @@index([userId, quadrant])
   @@index([parentTaskId])
@@ -324,6 +362,7 @@ model Goal {
   updatedAt         DateTime  @updatedAt
   user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   tasks           Task[]
+  projects        Project[]
   expenseCategory ExpenseCategory? @relation(fields: [expenseCategoryId], references: [id], onDelete: SetNull)
   @@index([userId, status])
   @@map("goals")

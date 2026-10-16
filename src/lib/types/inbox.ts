@@ -29,6 +29,8 @@ export interface ProcessCaptureInput {
   /** Calendar day keys. */
   plannedDate?: string | null
   dueDate?: string | null
+  /** Tasks join the project (and become its next action if it has none); notes link to it. */
+  projectId?: string | null
   url?: string
 }
 

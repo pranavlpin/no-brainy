@@ -36,6 +36,7 @@ export const createTaskSchema = z.object({
   context: contextSchema.nullable().optional(),
   parentTaskId: z.string().optional(),
   goalId: z.string().nullable().optional(),
+  projectId: z.string().nullable().optional(),
   quadrant: z
     .enum([
       'urgent_important',
@@ -72,6 +73,7 @@ export const taskQuerySchema = z.object({
   context: contextSchema.optional(),
   parentTaskId: z.string().optional(),
   goalId: z.string().optional(),
+  projectId: z.string().optional(),
   sortBy: z
     .enum(['createdAt', 'updatedAt', 'dueDate', 'plannedDate', 'priority', 'orderIndex'])
     .default('orderIndex'),

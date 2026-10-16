@@ -62,6 +62,7 @@ export function TaskForm({
     estimatedMinutes: initialData?.estimatedMinutes ?? null,
     effort: initialData?.effort ?? null,
     context: initialData?.context ?? null,
+    projectId: initialData?.projectId ?? null,
   })
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -84,6 +85,7 @@ export function TaskForm({
       ...(planning.estimatedMinutes && { estimatedMinutes: planning.estimatedMinutes }),
       ...(planning.effort && { effort: planning.effort }),
       ...(planning.context && { context: planning.context }),
+      ...(planning.projectId && { projectId: planning.projectId }),
       ...(quadrant && { quadrant }),
       isRecurring,
       ...(isRecurring && rrule && { rrule }),

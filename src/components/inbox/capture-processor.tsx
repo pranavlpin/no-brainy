@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select } from '@/components/ui/select'
 import { useProcessCapture } from '@/hooks/use-inbox'
+import { useProjects } from '@/hooks/use-projects'
 import { useUserToday } from '@/hooks/use-user-today'
 import { addDays } from '@/lib/dates'
 import { cn } from '@/lib/utils'
@@ -37,9 +38,11 @@ export function CaptureProcessor({ capture, onDone }: CaptureProcessorProps) {
   const [priority, setPriority] = useState<TaskPriority>('medium')
   const [plannedDate, setPlannedDate] = useState('')
   const [url, setUrl] = useState(capture.sourceUrl ?? '')
+  const [projectId, setProjectId] = useState('')
   const [error, setError] = useState('')
   const lock = useRef(false)
   const process = useProcessCapture()
+  const projects = useProjects({ status: 'active' })
   const destination = captureDestination(capture)
 
   const submit = async (event: React.FormEvent) => {
@@ -53,6 +56,7 @@ export function CaptureProcessor({ capture, onDone }: CaptureProcessorProps) {
         kind,
         ...(kind !== 'someday' && { title: title.trim() || undefined }),
         ...(kind === 'task' && { priority, plannedDate: plannedDate || null }),
+        ...((kind === 'task' || kind === 'note') && { projectId: projectId || null }),
         ...(kind === 'bookmark' && { url }),
       })
       onDone(result)
@@ -70,7 +74,11 @@ export function CaptureProcessor({ capture, onDone }: CaptureProcessorProps) {
   const tomorrow = addDays(today, 1)
 
   return (
-    <form className="space-y-4" data-testid={`process-${capture.id}`} onSubmit={(e) => void submit(e)}>
+    <form
+      className="space-y-4"
+      data-testid={`process-${capture.id}`}
+      onSubmit={(e) => void submit(e)}
+    >
       <div className="surface-solid rounded-xl p-3">
         <p className="font-mono text-[11px] uppercase tracking-wide text-retro-dark/50">Original</p>
         <p className="mt-1 max-h-40 overflow-y-auto whitespace-pre-wrap break-words text-sm leading-6 text-retro-dark">
@@ -100,7 +108,11 @@ export function CaptureProcessor({ capture, onDone }: CaptureProcessorProps) {
         <>
           <div className="space-y-1">
             <Label>Save as</Label>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4" role="radiogroup" aria-label="Save as">
+            <div
+              className="grid grid-cols-2 gap-2 sm:grid-cols-4"
+              role="radiogroup"
+              aria-label="Save as"
+            >
               {KINDS.map((k) => {
                 const active = kind === k.value
                 return (
@@ -173,7 +185,9 @@ export function CaptureProcessor({ capture, onDone }: CaptureProcessorProps) {
                     onClick={() => setPlannedDate(plannedDate === today ? '' : today)}
                     className={cn(
                       'shrink-0 rounded-full border px-2 py-1 font-mono text-[11px]',
-                      plannedDate === today ? 'border-retro-dark bg-retro-dark text-white' : 'border-border'
+                      plannedDate === today
+                        ? 'border-retro-dark bg-retro-dark text-white'
+                        : 'border-border'
                     )}
                   >
                     Today
@@ -183,13 +197,36 @@ export function CaptureProcessor({ capture, onDone }: CaptureProcessorProps) {
                     onClick={() => setPlannedDate(plannedDate === tomorrow ? '' : tomorrow)}
                     className={cn(
                       'shrink-0 rounded-full border px-2 py-1 font-mono text-[11px]',
-                      plannedDate === tomorrow ? 'border-retro-dark bg-retro-dark text-white' : 'border-border'
+                      plannedDate === tomorrow
+                        ? 'border-retro-dark bg-retro-dark text-white'
+                        : 'border-border'
                     )}
                   >
                     Tomorrow
                   </button>
                 </div>
               </div>
+            </div>
+          )}
+
+          {(kind === 'task' || kind === 'note') && (projects.data?.length ?? 0) > 0 && (
+            <div className="space-y-1">
+              <Label htmlFor="capture-project">Project (optional)</Label>
+              <Select
+                id="capture-project"
+                value={projectId}
+                onChange={(e) => setProjectId(e.target.value)}
+              >
+                <option value="">No project</option>
+                {projects.data?.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.title}
+                  </option>
+                ))}
+              </Select>
+              <p className="text-[11px] text-muted-foreground">
+                A task becomes the project&apos;s next action if it has none; a note links to it.
+              </p>
             </div>
           )}
 

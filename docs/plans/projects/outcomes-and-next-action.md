@@ -39,3 +39,12 @@ Cards with progress and "Next:" line; detail with a next-step hero, add-action i
 ## Risks and open questions
 
 - A next action must belong to the project and the owner; the route rejects anything else with 400. **Ruling applied.**
+
+## Refinements (while the branch was open)
+
+- A finished next action reads as "none chosen" in the API (`nextAction` null) so cards never point at a completed task; a focus session that completes the next action also clears it, and a next action typed at the end of a session becomes the project's next step when it has none.
+- The add-action task id is derived from owner, project, and submission id, so a retried submission returns the existing task.
+- Inbox processing accepts `projectId`: a task joins the project (and becomes its next action if empty), a note links to it; a foreign project is a 400.
+- The task planning fields gained a Project select, so a task can join a project from the create form, the detail page, and the Inbox.
+- Focus tasks show a project chip next to the goal chip; the planner fetches active projects for the lookup.
+- `g j` jumps to Projects.

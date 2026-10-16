@@ -14,6 +14,7 @@ import { AISuggestPanel } from '@/components/planner/ai-suggest-panel'
 import { StaggerBlock, StaggerGroup, AnimatedNumber } from '@/components/motion'
 import { useTodayPlan, useTriageTask, useUpdatePlan } from '@/hooks/use-planner'
 import { useCreateTask, useUpdateTask } from '@/hooks/use-tasks'
+import { useProjects } from '@/hooks/use-projects'
 import { usePlannerAISuggest } from '@/hooks/use-planner-ai'
 import { useAI } from '@/hooks/use-ai'
 import { useToast } from '@/hooks/use-toast'
@@ -41,6 +42,7 @@ function ProgressBar({ completed, total }: { completed: number; total: number })
 
 export default function PlannerPage() {
   const { data: plan, isLoading } = useTodayPlan()
+  const { data: projects } = useProjects({ status: 'active' })
   const updatePlan = useUpdatePlan()
   const updateTask = useUpdateTask()
   const createTask = useCreateTask()
@@ -250,6 +252,7 @@ export default function PlannerPage() {
           focusTaskIds={plan.focusTaskIds}
           allTasks={[...plannedTasks, ...plan.tasksDueToday, ...plan.carryForward]}
           goals={plan.goals}
+          projects={projects}
           onUpdate={handleUpdateFocus}
           onToggleComplete={handleToggleComplete}
         />

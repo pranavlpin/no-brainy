@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Plus, Target, X } from 'lucide-react'
+import { FolderKanban, Plus, Target, X } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Dialog } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -18,8 +18,24 @@ interface FocusTasksProps {
   focusTaskIds: string[]
   allTasks: TaskResponse[]
   goals?: PlannerGoal[]
+  /** Active projects, for a chip next to the goal chip. */
+  projects?: { id: string; title: string }[]
   onUpdate: (focusTaskIds: string[]) => void
   onToggleComplete: (taskId: string, completed: boolean) => void
+}
+
+export function ProjectChip({ project }: { project: { id: string; title: string } }) {
+  return (
+    <Badge
+      variant="outline"
+      className="max-w-[160px] truncate text-[10px]"
+      title={project.title}
+      data-testid={`project-chip-${project.id}`}
+    >
+      <FolderKanban className="mr-1 h-2.5 w-2.5" />
+      {project.title}
+    </Badge>
+  )
 }
 
 const SLOT_COUNT = 3
@@ -51,12 +67,14 @@ export function FocusTasks({
   focusTaskIds,
   allTasks,
   goals = [],
+  projects = [],
   onUpdate,
   onToggleComplete,
 }: FocusTasksProps) {
   const [pickerOpen, setPickerOpen] = useState(false)
   const [query, setQuery] = useState('')
   const goalsById = useMemo(() => new Map(goals.map((g) => [g.id, g])), [goals])
+  const projectsById = useMemo(() => new Map(projects.map((p) => [p.id, p])), [projects])
   const emptySlots = Math.max(0, SLOT_COUNT - focusTasks.length)
 
   const available = useMemo(() => {
@@ -115,6 +133,7 @@ export function FocusTasks({
           {focusTasks.map((task, index) => {
             const isCompleted = task.status === 'completed'
             const goal = task.goalId ? goalsById.get(task.goalId) : undefined
+            const project = task.projectId ? projectsById.get(task.projectId) : undefined
             return (
               <motion.div
                 key={task.id}
@@ -152,6 +171,7 @@ export function FocusTasks({
                   <div className="mt-1 flex flex-wrap items-center gap-1.5">
                     <PriorityBadge priority={task.priority} />
                     {goal && <GoalChip goal={goal} />}
+                    {project && <ProjectChip project={project} />}
                   </div>
                 </div>
                 <button

@@ -3,6 +3,7 @@
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select } from '@/components/ui/select'
+import { useProjects } from '@/hooks/use-projects'
 import { cn } from '@/lib/utils'
 import type { TaskContext, TaskEffort } from '@/lib/types/tasks'
 
@@ -11,6 +12,7 @@ export interface PlanningValues {
   estimatedMinutes: number | null
   effort: TaskEffort | null
   context: TaskContext | null
+  projectId?: string | null
 }
 
 interface TaskPlanningFieldsProps {
@@ -46,6 +48,9 @@ export function TaskPlanningFields({
   idPrefix = 'plan',
   className,
 }: TaskPlanningFieldsProps) {
+  const projects = useProjects({ status: 'active' })
+  const currentProjectKnown =
+    !value.projectId || (projects.data ?? []).some((p) => p.id === value.projectId)
   return (
     <div className={cn('grid grid-cols-1 gap-4 sm:grid-cols-2', className)}>
       <div className="space-y-1">
@@ -138,6 +143,23 @@ export function TaskPlanningFields({
           <option value="">Either</option>
           <option value="work">Work</option>
           <option value="personal">Personal</option>
+        </Select>
+      </div>
+
+      <div className="space-y-1 sm:col-span-2">
+        <Label htmlFor={`${idPrefix}-project`}>Project</Label>
+        <Select
+          id={`${idPrefix}-project`}
+          value={value.projectId ?? ''}
+          onChange={(e) => onChange({ projectId: e.target.value || null })}
+        >
+          <option value="">No project</option>
+          {!currentProjectKnown && <option value={value.projectId!}>Current project</option>}
+          {(projects.data ?? []).map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.title}
+            </option>
+          ))}
         </Select>
       </div>
     </div>

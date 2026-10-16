@@ -15,7 +15,7 @@ type Db = Prisma.TransactionClient
 
 export type ProcessOutcome =
   | { capture: Awaited<ReturnType<Db['capture']['update']>> }
-  | { error: 'not-found' | 'url' }
+  | { error: 'not-found' | 'url' | 'project' }
 
 function countWords(text: string): number {
   const trimmed = text.trim()
@@ -44,6 +44,11 @@ export async function processCapture(
     return { capture: await db.capture.update({ where: { id }, data: { state: 'processed' } }) }
   }
 
+  const project = input.projectId
+    ? await db.project.findFirst({ where: { id: input.projectId, userId } })
+    : null
+  if (input.projectId && !project) return { error: 'project' }
+
   const title = input.title ?? capture.content.split('\n')[0].trim().slice(0, 200)
   const source = capture.sourceUrl ? `\n\nSource: ${capture.sourceUrl}` : ''
   const reference = `\n\n[Original capture](/inbox?capture=${id})`
@@ -59,14 +64,21 @@ export async function processCapture(
         priorityRank: priorityRank(input.priority),
         plannedDate: input.plannedDate ? dateFromKey(input.plannedDate) : null,
         dueDate: input.dueDate ? dateFromKey(input.dueDate) : null,
+        projectId: project?.id ?? null,
+        goalId: project?.goalId ?? null,
+        context: project?.context ?? null,
       },
     })
+    if (project && !project.nextActionId) {
+      await db.project.update({ where: { id: project.id }, data: { nextActionId: task.id } })
+    }
     destinationId = task.id
   } else if (input.kind === 'note') {
     const body = capture.content + source + reference
     const note = await db.note.create({
       data: { userId, title, contentMd: body, wordCount: countWords(capture.content) },
     })
+    if (project) await db.projectNote.create({ data: { projectId: project.id, noteId: note.id } })
     destinationId = note.id
   } else {
     const url = input.url ?? capture.sourceUrl
@@ -94,11 +106,7 @@ export async function processCapture(
  * Undo a conversion: remove what processing created (only if the user still
  * owns it) and reopen the capture. The original text is never touched.
  */
-export async function undoCapture(
-  db: Db,
-  userId: string,
-  id: string
-): Promise<ProcessOutcome> {
+export async function undoCapture(db: Db, userId: string, id: string): Promise<ProcessOutcome> {
   const capture = await db.capture.findFirst({ where: { id, userId } })
   if (!capture) return { error: 'not-found' }
   if (capture.destinationId) {

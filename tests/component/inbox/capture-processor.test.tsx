@@ -5,8 +5,13 @@ import { CaptureProcessor } from '@/components/inbox/capture-processor'
 import type { CaptureResponse } from '@/lib/types/inbox'
 
 const process = vi.hoisted(() => vi.fn())
-vi.mock('@/hooks/use-inbox', () => ({ useProcessCapture: () => ({ mutateAsync: process, isPending: false }) }))
-vi.mock('@/hooks/use-user-today', () => ({ useUserToday: () => ({ today: '2026-10-16', timezone: 'Asia/Kolkata' }) }))
+vi.mock('@/hooks/use-inbox', () => ({
+  useProcessCapture: () => ({ mutateAsync: process, isPending: false }),
+}))
+vi.mock('@/hooks/use-user-today', () => ({
+  useUserToday: () => ({ today: '2026-10-16', timezone: 'Asia/Kolkata' }),
+}))
+vi.mock('@/hooks/use-projects', () => ({ useProjects: () => ({ data: [], isLoading: false }) }))
 
 const capture: CaptureResponse = {
   id: 'c1',
@@ -25,14 +30,23 @@ const capture: CaptureResponse = {
 describe('CaptureProcessor', () => {
   it('pre-fills the title from the first line and submits the chosen kind', async () => {
     const onDone = vi.fn()
-    process.mockResolvedValue({ ...capture, state: 'processed', destinationType: 'task', destinationId: 't1' })
+    process.mockResolvedValue({
+      ...capture,
+      state: 'processed',
+      destinationType: 'task',
+      destinationId: 't1',
+    })
     render(<CaptureProcessor capture={capture} onDone={onDone} />)
     expect(screen.getByLabelText(/title/i)).toHaveValue('Practice with intention every morning')
     expect(screen.getByRole('link', { name: /source/i })).toHaveAttribute('href', capture.sourceUrl)
     await userEvent.click(screen.getByRole('button', { name: /save & next/i }))
     await waitFor(() =>
       expect(process).toHaveBeenCalledWith(
-        expect.objectContaining({ id: 'c1', kind: 'task', title: 'Practice with intention every morning' })
+        expect.objectContaining({
+          id: 'c1',
+          kind: 'task',
+          title: 'Practice with intention every morning',
+        })
       )
     )
     expect(onDone).toHaveBeenCalledWith(expect.objectContaining({ destinationId: 't1' }))

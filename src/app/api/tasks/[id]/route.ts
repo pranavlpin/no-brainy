@@ -110,6 +110,7 @@ async function handlePut(req: NextRequest, user: AuthUser, id: string): Promise<
       ...(data.context !== undefined && { context: data.context }),
       ...(data.parentTaskId !== undefined && { parentTaskId: data.parentTaskId ?? null }),
       ...(data.goalId !== undefined && { goalId: data.goalId ?? null }),
+      ...(data.projectId !== undefined && { projectId: data.projectId ?? null }),
       ...(data.quadrant !== undefined && { quadrant: data.quadrant ?? null }),
       ...(data.isRecurring !== undefined && { isRecurring: data.isRecurring }),
       ...(data.rrule !== undefined && { rrule: data.rrule ?? null }),

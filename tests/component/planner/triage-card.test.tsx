@@ -9,6 +9,7 @@ const task = (id: string, title: string): TaskResponse => ({
   userId: 'u1',
   parentTaskId: null,
   goalId: null,
+  projectId: null,
   title,
   descriptionMd: '',
   priority: 'medium',

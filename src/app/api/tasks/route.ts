@@ -56,6 +56,7 @@ export const GET = withAuth(async (req: NextRequest, user) => {
     if (query.priority) where.priority = query.priority
     if (query.quadrant) where.quadrant = query.quadrant
     if (query.goalId) where.goalId = query.goalId
+    if (query.projectId) where.projectId = query.projectId
     if (query.context) where.context = query.context
     if (query.parentTaskId) {
       where.parentTaskId = query.parentTaskId === 'null' ? null : query.parentTaskId
@@ -139,6 +140,7 @@ export const POST = withAuth(async (req: NextRequest, user) => {
         context: data.context ?? null,
         parentTaskId: data.parentTaskId ?? null,
         goalId: data.goalId ?? null,
+        projectId: data.projectId ?? null,
         quadrant: data.quadrant ?? null,
         isRecurring: data.isRecurring,
         rrule: data.rrule ?? null,

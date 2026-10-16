@@ -131,6 +131,7 @@ export function applyTaskUpdate(task: TaskResponse, data: UpdateTaskRequest): Ta
   if (data.context !== undefined) next.context = data.context
   if (data.parentTaskId !== undefined) next.parentTaskId = data.parentTaskId
   if (data.goalId !== undefined) next.goalId = data.goalId
+  if (data.projectId !== undefined) next.projectId = data.projectId
   if (data.isRecurring !== undefined) next.isRecurring = data.isRecurring
   if (data.rrule !== undefined) next.rrule = data.rrule
   if (data.quadrant !== undefined) next.quadrant = data.quadrant
