@@ -34,6 +34,7 @@ model User {
   flashcards    Flashcard[]
   dayPlans      DayPlan[]
   dailyReviews  DailyReview[]
+  weeklyReviews WeeklyReview[]
   goals         Goal[]
   insights      Insight[]
   sessions      UserSession[]
@@ -171,6 +172,8 @@ model Task {
   subtasks   Task[]  @relation("Subtasks")
   goal       Goal?   @relation(fields: [goalId], references: [id], onDelete: SetNull)
   focusSessions FocusSession[]
+  tomorrowReviews DailyReview[] @relation("TomorrowAction")
+  weeklyReviews WeeklyReview[] @relation("NextWeekAction")
   taskLinks  TaskLink[]
   project Project? @relation("ProjectTasks", fields: [projectId], references: [id], onDelete: SetNull)
   nextActionFor Project[] @relation("ProjectNextAction")
@@ -284,6 +287,12 @@ model DailyReview {
   tasksMissed    Int      @default(0)
   notesCreated   Int      @default(0)
   cardsReviewed  Int      @default(0)
+  whatMoved      String @default("") @db.Text
+  blockers       String @default("") @db.Text
+  tomorrowTaskId String?
+  tomorrowTask Task? @relation("TomorrowAction", fields:[tomorrowTaskId], references:[id], onDelete:SetNull)
+  closedAt DateTime?
+  updatedAt DateTime @default(now()) @updatedAt
   reflectionMd   String   @default("") @db.Text
   aiSummaryMd    String?  @db.Text
   mood           String?
@@ -650,4 +659,23 @@ model GrowthEvidence {
  @@unique([userId,clientRequestId])
  @@index([goalId,observedAt])
  @@map("growth_evidence")
+}
+
+model WeeklyReview {
+ id String @id @default(cuid())
+ userId String
+ weekStart DateTime @db.Date
+ stopDoing String @default("") @db.Text
+ keepDoing String @default("") @db.Text
+ startTrying String @default("") @db.Text
+ reflectionMd String @default("") @db.Text
+ outcomes Json @default("[]")
+ nextTaskId String?
+ closedAt DateTime?
+ createdAt DateTime @default(now())
+ updatedAt DateTime @updatedAt
+ user User @relation(fields:[userId], references:[id], onDelete:Cascade)
+ nextTask Task? @relation("NextWeekAction", fields:[nextTaskId], references:[id], onDelete:SetNull)
+ @@unique([userId,weekStart])
+ @@map("weekly_reviews")
 }
