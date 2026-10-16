@@ -18,6 +18,7 @@ import {
   Film,
   Archive,
   FolderKanban,
+  Inbox,
   PanelLeftClose,
   PanelLeftOpen,
 } from 'lucide-react'
@@ -34,6 +35,7 @@ const NAV_ITEMS_MAP: Record<string, NavItem> = {
   '/stash': { label: 'Stash', href: '/stash', icon: Archive },
   '/tasks': { label: 'Tasks', href: '/tasks', icon: CheckSquare },
   '/projects': { label: 'Projects', href: '/projects', icon: FolderKanban },
+  '/inbox': { label: 'Inbox', href: '/inbox', icon: Inbox },
   '/books': { label: 'Books', href: '/books', icon: BookOpen },
   '/flashcards': { label: 'Flashcards', href: '/flashcards', icon: Layers },
   '/planner': { label: 'Daily Planner', href: '/planner', icon: Calendar },
@@ -54,6 +56,7 @@ const NAV_GROUPS: Record<string, string> = {
   '/stash': 'core',
   '/tasks': 'core',
   '/projects': 'core',
+  '/inbox': 'core',
   '/planner': 'core',
   '/reviews': 'core',
   '/expenses': 'finance',
@@ -71,7 +74,7 @@ const NAV_GROUPS: Record<string, string> = {
 
 export { NAV_ITEMS_MAP, NAV_GROUPS }
 
-export const PRIMARY_NAV = ['/today', '/tasks', '/projects', '/goals', '/library']
+export const PRIMARY_NAV = ['/today', '/inbox', '/tasks', '/projects', '/goals', '/library']
 
 export function Sidebar() {
   const {

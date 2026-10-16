@@ -2,6 +2,7 @@ import { create } from 'zustand'
 
 export const DEFAULT_NAV_ORDER = [
   '/today',
+  '/inbox',
   '/planner',
   '/tasks',
   '/projects',

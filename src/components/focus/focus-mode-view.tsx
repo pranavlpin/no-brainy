@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { X, ChevronDown, ChevronRight, CheckCircle2, Circle } from 'lucide-react'
+import { X, ChevronDown, ChevronRight, CheckCircle2, Circle, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { PomodoroTimer } from './pomodoro-timer'
 import { useUIStore } from '@/stores/ui-store'
@@ -18,6 +18,7 @@ export function FocusModeView() {
   // Escape key to exit
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      if (document.querySelector('[role="dialog"]')) return
       if (e.key === 'Escape') exitFocusMode()
     }
     window.addEventListener('keydown', handler)
@@ -36,17 +37,25 @@ export function FocusModeView() {
     })
   }
 
-  const linkedNotes =
-    taskLinks?.filter((l) => l.linkedType === 'note') ?? []
+  const linkedNotes = taskLinks?.filter((l) => l.linkedType === 'note') ?? []
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-background">
+      <Button
+        variant="outline"
+        className="absolute left-4 top-4 gap-2"
+        onClick={() => window.dispatchEvent(new Event('nobrainy:capture'))}
+      >
+        <Plus className="h-4 w-4" />
+        Capture
+      </Button>
       {/* Close button */}
       <Button
         variant="ghost"
         size="icon"
         className="absolute top-4 right-4 text-muted-foreground hover:text-foreground"
         onClick={exitFocusMode}
+        aria-label="Exit focus mode"
       >
         <X className="h-5 w-5" />
       </Button>
@@ -107,10 +116,7 @@ export function FocusModeView() {
             {notesOpen && (
               <ul className="mt-2 space-y-1 pl-6">
                 {linkedNotes.map((link) => (
-                  <li
-                    key={link.linkedId}
-                    className="text-sm text-muted-foreground"
-                  >
+                  <li key={link.linkedId} className="text-sm text-muted-foreground">
                     {link.title || link.linkedId}
                   </li>
                 ))}
