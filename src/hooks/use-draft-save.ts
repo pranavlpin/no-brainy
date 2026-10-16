@@ -8,7 +8,7 @@ const activeQueues = new Map<string, { queue: DraftSave<Entity>; users: number }
 
 /** Bind an entity-scoped durable queue to a page, flushing on navigation and protecting reloads. */
 export function useDraftSave<T extends Entity>(
-  kind: 'task' | 'note',
+  kind: 'task' | 'note' | 'day-plan',
   remote: T | undefined,
   save: (patch: Partial<T>, version: string) => Promise<T>,
   reload: () => Promise<T | undefined>
