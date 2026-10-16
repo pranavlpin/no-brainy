@@ -8,10 +8,26 @@ NoBrainy is a unified platform for thinking, learning, and execution. It combine
 
 Designed for developers, product thinkers, and knowledge workers who want one coherent system instead of multiple disconnected tools. Everything is Markdown-first, cross-linked, and designed for minimal friction.
 
+## The daily loop (October 2026)
+
+NoBrainy now opens on **Today**, a single cockpit that runs the day end to end:
+
+- **Morning**: triage yesterday's leftovers (keep today, move to a date, drop), pick three focus tasks grouped by goal, and read the intent you set the night before.
+- **Day**: instant task toggles with optimistic updates, a persisted pomodoro timer whose countdown follows you in the top bar, deep-work minutes on Home.
+- **Evening**: a four-step close-the-day flow (stats, three reflection prompts, mood, one intent for tomorrow) that writes the intent straight into tomorrow's plan.
+- **Capture anywhere**: `⌘K` command palette (navigate, act, search), `C` for natural-language capture (`Call bank tomorrow #finance !high @Goal`), `G` then a letter to jump, `?` for the shortcut sheet.
+- **Feel**: aurora background, glass surfaces, animated dialogs and toasts, page transitions, reduced-motion support, grouped collapsible sidebar with live badges.
+- **Phone**: installable PWA, bottom tab bar with a capture button, swipe right to complete.
+- **Nudges**: `POST /api/cron/daily` (bearer-protected) generates due, overdue, cards-due, morning-brief, and close-the-day reminders in your timezone.
+
+Every "today" is computed in your timezone (auto-detected from the browser). Contributors: read [`CLAUDE.md`](CLAUDE.md) for the workflow, ledgers under `docs/tasks/`, and plans under `docs/plans/`.
+
 ## Features
 
 ### Notes
+
 Full Markdown editor with live split-pane preview (resizable divider), syntax-highlighted code blocks, Mermaid.js diagram rendering, GFM support (tables, checkboxes, strikethrough), `[[wiki-links]]` for bi-directional linking with graph view, multi-tag filtering, full-text search, pinning, and soft delete with recovery. Additional features:
+
 - **Slash commands** — type `/` for 20+ commands: headings, lists, code blocks, tables, links, color blocks, dates
 - **`/link`** — search and link to other notes (creates graph connections)
 - **`/url`** — insert external website links
@@ -23,16 +39,21 @@ Full Markdown editor with live split-pane preview (resizable divider), syntax-hi
 - **Print / Export** — print with optional color toggle, export as .doc
 
 ### Tasks
+
 Eisenhower Matrix four-quadrant view, nested subtasks, recurring tasks (RRULE-based), priority levels (Urgent / High / Medium / Low), status tracking, due dates, tag filtering, bulk actions (complete, delete, reprioritize), drag-and-drop reordering, and goal linking. Completed tasks hidden by default with toggle. Sort by priority, due date, or creation date.
 
 ### Books
+
 Reading tracker with status management (Want to Read / Reading / Completed), structured fields for summaries, key ideas, favourite quotes, personal learnings, and application notes. Star ratings (1-5), page progress tracking, and Markdown formatting throughout.
 
 ### Flashcards
+
 Deck-based flashcard management with SM-2 spaced repetition algorithm. Card types include Q&A, Cloze, Definition, Reflection, and Application. Review mode with difficulty rating (Easy / Medium / Hard / Forgot), automatic scheduling, review session tracking, quiz mode with scoring, and source linking back to notes and books.
 
 ### Expense Manager
+
 Full expense tracking with 23+ preset categories (Shopping, Food, EMI, Travel, etc.) plus custom categories with icon and color picker. Features include:
+
 - **Bulk entry** — spreadsheet-style UI with auto-growing rows for fast data entry
 - **CSV/TXT import** — import bank statements or SMS transaction exports with auto-categorization (150+ keyword rules)
 - **Monthly summary matrix** — category-by-month grid with totals
@@ -43,23 +64,30 @@ Full expense tracking with 23+ preset categories (Shopping, Food, EMI, Travel, e
 - **Filters & sorting** — by date range, category, tags, amount, name
 
 ### Daily Planner
-Today view with focus task selection (top 3), time blocking, daily task carry-forward for incomplete items, and progress indicators.
+
+Morning triage of yesterday's leftovers (keep / move / drop), top 3 focus tasks with goal chips, the day's intent carried in from last night's review, tasks due today, AI plan suggestions, and progress.
 
 ### Reviews
-Daily and weekly reflection system with guided prompts. Auto-aggregated statistics for tasks completed, tasks missed, notes created, and cards reviewed. Mood tracking and weekly summary views.
+
+Guided close-the-day flow: auto-gathered stats (including deep-work minutes), three reflection prompts, mood, and one intent for tomorrow that seeds the next day's plan. Weekly summary with streak.
 
 ### Goals
+
 Goal creation with categories (fitness, learning, work, personal), target dates, and status tracking. Goals link to tasks — progress tracked as completed tasks / total tasks. Auto-completion when all linked tasks are done.
 
 ### Bookmarks
+
 Save and organize web links with tags, descriptions, and favicons. Features include:
+
 - **Preview panel** — click a bookmark to preview the site in a side panel (iframe)
 - **Search & filter** — by title, tags
 - **Pin** important bookmarks
 - **Edit inline** — update title, URL, description, tags
 
 ### Watchlist (Movies & Shows)
+
 Track movies and TV shows with genre, rating, platform, and status. Features include:
+
 - **IMDB/Google CSV import** — import your existing watchlist with auto-categorization
 - **OMDB metadata fetch** — auto-fill posters, genres, directors, plots from OMDB API
 - **Star ratings** — 1-5 clickable stars
@@ -67,10 +95,13 @@ Track movies and TV shows with genre, rating, platform, and status. Features inc
 - **Bulk metadata update** — fetch details for all new items at once
 
 ### Analytics
+
 Dashboard with completion rate charts, productivity breakdowns, activity heatmap, stat cards, and integrated expense analytics (category donut + monthly spending bars).
 
 ### AI Features (BYOK — Bring Your Own Key)
+
 Connect your OpenAI API key to unlock:
+
 - **Flashcard generation** from notes and books
 - **Note summarization** and key insight extraction
 - **Task prioritization** and daily plan suggestions
@@ -80,30 +111,33 @@ Connect your OpenAI API key to unlock:
 - **Auto-categorization** of imported expenses
 
 ### Global Search
+
 Universal full-text search across notes, tasks, books, flashcards, and all other modules. Keyword-based search powered by PostgreSQL tsvector with GIN indexes.
 
-### Quick Capture
-Global `Cmd+K` / `Ctrl+K` modal for fast input. Quickly create notes, tasks, or ideas without navigating away from the current view.
+### Command Palette & Quick Capture
+
+`⌘K` opens the palette (navigate, actions, live search). `C` opens capture, which understands dates (today, tomorrow, friday, next week, in 3 days, 25/12), `#tags`, `!priority`, `@goal`, and a `note:` prefix, showing chips as you type.
 
 ### Cross-Module Linking
+
 Connect notes to tasks, books to flashcard decks, tasks to goals, and more. Link picker modal for easy cross-referencing.
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|------------|
-| Frontend | Next.js 14 (App Router), React 18, TypeScript (strict), Tailwind CSS 3, shadcn/ui |
-| Design | Space Grotesk + Space Mono + Inter fonts, retro design system |
-| Charts | Recharts |
-| Editor | CodeMirror 6, react-markdown, remark-gfm, rehype-highlight, Mermaid.js |
-| State | Zustand (client UI state), TanStack React Query v5 (server state) |
-| Backend | Next.js API Route Handlers |
-| Database | PostgreSQL 16, Prisma ORM 5 |
-| Auth | NextAuth.js v5 (email/password + Google OAuth) |
-| AI | OpenAI API (GPT-4o-mini / GPT-4o) — user's own key |
-| Validation | Zod |
-| Testing | Vitest, React Testing Library |
-| Package Manager | pnpm |
+| Layer           | Technology                                                                        |
+| --------------- | --------------------------------------------------------------------------------- |
+| Frontend        | Next.js 14 (App Router), React 18, TypeScript (strict), Tailwind CSS 3, shadcn/ui |
+| Design          | Space Grotesk + Space Mono + Inter fonts, retro design system                     |
+| Charts          | Recharts                                                                          |
+| Editor          | CodeMirror 6, react-markdown, remark-gfm, rehype-highlight, Mermaid.js            |
+| State           | Zustand (client UI state), TanStack React Query v5 (server state)                 |
+| Backend         | Next.js API Route Handlers                                                        |
+| Database        | PostgreSQL 16, Prisma ORM 5                                                       |
+| Auth            | NextAuth.js v5 (email/password + Google OAuth)                                    |
+| AI              | OpenAI API (GPT-4o-mini / GPT-4o) — user's own key                                |
+| Validation      | Zod                                                                               |
+| Testing         | Vitest, React Testing Library                                                     |
+| Package Manager | pnpm                                                                              |
 
 ## Getting Started
 
@@ -135,15 +169,16 @@ pnpm dev                       # Start dev server at localhost:3000
 
 ### Environment Variables
 
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `DATABASE_URL` | PostgreSQL connection string | Yes |
-| `NEXTAUTH_URL` | Base URL (e.g., `http://localhost:3000`) | Yes |
-| `NEXTAUTH_SECRET` | Random secret — generate with `openssl rand -base64 32` | Yes |
-| `GOOGLE_CLIENT_ID` | Google OAuth client ID | Optional |
-| `GOOGLE_CLIENT_SECRET` | Google OAuth client secret | Optional |
-| `NEXT_PUBLIC_GA_ID` | Google Analytics measurement ID | Optional |
-| `OMDB_API_KEY` | OMDB API key for movie/show metadata ([free](https://www.omdbapi.com/apikey.aspx)) | Optional |
+| Variable               | Description                                                                        | Required |
+| ---------------------- | ---------------------------------------------------------------------------------- | -------- |
+| `DATABASE_URL`         | PostgreSQL connection string                                                       | Yes      |
+| `NEXTAUTH_URL`         | Base URL (e.g., `http://localhost:3000`)                                           | Yes      |
+| `NEXTAUTH_SECRET`      | Random secret — generate with `openssl rand -base64 32`                            | Yes      |
+| `GOOGLE_CLIENT_ID`     | Google OAuth client ID                                                             | Optional |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth client secret                                                         | Optional |
+| `NEXT_PUBLIC_GA_ID`    | Google Analytics measurement ID                                                    | Optional |
+| `OMDB_API_KEY`         | OMDB API key for movie/show metadata ([free](https://www.omdbapi.com/apikey.aspx)) | Optional |
+| `CRON_SECRET`          | Bearer token for `POST /api/cron/daily` scheduled nudges                           | Optional |
 
 ## Project Structure
 
@@ -184,21 +219,21 @@ src/
 
 PostgreSQL 16 with Prisma ORM. 18 models total.
 
-| Model | Description |
-|-------|-------------|
-| `User` | Accounts with email, OAuth, timezone, encrypted preferences |
-| `Note` / `NoteLink` | Markdown notes with tags, pinning, bi-directional links, graph view |
-| `Task` / `TaskLink` | Tasks with priority, Eisenhower quadrant, subtasks, recurrence |
-| `Book` | Reading tracker with summaries, quotes, ratings, progress |
-| `Deck` / `Flashcard` | Flashcard decks with SM-2 spaced repetition |
-| `DayPlan` | Daily plans with focus tasks and time blocks |
-| `DailyReview` | Daily reflections with auto-aggregated stats and mood |
-| `Goal` | Goal tracking with task-driven progress |
-| `Bookmark` | Saved web links with tags, favicon, pin support |
-| `WatchlistItem` | Movies/shows with genre, rating, status, OMDB metadata |
-| `ExpenseCategory` / `Expense` | Expense tracking with categories, import, charts |
-| `Insight` | AI-generated insights with type, severity, expiration |
-| `Notification` / `PushSubscription` | In-app and push notifications |
+| Model                               | Description                                                         |
+| ----------------------------------- | ------------------------------------------------------------------- |
+| `User`                              | Accounts with email, OAuth, timezone, encrypted preferences         |
+| `Note` / `NoteLink`                 | Markdown notes with tags, pinning, bi-directional links, graph view |
+| `Task` / `TaskLink`                 | Tasks with priority, Eisenhower quadrant, subtasks, recurrence      |
+| `Book`                              | Reading tracker with summaries, quotes, ratings, progress           |
+| `Deck` / `Flashcard`                | Flashcard decks with SM-2 spaced repetition                         |
+| `DayPlan`                           | Daily plans with focus tasks and time blocks                        |
+| `DailyReview`                       | Daily reflections with auto-aggregated stats and mood               |
+| `Goal`                              | Goal tracking with task-driven progress                             |
+| `Bookmark`                          | Saved web links with tags, favicon, pin support                     |
+| `WatchlistItem`                     | Movies/shows with genre, rating, status, OMDB metadata              |
+| `ExpenseCategory` / `Expense`       | Expense tracking with categories, import, charts                    |
+| `Insight`                           | AI-generated insights with type, severity, expiration               |
+| `Notification` / `PushSubscription` | In-app and push notifications                                       |
 
 ## Deployment
 

@@ -18,11 +18,11 @@ Ruling recorded for the batch T01–T12 only:
 
 ## Tasks
 
-| ID | Task | Date | Branch | Plan | Status |
-|---|---|---|---|---|---|
-| T01 | Governance, test layout, formatting gates | 2026-10-16 | feature/platform-daily-loop-overhaul | [plan](../plans/platform/governance-and-test-layout.md) | done — 4 files / 19 tests green, typecheck clean, lint at 5 pre-existing warnings |
-| T02 | Motion system and design system v2 | 2026-10-16 | feature/platform-daily-loop-overhaul | [plan](../plans/platform/motion-and-design-system-v2.md) | done — 10 files / 33 tests green, typecheck clean, dev server renders all dashboard routes |
-| T03 | User-timezone day boundaries | 2026-10-16 | feature/platform-daily-loop-overhaul | [plan](../plans/platform/user-timezone-dates.md) | done — 13 files / 48 tests green; tests pinned to TZ=UTC; planner, reviews, notifications, AI routes use user zone |
+| ID  | Task                                      | Date       | Branch                               | Plan                                                     | Status                                                                                                             |
+| --- | ----------------------------------------- | ---------- | ------------------------------------ | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| T01 | Governance, test layout, formatting gates | 2026-10-16 | feature/platform-daily-loop-overhaul | [plan](../plans/platform/governance-and-test-layout.md)  | done — 4 files / 19 tests green, typecheck clean, lint at 5 pre-existing warnings                                  |
+| T02 | Motion system and design system v2        | 2026-10-16 | feature/platform-daily-loop-overhaul | [plan](../plans/platform/motion-and-design-system-v2.md) | done — 10 files / 33 tests green, typecheck clean, dev server renders all dashboard routes                         |
+| T03 | User-timezone day boundaries              | 2026-10-16 | feature/platform-daily-loop-overhaul | [plan](../plans/platform/user-timezone-dates.md)         | done — 13 files / 48 tests green; tests pinned to TZ=UTC; planner, reviews, notifications, AI routes use user zone |
 
 ## Backlog (registered, not yet planned)
 
@@ -31,3 +31,7 @@ These are owner-visible next bets. They have no plan yet and must go through the
 - Guided weekly review with AI theme detection across the week's reflections (module `reviews`).
 - Learning Journeys module replacing the static pages under `public/secret/learning/` (new module `journeys`).
 - Merge Bookmarks into Stash link messages (modules `bookmarks`, `stash`).
+
+## Batch summary — 2026-10-16
+
+All twelve registered tasks (T01–T12) landed on `feature/platform-daily-loop-overhaul` as one commit series per task, each with a plan, failing-first tests, and a ledger status line. Final gates on the branch: `pnpm typecheck` clean, `pnpm lint` at the five pre-existing warnings, `pnpm test` 40 files / 135 tests green, `pnpm build` succeeds for every route. Local verification used the dev server with the owner account: planner triage, review-to-plan intent handoff, home aggregate, focus sessions, nav badges, manifest, and the cron endpoint were exercised end to end over HTTP. Visual QA in a browser is the owner's step; no screenshots were requested.
