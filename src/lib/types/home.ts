@@ -9,6 +9,11 @@ export interface HomeGoal {
   completedTaskCount: number
   lastActivityAt: string
   daysSinceActivity: number
+  /** Practice days this week against the goal's target; target null when not tracked. */
+  practiceCount: number
+  weeklyPracticeTarget: number | null
+  /** Measured distance to target; null when the goal is not measured. */
+  outcomePercent: number | null
 }
 
 export interface HomeData {

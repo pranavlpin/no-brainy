@@ -41,3 +41,12 @@ Goal detail: success card with measurement, practice card with week navigation a
 ## Risks and open questions
 
 - Financial goals keep their amount semantics; the measurement formula does not apply to them. **Ruling applied.**
+
+## Refinements (while the branch was open)
+
+- Practice is counted in distinct local days (practice evidence plus completed or progress focus sessions on the goal's tasks); the acceptance branch's routine identities do not exist here, so day-level deduplication is the honest unit.
+- The goal routes now share one serializer (`src/lib/goals/serialize.ts`) and compute practice for a whole list in two queries instead of per goal.
+- Evidence sources are snapshotted by title and linked by type and id without a per-item lookup; a session source carries the local day it ended so practice dates line up.
+- The practice card shows the current local week; week navigation is deferred to the weekly review (T20), which is the natural place to look back.
+- A book experiment is an ordinary task tagged `experiment` with the book cited in its description and an optional goal; it needs no separate endpoint.
+- Home's goal pulse shows the measured outcome when a goal is measured, otherwise task progress, plus a practice chip against the weekly target.

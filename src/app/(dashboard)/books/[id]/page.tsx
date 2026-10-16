@@ -16,6 +16,7 @@ import { QuotesEditor, type BookQuote } from '@/components/books/quotes-editor'
 import { MarkdownEditor } from '@/components/editor/markdown-editor'
 import { useBook, useUpdateBook, useDeleteBook } from '@/hooks/use-books'
 import { FlashcardGenerator } from '@/components/ai/flashcard-generator'
+import { BookExperiment } from '@/components/growth/book-experiment'
 import { DistillPreview } from '@/components/ai/distill-preview'
 import { ActionItemsPreview } from '@/components/ai/action-items-preview'
 import { AIActionButton } from '@/components/ai/ai-action-button'
@@ -319,12 +320,19 @@ export default function BookDetailPage() {
           )}
 
           {activeTab === 'application' && (
-            <MarkdownEditor
-              value={book.applicationMd}
-              onChange={(applicationMd) => save({ applicationMd })}
-              placeholder="How will you apply what you learned?"
-              minHeight="300px"
-            />
+            <div className="space-y-4">
+              <MarkdownEditor
+                value={book.applicationMd}
+                onChange={(applicationMd) => save({ applicationMd })}
+                placeholder="How will you apply what you learned?"
+                minHeight="300px"
+              />
+              <BookExperiment
+                bookId={book.id}
+                title={book.title}
+                application={book.applicationMd}
+              />
+            </div>
           )}
         </div>
       </div>
