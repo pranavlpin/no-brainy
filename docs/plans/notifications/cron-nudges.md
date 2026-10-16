@@ -42,3 +42,10 @@ Notification panel renders the two new types with distinct icons.
 ## Risks and open questions
 
 - Iterating all users is fine for one user; the endpoint batches 50 at a time anyway. **Ruling applied.**
+
+## Refinements while on the task branch (2026-10-16)
+
+- Notification preference keys and defaults now live in `src/lib/notifications/preferences.ts`; the retired `habitReminders` key is dropped on read, and a `morningBrief` preference is added alongside the existing review reminder.
+- New notification types `morning_brief` (before 10:00 local while the plan has no focus) and `review_reminder` (after 20:00 local without a review) render with their own icons and deep-link to the planner and the close-the-day flow.
+- Habit strings that remain in AI prompt variable types (`coach.ts`, `insights.ts`) and the search entity union are inert type members with no UI; they are left for a later cleanup rather than widened into this task.
+- Verified on the dev server: unauthenticated and wrong-token calls return 401, an authorized run created 4 nudges for the owner, and an immediate second run created 0.

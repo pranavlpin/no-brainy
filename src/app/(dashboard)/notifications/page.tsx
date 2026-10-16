@@ -6,11 +6,12 @@ import {
   Bell,
   Clock,
   AlertTriangle,
-  Flame,
   Brain,
   FileText,
   RefreshCw,
   CheckCheck,
+  Moon,
+  Sunrise,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -38,8 +39,10 @@ function getNotificationIcon(type: string) {
       return <Clock className="h-5 w-5 text-blue-500" />
     case 'overdue':
       return <AlertTriangle className="h-5 w-5 text-red-500" />
-    case 'habit_reminder':
-      return <Flame className="h-5 w-5 text-orange-500" />
+    case 'review_reminder':
+      return <Moon className="h-5 w-5 text-indigo-500" />
+    case 'morning_brief':
+      return <Sunrise className="h-5 w-5 text-amber-500" />
     case 'flashcard_review':
       return <Brain className="h-5 w-5 text-purple-500" />
     case 'daily_review':
@@ -53,14 +56,12 @@ function getNavigationPath(notification: NotificationItem): string | null {
   switch (notification.relatedEntity) {
     case 'task':
       return '/tasks'
-    case 'habit':
-      return '/habits'
+    case 'planner':
+      return '/planner'
     case 'deck':
-      return notification.relatedId
-        ? `/flashcards/${notification.relatedId}`
-        : '/flashcards'
+      return notification.relatedId ? `/flashcards/${notification.relatedId}` : '/flashcards'
     case 'review':
-      return '/reviews'
+      return '/reviews/daily'
     default:
       return null
   }
@@ -101,9 +102,7 @@ export default function NotificationsPage() {
             onClick={() => generate.mutate()}
             disabled={generate.isPending}
           >
-            <RefreshCw
-              className={`mr-1.5 h-4 w-4 ${generate.isPending ? 'animate-spin' : ''}`}
-            />
+            <RefreshCw className={`mr-1.5 h-4 w-4 ${generate.isPending ? 'animate-spin' : ''}`} />
             Generate
           </Button>
           <Button
@@ -167,9 +166,7 @@ export default function NotificationsPage() {
                   !notification.isRead ? 'bg-retro-blue/5' : ''
                 }`}
               >
-                <div className="mt-0.5 shrink-0">
-                  {getNotificationIcon(notification.type)}
-                </div>
+                <div className="mt-0.5 shrink-0">{getNotificationIcon(notification.type)}</div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <p
@@ -185,9 +182,7 @@ export default function NotificationsPage() {
                       <span className="h-2 w-2 shrink-0 rounded-full bg-retro-blue" />
                     )}
                   </div>
-                  <p className="mt-0.5 text-sm text-retro-dark/60">
-                    {notification.body}
-                  </p>
+                  <p className="mt-0.5 text-sm text-retro-dark/60">{notification.body}</p>
                   <p className="mt-1 text-xs text-retro-dark/40">
                     {getTimeAgo(notification.createdAt)}
                   </p>

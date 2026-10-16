@@ -2,30 +2,18 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withAuth } from '@/lib/auth/middleware'
 import type { AuthUser } from '@/lib/types/auth'
-
-export interface NotificationPreferences {
-  dueTasks: boolean
-  overdueTasks: boolean
-  habitReminders: boolean
-  flashcardReminders: boolean
-  dailyReviewReminders: boolean
-}
-
-const DEFAULTS: NotificationPreferences = {
-  dueTasks: true,
-  overdueTasks: true,
-  habitReminders: true,
-  flashcardReminders: true,
-  dailyReviewReminders: true,
-}
+import {
+  NOTIFICATION_PREF_DEFAULTS as DEFAULTS,
+  NOTIFICATION_PREF_KEYS,
+  resolveNotificationPreferences,
+  type NotificationPreferences,
+} from '@/lib/notifications/preferences'
 
 export const GET = withAuth(async (_req: NextRequest, user: AuthUser) => {
   const prefs = (user.preferences ?? {}) as Record<string, unknown>
-  const notifPrefs = (prefs.notificationPreferences ?? {}) as Partial<NotificationPreferences>
-
   return NextResponse.json({
     success: true,
-    data: { ...DEFAULTS, ...notifPrefs },
+    data: resolveNotificationPreferences(prefs.notificationPreferences as Record<string, unknown>),
   })
 })
 
@@ -35,9 +23,8 @@ export const PUT = withAuth(async (req: NextRequest, user: AuthUser) => {
     const incoming = body as Partial<NotificationPreferences>
 
     // Validate all values are booleans
-    const validKeys = Object.keys(DEFAULTS) as (keyof NotificationPreferences)[]
     const notifPrefs: Record<string, boolean> = {}
-    for (const key of validKeys) {
+    for (const key of NOTIFICATION_PREF_KEYS) {
       if (key in incoming && typeof incoming[key] === 'boolean') {
         notifPrefs[key] = incoming[key]
       }
@@ -48,7 +35,9 @@ export const PUT = withAuth(async (req: NextRequest, user: AuthUser) => {
       ...currentPrefs,
       notificationPreferences: {
         ...DEFAULTS,
-        ...((currentPrefs.notificationPreferences ?? {}) as Record<string, boolean>),
+        ...resolveNotificationPreferences(
+          currentPrefs.notificationPreferences as Record<string, unknown>
+        ),
         ...notifPrefs,
       },
     }

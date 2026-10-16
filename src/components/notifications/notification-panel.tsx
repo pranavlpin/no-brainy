@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { Clock, AlertTriangle, Flame, Brain, FileText, X } from 'lucide-react'
+import { Clock, AlertTriangle, Brain, FileText, X, Moon, Sunrise } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   useNotifications,
@@ -27,8 +27,10 @@ function getNotificationIcon(type: string) {
       return <Clock className="h-4 w-4 text-blue-500" />
     case 'overdue':
       return <AlertTriangle className="h-4 w-4 text-red-500" />
-    case 'habit_reminder':
-      return <Flame className="h-4 w-4 text-orange-500" />
+    case 'review_reminder':
+      return <Moon className="h-4 w-4 text-indigo-500" />
+    case 'morning_brief':
+      return <Sunrise className="h-4 w-4 text-amber-500" />
     case 'flashcard_review':
       return <Brain className="h-4 w-4 text-purple-500" />
     case 'daily_review':
@@ -42,12 +44,12 @@ function getNavigationPath(notification: NotificationItem): string | null {
   switch (notification.relatedEntity) {
     case 'task':
       return '/tasks'
-    case 'habit':
-      return '/habits'
+    case 'planner':
+      return '/planner'
     case 'deck':
       return notification.relatedId ? `/flashcards/${notification.relatedId}` : '/flashcards'
     case 'review':
-      return '/reviews'
+      return '/reviews/daily'
     default:
       return null
   }
@@ -95,10 +97,7 @@ export function NotificationPanel({ onClose }: NotificationPanelProps) {
               Mark all read
             </button>
           )}
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
-          >
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -107,13 +106,9 @@ export function NotificationPanel({ onClose }: NotificationPanelProps) {
       {/* List */}
       <div className="max-h-96 overflow-y-auto">
         {isLoading ? (
-          <div className="px-4 py-8 text-center text-sm text-gray-500">
-            Loading...
-          </div>
+          <div className="px-4 py-8 text-center text-sm text-gray-500">Loading...</div>
         ) : notifications.length === 0 ? (
-          <div className="px-4 py-8 text-center text-sm text-gray-500">
-            No notifications yet
-          </div>
+          <div className="px-4 py-8 text-center text-sm text-gray-500">No notifications yet</div>
         ) : (
           notifications.map((notification) => (
             <button
@@ -123,24 +118,16 @@ export function NotificationPanel({ onClose }: NotificationPanelProps) {
                 !notification.isRead ? 'bg-indigo-50/50' : ''
               }`}
             >
-              <div className="mt-0.5 shrink-0">
-                {getNotificationIcon(notification.type)}
-              </div>
+              <div className="mt-0.5 shrink-0">{getNotificationIcon(notification.type)}</div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <p className="text-sm font-medium text-gray-900 truncate">
-                    {notification.title}
-                  </p>
+                  <p className="text-sm font-medium text-gray-900 truncate">{notification.title}</p>
                   {!notification.isRead && (
                     <span className="h-2 w-2 shrink-0 rounded-full bg-indigo-500" />
                   )}
                 </div>
-                <p className="mt-0.5 text-sm text-gray-600 truncate">
-                  {notification.body}
-                </p>
-                <p className="mt-1 text-xs text-gray-400">
-                  {getTimeAgo(notification.createdAt)}
-                </p>
+                <p className="mt-0.5 text-sm text-gray-600 truncate">{notification.body}</p>
+                <p className="mt-1 text-xs text-gray-400">{getTimeAgo(notification.createdAt)}</p>
               </div>
             </button>
           ))

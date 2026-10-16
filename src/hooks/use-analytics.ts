@@ -16,7 +16,6 @@ export interface AnalyticsData {
     mastered: number
   }
   reviewStreak: number
-  habitCompletionRate: number
   mostActiveHours: { hour: number; count: number }[]
   totalTasksCompleted: number
   totalBooksRead: number
@@ -26,8 +25,7 @@ export interface AnalyticsData {
 export function useAnalytics() {
   return useQuery({
     queryKey: ['analytics'],
-    queryFn: () =>
-      apiClient<ApiResponse<AnalyticsData>>('/api/analytics'),
+    queryFn: () => apiClient<ApiResponse<AnalyticsData>>('/api/analytics'),
     select: (res) => res.data,
     staleTime: 5 * 60 * 1000, // 5 minutes
   })

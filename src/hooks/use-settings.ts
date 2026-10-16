@@ -15,9 +15,7 @@ export function useApiKeyStatus() {
   return useQuery({
     queryKey: API_KEY_QUERY_KEY,
     queryFn: async () => {
-      const res = await apiClient<ApiResponse<ApiKeyStatus>>(
-        '/api/settings/api-key'
-      )
+      const res = await apiClient<ApiResponse<ApiKeyStatus>>('/api/settings/api-key')
       return res.data
     },
   })
@@ -27,13 +25,10 @@ export function useSaveApiKey() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (apiKey: string) => {
-      const res = await apiClient<ApiResponse<ApiKeyStatus>>(
-        '/api/settings/api-key',
-        {
-          method: 'PUT',
-          body: JSON.stringify({ apiKey }),
-        }
-      )
+      const res = await apiClient<ApiResponse<ApiKeyStatus>>('/api/settings/api-key', {
+        method: 'PUT',
+        body: JSON.stringify({ apiKey }),
+      })
       return res.data
     },
     onSuccess: () => {
@@ -46,12 +41,9 @@ export function useRemoveApiKey() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async () => {
-      const res = await apiClient<ApiResponse<ApiKeyStatus>>(
-        '/api/settings/api-key',
-        {
-          method: 'DELETE',
-        }
-      )
+      const res = await apiClient<ApiResponse<ApiKeyStatus>>('/api/settings/api-key', {
+        method: 'DELETE',
+      })
       return res.data
     },
     onSuccess: () => {
@@ -62,13 +54,8 @@ export function useRemoveApiKey() {
 
 // --- Notification Preferences ---
 
-export interface NotificationPreferences {
-  dueTasks: boolean
-  overdueTasks: boolean
-  habitReminders: boolean
-  flashcardReminders: boolean
-  dailyReviewReminders: boolean
-}
+export type { NotificationPreferences } from '@/lib/notifications/preferences'
+import type { NotificationPreferences } from '@/lib/notifications/preferences'
 
 const NOTIF_PREFS_KEY = ['settings', 'notification-preferences'] as const
 
