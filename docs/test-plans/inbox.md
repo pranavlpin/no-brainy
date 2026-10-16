@@ -41,3 +41,13 @@ Final results: PENDING — no tests have run for this task.
 ## Approval — 2026-10-16
 
 The owner’s conversation message “approved.” approves the parent package, this section’s linked task plan, and the six developer packages listed in NB-02. The proposed section above is retained as the pre-approval record. Tests have not run at this approval checkpoint.
+
+---
+
+## NB-06 execution — 2026-10-16
+
+Branch `feature/inbox-capture-and-process` started from `089baee9904840cb70ac5157e7c7ad95809797ed`. The approved ledger entry preceded tests/code. Behavioral red was observed for missing persistence/conversion/UI behavior before implementation; initial blank exports/501 endpoints allowed meaningful assertions for new modules.
+
+Unit/component coverage exercises account-scoped draft/request restoration, malformed/unavailable storage, close/remount, retry preservation and same submission identity, unclassified saving and explicit owned-project processing. PostgreSQL tests exercise concurrent capture/conversion, source preservation, safe undo/retry, foreign-owner rejection, no destination after a rejected conversion, notes/bookmarks/Someday, archived-original backlinks and unsafe URL rejection. Browser journeys exercise close/reopen, processing into a project action and capture during a running Focus timer, including Space and Escape behavior.
+
+Execution results and final gates: `/Users/pranav/Pranav_projects/github/no-brainy/docs/tasks/inbox.md`. Red/green logs: `/Users/pranav/Pranav_projects/github/no-brainy/evidences/inbox/capture-and-process/`. No screenshots/video/traces were requested or captured.
