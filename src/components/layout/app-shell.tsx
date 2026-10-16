@@ -5,7 +5,7 @@ import { TopBar } from './top-bar'
 import { AppBackground } from './app-background'
 import { useUIStore } from '@/stores/ui-store'
 import { cn } from '@/lib/utils'
-import { QuickCaptureProvider } from '@/components/quick-capture/quick-capture-provider'
+import { CommandLayer } from '@/components/command-palette/command-layer'
 import { Toast } from '@/components/ui/toast'
 import { FocusModeView } from '@/components/focus/focus-mode-view'
 import { TimezoneSync } from '@/components/timezone-sync'
@@ -37,7 +37,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <TopBar />
         <main className="flex-1 overflow-y-auto p-4 md:p-6">{children}</main>
       </div>
-      <QuickCaptureProvider />
+      <CommandLayer />
       <TimezoneSync />
       <Toast />
     </div>

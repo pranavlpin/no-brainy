@@ -470,3 +470,31 @@
     transform: none !important;
   }
 }
+
+/* Command palette (cmdk) */
+.palette-group [cmdk-group-heading] {
+  padding: 0.5rem 0.75rem 0.25rem;
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: hsl(var(--retro-dark) / 0.45);
+}
+.palette-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  color: hsl(var(--retro-dark));
+  cursor: pointer;
+  transition: background-color 0.12s ease;
+}
+.palette-item[data-selected='true'] {
+  background: hsl(var(--retro-blue) / 0.12);
+}
+.palette-item[data-disabled='true'] {
+  opacity: 0.4;
+  pointer-events: none;
+}

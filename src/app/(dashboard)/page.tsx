@@ -138,9 +138,15 @@ export default function TodayPage() {
               </p>
               <ul className="mt-2 space-y-1.5 text-sm text-retro-dark/80">
                 <li className="flex items-center justify-between">
-                  <span>Quick capture</span>
+                  <span>Command palette</span>
                   <kbd className="rounded border border-retro-dark/20 bg-background/70 px-1.5 py-0.5 font-mono text-[10px]">
                     ⌘K
+                  </kbd>
+                </li>
+                <li className="flex items-center justify-between">
+                  <span>Quick capture</span>
+                  <kbd className="rounded border border-retro-dark/20 bg-background/70 px-1.5 py-0.5 font-mono text-[10px]">
+                    C
                   </kbd>
                 </li>
                 <li className="flex items-center justify-between">

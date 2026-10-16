@@ -58,13 +58,14 @@ export default function SearchPage() {
     inputRef.current?.focus()
   }, [])
 
-  // Cmd+K shortcut to focus search
+  // "/" focuses the search box (Cmd+K belongs to the command palette)
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault()
-        inputRef.current?.focus()
-      }
+      if (e.key !== '/' || e.metaKey || e.ctrlKey || e.altKey) return
+      const target = e.target as HTMLElement | null
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) return
+      e.preventDefault()
+      inputRef.current?.focus()
     }
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
@@ -102,8 +103,8 @@ export default function SearchPage() {
           ref={inputRef}
           type="text"
           value={query}
-          onChange={e => setQuery(e.target.value)}
-          placeholder="Search across all your content... (Cmd+K)"
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search across all your content… (press / to focus)"
           className="w-full rounded-xl border border-retro-dark/20 bg-retro-dark/5 py-4 pl-12 pr-4 text-lg text-retro-dark placeholder:text-retro-dark/40 focus:border-retro-blue focus:outline-none focus:ring-1 focus:ring-retro-blue"
         />
         {isFetching && hasQuery && (
@@ -117,7 +118,7 @@ export default function SearchPage() {
       <div className="mt-4 flex flex-wrap items-center gap-3">
         {/* Type filter tabs */}
         <div className="flex gap-1 overflow-x-auto">
-          {TYPE_TABS.map(tab => (
+          {TYPE_TABS.map((tab) => (
             <button
               key={tab.value}
               onClick={() => setType(tab.value)}
@@ -195,9 +196,7 @@ export default function SearchPage() {
             {recentSearches.length === 0 && (
               <div className="py-20 text-center">
                 <Search className="mx-auto h-12 w-12 text-retro-dark/30" />
-                <p className="mt-4 text-lg text-retro-dark/40">
-                  Search across all your content
-                </p>
+                <p className="mt-4 text-lg text-retro-dark/40">Search across all your content</p>
                 <p className="mt-1 text-sm text-retro-dark/40">
                   Find notes, tasks, books, and flashcards
                 </p>
@@ -230,7 +229,7 @@ export default function SearchPage() {
               {data.total} result{data.total !== 1 ? 's' : ''} for &ldquo;
               {data.query}&rdquo;
             </p>
-            {data.results.map(result => (
+            {data.results.map((result) => (
               <SearchResultItem
                 key={`${result.entityType}-${result.id}`}
                 result={result}
@@ -243,12 +242,8 @@ export default function SearchPage() {
         {/* No results */}
         {showEmpty && (
           <div className="py-16 text-center">
-            <p className="text-lg text-retro-dark/40">
-              No results for &ldquo;{query}&rdquo;
-            </p>
-            <p className="mt-1 text-sm text-retro-dark/40">
-              Try a different search term or filter
-            </p>
+            <p className="text-lg text-retro-dark/40">No results for &ldquo;{query}&rdquo;</p>
+            <p className="mt-1 text-sm text-retro-dark/40">Try a different search term or filter</p>
           </div>
         )}
       </div>
