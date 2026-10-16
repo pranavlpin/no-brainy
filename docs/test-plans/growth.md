@@ -41,3 +41,17 @@ Final results: PENDING — no tests have run for this task.
 ## Approval — 2026-10-16
 
 The owner’s conversation message “approved.” approves the parent package, this section’s linked task plan, and the six developer packages listed in NB-02. The proposed section above is retained as the pre-approval record. Tests have not run at this approval checkpoint.
+
+---
+
+## NB-09 execution — 2026-10-16
+
+Behavioral red → green for outcome/measurement separation, date/timezone practice identity, evidence ownership/corrections and retry-safe creation, sourced scheduled experiments, all-page goal selectors and editable success criteria. Additional regressions prevent moving a session's practice date through later evidence and keep linked historical notes visible when changing the selected week. Financial amount semantics remain separate and tested.
+
+Component coverage verifies source-preserving book experiments without AI, explicit Today scheduling, failed evidence input retention and repeated-request identity. The end-to-end Growth journey covers goal creation, an explicitly planned next action, Focus completion, unchanged unknown outcome until evidence is recorded, reload persistence, pausing and narrow-screen layout. The first implementation browser run encountered JSX syntax errors; these were corrected before a clean run. The separate book journey initially used the wrong legacy HTTP verb in its fixture; it now uses the existing PATCH contract without changing assertions.
+
+Latest full results: 23 governance + 84 unit/component tests and 27 integration tests passed. TypeScript, formatting, Prisma validation and the production build passed. ESLint has zero errors and the four inherited image warnings assigned to NB-12. Final browser results are recorded in the task ledger. Evidence: /Users/pranav/Pranav_projects/github/no-brainy/evidences/growth/practice-and-evidence/.
+
+### Final browser result
+
+All 11 browser journeys passed in the integrated run, including the book application → sourced scheduled action journey and Growth at 375px. No screenshots, videos or traces were captured.
