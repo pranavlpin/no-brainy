@@ -5,3 +5,4 @@ Append-only ledger for the `focus` module (focus mode, pomodoro). See `CLAUDE.md
 | ID | Task | Date | Branch | Plan | Status |
 |---|---|---|---|---|---|
 | T10 | Persisted focus sessions and mini timer | 2026-10-16 | feature/platform-daily-loop-overhaul | [plan](../plans/focus/persisted-sessions.md) | done — 35 files / 122 tests green; sessions persisted, timer survives navigation, minutes on Home and in the review |
+| T17 | Focus outcomes and session intention; review activity view | 2026-10-16 | feature/product-adoption-wave-2 | [plan](../plans/focus/outcomes.md) | planned |
