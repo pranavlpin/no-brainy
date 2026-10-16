@@ -20,9 +20,7 @@ export function DeckCard({ deck, onOpen, onReview }: DeckCardProps) {
       onClick={() => onOpen(deck.id)}
     >
       <div className="flex items-start justify-between">
-        <h3 className="text-lg font-semibold text-foreground line-clamp-1">
-          {deck.name}
-        </h3>
+        <h3 className="text-lg font-semibold text-foreground line-clamp-1">{deck.name}</h3>
         {hasDue && (
           <Badge variant="orange" className="ml-2 shrink-0">
             {deck.dueCount} due
@@ -31,9 +29,7 @@ export function DeckCard({ deck, onOpen, onReview }: DeckCardProps) {
       </div>
 
       {deck.descriptionMd && (
-        <p className="mt-1.5 text-sm text-muted-foreground line-clamp-2">
-          {deck.descriptionMd}
-        </p>
+        <p className="mt-1.5 text-sm text-muted-foreground line-clamp-2">{deck.descriptionMd}</p>
       )}
 
       <div className="mt-4 flex items-center gap-3 text-sm text-muted-foreground">
@@ -63,7 +59,7 @@ export function DeckCard({ deck, onOpen, onReview }: DeckCardProps) {
         </div>
       )}
 
-      <div className="mt-auto pt-4 flex items-center justify-between">
+      <div className="mt-auto pt-4 flex flex-wrap items-center justify-between gap-3">
         <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
           <Clock className="h-3 w-3" />
           {new Date(deck.updatedAt).toLocaleDateString()}

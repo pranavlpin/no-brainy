@@ -58,7 +58,7 @@ export function QuizProgress({
         />
       </div>
 
-      <div className="flex items-center justify-between text-sm text-muted-foreground">
+      <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
         <span>
           Card {Math.min(current + 1, total)} of {total}
         </span>
@@ -80,7 +80,7 @@ export function QuizProgress({
 
           {timeLeft !== null && (
             <span
-              className={`font-mono text-xs tabular-nums ${
+              className={`text-xs tabular-nums ${
                 timeLeft <= 30 ? 'text-red-500 font-semibold' : ''
               }`}
             >

@@ -65,19 +65,14 @@ export function WatchlistForm({
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="space-y-4 border-2 border-retro-dark/20 bg-card p-4"
-    >
+    <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-border bg-card p-4">
       <h3 className="font-display text-lg font-bold text-retro-dark">
         {item ? 'Edit Item' : 'Add to Watchlist'}
       </h3>
 
       {/* Title */}
       <div>
-        <label className="mb-1 block font-mono text-xs font-bold uppercase text-retro-dark/60">
-          Title *
-        </label>
+        <label className="mb-1 block text-xs font-bold uppercase text-retro-dark/60">Title *</label>
         <Input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
@@ -90,21 +85,14 @@ export function WatchlistForm({
       {/* Type + Year row */}
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="mb-1 block font-mono text-xs font-bold uppercase text-retro-dark/60">
-            Type
-          </label>
-          <Select
-            value={type}
-            onChange={(e) => setType(e.target.value as WatchlistType)}
-          >
+          <label className="mb-1 block text-xs font-bold uppercase text-retro-dark/60">Type</label>
+          <Select value={type} onChange={(e) => setType(e.target.value as WatchlistType)}>
             <option value="movie">Movie</option>
             <option value="show">Show</option>
           </Select>
         </div>
         <div>
-          <label className="mb-1 block font-mono text-xs font-bold uppercase text-retro-dark/60">
-            Year
-          </label>
+          <label className="mb-1 block text-xs font-bold uppercase text-retro-dark/60">Year</label>
           <Input
             type="number"
             value={year}
@@ -119,7 +107,7 @@ export function WatchlistForm({
 
       {/* Platform */}
       <div>
-        <label className="mb-1 block font-mono text-xs font-bold uppercase text-retro-dark/60">
+        <label className="mb-1 block text-xs font-bold uppercase text-retro-dark/60">
           Platform
         </label>
         <Input
@@ -132,7 +120,7 @@ export function WatchlistForm({
 
       {/* Genre */}
       <div>
-        <label className="mb-1 block font-mono text-xs font-bold uppercase text-retro-dark/60">
+        <label className="mb-1 block text-xs font-bold uppercase text-retro-dark/60">
           Genre (comma-separated)
         </label>
         <Input
@@ -145,7 +133,7 @@ export function WatchlistForm({
 
       {/* Tags */}
       <div>
-        <label className="mb-1 block font-mono text-xs font-bold uppercase text-retro-dark/60">
+        <label className="mb-1 block text-xs font-bold uppercase text-retro-dark/60">
           Tags (comma-separated)
         </label>
         <Input
@@ -158,35 +146,26 @@ export function WatchlistForm({
 
       {/* Notes */}
       <div>
-        <label className="mb-1 block font-mono text-xs font-bold uppercase text-retro-dark/60">
-          Notes
-        </label>
+        <label className="mb-1 block text-xs font-bold uppercase text-retro-dark/60">Notes</label>
         <textarea
           value={notesMd}
           onChange={(e) => setNotesMd(e.target.value)}
           placeholder="Your thoughts..."
           rows={3}
-          className="flex w-full border-2 border-retro-dark/20 bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-retro-blue focus-visible:ring-offset-2"
+          className="flex w-full rounded-xl border border-border bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-retro-blue focus-visible:ring-offset-2"
         />
       </div>
 
       {/* Rating */}
       <div>
-        <label className="mb-1 block font-mono text-xs font-bold uppercase text-retro-dark/60">
-          Rating
-        </label>
+        <label className="mb-1 block text-xs font-bold uppercase text-retro-dark/60">Rating</label>
         <StarRating value={rating} onChange={setRating} size={24} />
       </div>
 
       {/* Status */}
       <div>
-        <label className="mb-1 block font-mono text-xs font-bold uppercase text-retro-dark/60">
-          Status
-        </label>
-        <Select
-          value={status}
-          onChange={(e) => setStatus(e.target.value as WatchlistStatus)}
-        >
+        <label className="mb-1 block text-xs font-bold uppercase text-retro-dark/60">Status</label>
+        <Select value={status} onChange={(e) => setStatus(e.target.value as WatchlistStatus)}>
           <option value="want_to_watch">Want to Watch</option>
           <option value="watching">Watching</option>
           <option value="completed">Completed</option>
@@ -199,14 +178,14 @@ export function WatchlistForm({
         <button
           type="submit"
           disabled={isLoading || !title.trim()}
-          className="border-2 border-retro-dark bg-retro-blue px-4 py-2 font-mono text-sm font-bold text-white shadow-hard hover-shadow-grow disabled:opacity-50"
+          className="inline-flex items-center rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 disabled:opacity-50"
         >
           {isLoading ? 'Saving...' : item ? 'Update' : 'Add'}
         </button>
         <button
           type="button"
           onClick={onCancel}
-          className="border-2 border-retro-dark/20 bg-background px-4 py-2 font-mono text-sm font-bold text-retro-dark hover:bg-muted"
+          className="rounded-xl border border-border bg-background px-4 py-2 text-sm font-bold text-retro-dark hover:bg-muted"
         >
           Cancel
         </button>

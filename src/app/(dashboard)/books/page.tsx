@@ -1,5 +1,6 @@
 'use client'
 
+import { ErrorState } from '@/components/ui/workspace-states'
 import { useState } from 'react'
 import Link from 'next/link'
 import { Plus, Search, BookOpen } from 'lucide-react'
@@ -37,18 +38,23 @@ export default function BooksPage() {
     ...(search.trim() ? { search: search.trim() } : {}),
   }
 
-  const { data: books, isLoading } = useBooks(
-    Object.keys(filters).length > 0 ? filters : undefined
-  )
+  const {
+    data: books,
+    isLoading,
+    isError,
+    refetch,
+  } = useBooks(Object.keys(filters).length > 0 ? filters : undefined)
+
+  if (isError) return <ErrorState retry={() => void refetch()} />
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="font-display text-2xl font-bold text-retro-dark">Books</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="display-title">Books</h1>
         <Link
           href="/books/new"
-          className="border-2 border-retro-dark bg-retro-blue px-4 py-2 font-mono text-sm font-bold text-white shadow-hard hover-shadow-grow"
+          className="inline-flex items-center rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
         >
           <Plus size={16} className="mr-2 inline" />
           Add Book
@@ -64,7 +70,7 @@ export default function BooksPage() {
             className={cn(
               'rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
               tab === t.value
-                ? 'bg-retro-blue/10 text-retro-dark font-mono'
+                ? 'bg-retro-blue/10 text-foreground'
                 : 'text-retro-dark/40 hover:text-foreground'
             )}
           >
@@ -83,7 +89,7 @@ export default function BooksPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search books..."
-          className="rounded-none pl-9"
+          className="pl-9"
         />
       </div>
 
@@ -109,9 +115,7 @@ export default function BooksPage() {
       ) : (
         <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border py-16">
           <BookOpen size={48} className="text-muted-foreground/40" />
-          <p className="mt-4 text-sm text-muted-foreground">
-            {emptyMessages[tab]}
-          </p>
+          <p className="mt-4 text-sm text-muted-foreground">{emptyMessages[tab]}</p>
           <Link href="/books/new" className={cn(buttonVariants({ variant: 'outline' }), 'mt-4')}>
             <Plus size={16} className="mr-2" />
             Add Book

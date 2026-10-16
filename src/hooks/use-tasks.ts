@@ -1,146 +1,165 @@
-import {
-  useQuery,
-  useMutation,
-  useQueryClient,
-} from "@tanstack/react-query"
-import { apiClient } from "@/lib/api-client"
-import type { ApiResponse, PaginatedResponse } from "@/lib/types/api"
+import { useQuery, useMutation, useQueryClient, type QueryClient } from '@tanstack/react-query'
+import { apiClient } from '@/lib/api-client'
+import type { ApiResponse, PaginatedResponse } from '@/lib/types/api'
 import type {
   TaskResponse,
   TaskFilters,
   CreateTaskRequest,
   UpdateTaskRequest,
   TaskPriority,
-} from "@/lib/types/tasks"
+} from '@/lib/types/tasks'
 
-// Extended type for list items that include subtasksCount
 interface TaskListItem extends TaskResponse {
   subtasksCount?: number
 }
+const affected = ['tasks', 'planner', 'goals', 'growth', 'reviews', 'projects']
+const relevant = (key: readonly unknown[]) => affected.includes(String(key[0]))
+const refresh = (client: QueryClient) =>
+  client.invalidateQueries({ predicate: (query) => relevant(query.queryKey) })
 
 function buildQueryString(filters: TaskFilters): string {
   const params = new URLSearchParams()
-  if (filters.search) params.set("search", filters.search)
-  if (filters.status) {
-    const val = Array.isArray(filters.status)
-      ? filters.status[0]
-      : filters.status
-    if (val) params.set("status", val)
+  for (const [key, value] of Object.entries(filters)) {
+    if (value === undefined || value === '') continue
+    params.set(key, Array.isArray(value) ? value.join(',') : String(value))
   }
-  if (filters.priority) {
-    const val = Array.isArray(filters.priority)
-      ? filters.priority[0]
-      : filters.priority
-    if (val) params.set("priority", val)
-  }
-  if (filters.quadrant) params.set("quadrant", filters.quadrant)
-  if (filters.tags?.length) params.set("tags", filters.tags.join(","))
-  if (filters.goalId) params.set("goalId", filters.goalId)
-  if (filters.parentTaskId !== undefined) {
-    if (filters.parentTaskId === null) {
-      params.set("parentTaskId", "null")
-    } else {
-      params.set("parentTaskId", filters.parentTaskId)
-    }
-  }
-  if (filters.dueDateFrom) params.set("dueDateFrom", filters.dueDateFrom)
-  if (filters.dueDateTo) params.set("dueDateTo", filters.dueDateTo)
-  if (filters.sortBy) params.set("sortBy", filters.sortBy)
-  if (filters.sortOrder) params.set("sortOrder", filters.sortOrder)
-  const str = params.toString()
-  return str ? `?${str}` : ""
+  return `?${params.toString()}`
+}
+const fetchPage = async (filters: TaskFilters) =>
+  (
+    await apiClient<
+      ApiResponse<PaginatedResponse<TaskListItem> & { today: string; timezone: string }>
+    >(`/api/tasks${buildQueryString(filters)}`)
+  ).data
+
+/** Fetch one explicit page with its total and continuation metadata. */
+export function useTaskPage(filters: TaskFilters = {}) {
+  return useQuery({ queryKey: ['tasks', 'page', filters], queryFn: () => fetchPage(filters) })
 }
 
+/** Fetch all matching tasks for selectors and legacy consumers, without a silent 20-item cutoff. */
 export function useTasks(filters: TaskFilters = {}) {
   return useQuery({
-    queryKey: ["tasks", filters],
-    queryFn: () =>
-      apiClient<ApiResponse<PaginatedResponse<TaskListItem>>>(
-        `/api/tasks${buildQueryString(filters)}`
-      ),
-    select: (res) => res.data.items,
+    queryKey: ['tasks', 'all', filters],
+    queryFn: async () => {
+      let page = await fetchPage({ ...filters, page: 1, pageSize: 100 })
+      const items = [...page.items]
+      while (page.hasMore) {
+        page = await fetchPage({ ...filters, page: page.page + 1, pageSize: 100 })
+        items.push(...page.items)
+      }
+      return items
+    },
   })
 }
 
 export function useTask(id: string | undefined) {
   return useQuery({
-    queryKey: ["tasks", id],
-    queryFn: () =>
-      apiClient<ApiResponse<TaskResponse>>(`/api/tasks/${id}`),
+    queryKey: ['tasks', id],
+    queryFn: () => apiClient<ApiResponse<TaskResponse>>(`/api/tasks/${id}`),
     select: (res) => res.data,
     enabled: !!id,
   })
 }
 
+/** Update a task wherever it appears inside a task/planner response. */
+function patchTask(value: unknown, id: string, patch: UpdateTaskRequest): unknown {
+  if (Array.isArray(value)) return value.map((item) => patchTask(item, id, patch))
+  if (!value || typeof value !== 'object') return value
+  const record = value as Record<string, unknown>
+  if (record.id === id && 'status' in record) return { ...record, ...patch }
+  return Object.fromEntries(
+    Object.entries(record).map(([key, item]) => [key, patchTask(item, id, patch)])
+  )
+}
+
 export function useCreateTask() {
-  const queryClient = useQueryClient()
+  const client = useQueryClient()
   return useMutation({
     mutationFn: (data: CreateTaskRequest) =>
-      apiClient<ApiResponse<TaskResponse>>("/api/tasks", {
-        method: "POST",
+      apiClient<ApiResponse<TaskResponse>>('/api/tasks', {
+        method: 'POST',
         body: JSON.stringify(data),
       }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["tasks"] })
-    },
+    onSuccess: () => refresh(client),
   })
 }
 
 export function useUpdateTask() {
-  const queryClient = useQueryClient()
+  const client = useQueryClient()
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateTaskRequest }) =>
       apiClient<ApiResponse<TaskResponse>>(`/api/tasks/${id}`, {
-        method: "PUT",
+        method: 'PUT',
         body: JSON.stringify(data),
       }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["tasks"] })
+    onMutate: async ({ id, data }) => {
+      await client.cancelQueries({ predicate: (query) => relevant(query.queryKey) })
+      const previous = client.getQueriesData({ predicate: (query) => relevant(query.queryKey) })
+      const changes = previous.map(([key, value]) => {
+        const next = patchTask(value, id, data)
+        client.setQueryData(key, next)
+        return { key, value, next: client.getQueryData(key) }
+      })
+      return changes
     },
+    onError: (_error, _variables, changes) => {
+      for (const change of changes ?? []) {
+        // Do not erase a later optimistic operation on the same query.
+        if (client.getQueryData(change.key) === change.next)
+          client.setQueryData(change.key, change.value)
+      }
+    },
+    onSettled: () => refresh(client),
   })
 }
 
 export function useDeleteTask() {
-  const queryClient = useQueryClient()
+  const client = useQueryClient()
   return useMutation({
     mutationFn: (id: string) =>
-      apiClient<ApiResponse<{ id: string }>>(`/api/tasks/${id}`, {
-        method: "DELETE",
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["tasks"] })
-    },
+      apiClient<ApiResponse<{ id: string }>>(`/api/tasks/${id}`, { method: 'DELETE' }),
+    onSuccess: () => refresh(client),
   })
 }
 
 export function useBulkAction() {
-  const queryClient = useQueryClient()
+  const client = useQueryClient()
   return useMutation({
     mutationFn: (data: {
       taskIds: string[]
-      action: "complete" | "delete" | "setPriority"
+      action: 'complete' | 'delete' | 'setPriority'
       priority?: TaskPriority
     }) =>
-      apiClient<ApiResponse<{ affected: number }>>("/api/tasks/bulk", {
-        method: "POST",
+      apiClient<ApiResponse<{ affected: number }>>('/api/tasks/bulk', {
+        method: 'POST',
         body: JSON.stringify(data),
       }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["tasks"] })
-    },
+    onSuccess: () => refresh(client),
   })
 }
 
 export function useReorderTasks() {
-  const queryClient = useQueryClient()
+  const client = useQueryClient()
   return useMutation({
     mutationFn: (tasks: { id: string; orderIndex: number }[]) =>
-      apiClient<ApiResponse<{ updated: number }>>("/api/tasks/reorder", {
-        method: "POST",
+      apiClient<ApiResponse<{ updated: number }>>('/api/tasks/reorder', {
+        method: 'POST',
         body: JSON.stringify({ tasks }),
       }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["tasks"] })
-    },
+    onSuccess: () => refresh(client),
+  })
+}
+
+/** Explicit routine controls retain completed and skipped occurrences as history. */
+export function useRoutineAction() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, action }: { id: string; action: 'pause' | 'resume' | 'skip' }) =>
+      apiClient<ApiResponse<TaskResponse>>(`/api/tasks/${id}/routine`, {
+        method: 'POST',
+        body: JSON.stringify({ action }),
+      }),
+    onSuccess: () => refresh(client),
   })
 }

@@ -1,7 +1,14 @@
 'use client'
 
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
 } from 'recharts'
 import { formatINR, formatMonthLabel } from '@/lib/expenses/formatters'
 
@@ -18,7 +25,15 @@ interface CategoryTrendChartProps {
   categories: CategoryTrend[]
 }
 
-function CustomTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ name: string; value: number; color: string }>; label?: string }): React.ReactElement | null {
+function CustomTooltip({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean
+  payload?: Array<{ name: string; value: number; color: string }>
+  label?: string
+}): React.ReactElement | null {
   if (!active || !payload?.length) return null
   return (
     <div className="rounded-lg border border-border bg-background px-3 py-2 shadow-md max-w-[200px]">
@@ -27,19 +42,22 @@ function CustomTooltip({ active, payload, label }: { active?: boolean; payload?:
         .filter((p) => p.value > 0)
         .sort((a, b) => b.value - a.value)
         .map((p, i) => (
-        <div key={i} className="flex items-center justify-between gap-3 text-xs">
-          <span className="flex items-center gap-1">
-            <span className="h-2 w-2 rounded-full" style={{ backgroundColor: p.color }} />
-            {p.name}
-          </span>
-          <span className="font-mono">{formatINR(p.value)}</span>
-        </div>
-      ))}
+          <div key={i} className="flex flex-wrap items-center justify-between gap-3 gap-3 text-xs">
+            <span className="flex items-center gap-1">
+              <span className="h-2 w-2 rounded-full" style={{ backgroundColor: p.color }} />
+              {p.name}
+            </span>
+            <span className="font-mono">{formatINR(p.value)}</span>
+          </div>
+        ))}
     </div>
   )
 }
 
-export function CategoryTrendChart({ months, categories }: CategoryTrendChartProps): React.ReactElement {
+export function CategoryTrendChart({
+  months,
+  categories,
+}: CategoryTrendChartProps): React.ReactElement {
   const chartData = months.map((month) => {
     const row: Record<string, string | number> = { month: formatMonthLabel(month) }
     categories.forEach((cat) => {
@@ -54,8 +72,16 @@ export function CategoryTrendChart({ months, categories }: CategoryTrendChartPro
       <ResponsiveContainer width="100%" height={320}>
         <LineChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-          <XAxis dataKey="month" className="text-xs" tick={{ fill: 'currentColor', fontSize: 11 }} />
-          <YAxis className="text-xs" tick={{ fill: 'currentColor', fontSize: 11 }} tickFormatter={(v: number) => `₹${(v / 1000).toFixed(0)}k`} />
+          <XAxis
+            dataKey="month"
+            className="text-xs"
+            tick={{ fill: 'currentColor', fontSize: 11 }}
+          />
+          <YAxis
+            className="text-xs"
+            tick={{ fill: 'currentColor', fontSize: 11 }}
+            tickFormatter={(v: number) => `₹${(v / 1000).toFixed(0)}k`}
+          />
           <Tooltip content={<CustomTooltip />} />
           <Legend
             formatter={(value: string) => <span className="text-xs">{value}</span>}

@@ -1,3 +1,4 @@
+import { validateAIOutput } from '@/lib/ai/validation'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withAI } from '@/lib/ai/middleware'
@@ -47,15 +48,13 @@ export const POST = withAI(async (req: NextRequest, { user, apiKey }) => {
       apiKey,
       model: extractActionsPrompt.model,
       systemPrompt: extractActionsPrompt.systemPrompt,
-      userPrompt: extractActionsPrompt.userPrompt(
-        `Note: "${note.title}"\n\n${note.contentMd}`
-      ),
+      userPrompt: extractActionsPrompt.userPrompt(`Note: "${note.title}"\n\n${note.contentMd}`),
       maxTokens: extractActionsPrompt.maxTokens,
       temperature: extractActionsPrompt.temperature,
       responseFormat: 'json',
     })
 
-    return NextResponse.json(result)
+    return NextResponse.json({ ...result, data: validateAIOutput('actions', result.data) })
   } catch (error) {
     return handleAIError(error)
   }

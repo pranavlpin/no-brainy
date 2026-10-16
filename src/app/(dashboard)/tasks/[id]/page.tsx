@@ -1,33 +1,48 @@
-"use client"
+'use client'
 
-import { useState, useEffect, useCallback, useRef } from "react"
-import { useParams, useRouter } from "next/navigation"
-import { ArrowLeft, Trash2, Focus } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select } from "@/components/ui/select"
-import { MarkdownEditor } from "@/components/editor/markdown-editor"
-import { SubtaskList } from "@/components/tasks/subtask-list"
-import { PriorityBadge } from "@/components/tasks/priority-badge"
-import { useTask, useUpdateTask, useDeleteTask } from "@/hooks/use-tasks"
-import { useTaskLinks, useAddTaskLink, useRemoveTaskLink } from "@/hooks/use-links"
-import { useUIStore } from "@/stores/ui-store"
-import { LinkManager } from "@/components/linking/link-manager"
-import type { LinkedItemData } from "@/components/linking/linked-item"
-import { cn } from "@/lib/utils"
-import type {
-  TaskPriority,
-  TaskStatus,
-  TaskQuadrant,
-  UpdateTaskRequest,
-} from "@/lib/types/tasks"
+import { useState } from 'react'
+import { useParams, useRouter } from 'next/navigation'
+import { ArrowLeft, Trash2, Focus } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Select } from '@/components/ui/select'
+import { MarkdownEditor } from '@/components/editor/markdown-editor'
+import { SubtaskList } from '@/components/tasks/subtask-list'
+import { PriorityBadge } from '@/components/tasks/priority-badge'
+import { useTask, useUpdateTask, useDeleteTask, useRoutineAction } from '@/hooks/use-tasks'
+import { useTaskLinks, useAddTaskLink, useRemoveTaskLink } from '@/hooks/use-links'
+import { useUIStore } from '@/stores/ui-store'
+import { LinkManager } from '@/components/linking/link-manager'
+import type { LinkedItemData } from '@/components/linking/linked-item'
+import { useDraftSave } from '@/hooks/use-draft-save'
+import { SaveStatus } from '@/components/ui/save-status'
+import { TaskPlanningFields } from '@/components/tasks/task-planning-fields'
+import { supportedRecurrence } from '@/lib/tasks/recurrence'
+import { cn } from '@/lib/utils'
+import type { TaskPriority, TaskStatus, TaskQuadrant } from '@/lib/types/tasks'
 
 const quadrantOptions: { value: TaskQuadrant; label: string; color: string }[] = [
-  { value: "urgent_important", label: "Do First", color: "bg-red-100 border-red-300 dark:bg-red-950/30 dark:border-red-800" },
-  { value: "not_urgent_important", label: "Schedule", color: "bg-blue-100 border-blue-300 dark:bg-blue-950/30 dark:border-blue-800" },
-  { value: "urgent_not_important", label: "Delegate", color: "bg-yellow-100 border-yellow-300 dark:bg-yellow-950/30 dark:border-yellow-800" },
-  { value: "not_urgent_not_important", label: "Eliminate", color: "bg-gray-100 border-gray-300 dark:bg-gray-800 dark:border-gray-700" },
+  {
+    value: 'urgent_important',
+    label: 'Do First',
+    color: 'bg-red-100 border-red-300 dark:bg-red-950/30 dark:border-red-800',
+  },
+  {
+    value: 'not_urgent_important',
+    label: 'Schedule',
+    color: 'bg-blue-100 border-blue-300 dark:bg-blue-950/30 dark:border-blue-800',
+  },
+  {
+    value: 'urgent_not_important',
+    label: 'Delegate',
+    color: 'bg-yellow-100 border-yellow-300 dark:bg-yellow-950/30 dark:border-yellow-800',
+  },
+  {
+    value: 'not_urgent_not_important',
+    label: 'Eliminate',
+    color: 'bg-gray-100 border-gray-300 dark:bg-gray-800 dark:border-gray-700',
+  },
 ]
 
 export default function TaskDetailPage() {
@@ -35,9 +50,10 @@ export default function TaskDetailPage() {
   const router = useRouter()
   const id = params.id as string
 
-  const { data: task, isLoading } = useTask(id)
+  const { data: task, isLoading, refetch } = useTask(id)
   const updateTask = useUpdateTask()
   const deleteTask = useDeleteTask()
+  const routineAction = useRoutineAction()
   const enterFocusMode = useUIStore((s) => s.enterFocusMode)
   const { data: taskLinks } = useTaskLinks(id)
   const addTaskLink = useAddTaskLink(id)
@@ -50,142 +66,101 @@ export default function TaskDetailPage() {
     extra: l.extra,
   }))
 
-  const [title, setTitle] = useState("")
-  const [descriptionMd, setDescriptionMd] = useState("")
-  const [priority, setPriority] = useState<TaskPriority>("medium")
-  const [status, setStatus] = useState<TaskStatus>("pending")
-  const [dueDate, setDueDate] = useState("")
-  const [tagsInput, setTagsInput] = useState("")
-  const [quadrant, setQuadrant] = useState<TaskQuadrant | "">("")
-  const [isRecurring, setIsRecurring] = useState(false)
-  const [rrule, setRrule] = useState("")
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-  const [initialized, setInitialized] = useState(false)
-
-  // Populate form when task loads
-  useEffect(() => {
-    if (task && !initialized) {
-      setTitle(task.title)
-      setDescriptionMd(task.descriptionMd)
-      setPriority(task.priority)
-      setStatus(task.status)
-      setDueDate(task.dueDate ? task.dueDate.split("T")[0] : "")
-      setTagsInput(task.tags.join(", "))
-      setQuadrant(task.quadrant ?? "")
-      setIsRecurring(task.isRecurring)
-      setRrule(task.rrule ?? "")
-      setInitialized(true)
-    }
-  }, [task, initialized])
-
-  // Auto-save with debounce
-  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  const scheduleAutoSave = useCallback(
-    (updates: UpdateTaskRequest) => {
-      if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current)
-      autoSaveTimer.current = setTimeout(() => {
-        updateTask.mutate({ id, data: updates })
-      }, 800)
-    },
-    [id, updateTask]
+  const draft = useDraftSave(
+    'task',
+    task,
+    async (patch, version) =>
+      (await updateTask.mutateAsync({ id, data: { ...patch, expectedUpdatedAt: version } })).data,
+    async () => (await refetch()).data
   )
+  const value = draft.value
+  const title = value?.title ?? ''
+  const descriptionMd = value?.descriptionMd ?? ''
+  const priority = value?.priority ?? 'medium'
+  const status = value?.status ?? 'pending'
+  const dueDate = value?.dueDate?.slice(0, 10) ?? ''
+  const [rawTags, setRawTags] = useState<string | null>(null)
+  const tagsInput = rawTags ?? value?.tags.join(', ') ?? ''
+  const quadrant = value?.quadrant ?? ''
+  const isRecurring = value?.isRecurring ?? false
+  const rrule = value?.rrule ?? ''
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const scheduleAutoSave = draft.change
 
   // Field change handlers that trigger auto-save
   const handleTitleChange = (val: string) => {
-    setTitle(val)
-    if (val.trim()) scheduleAutoSave({ title: val.trim() })
+    scheduleAutoSave({ title: val })
   }
 
   const handleDescriptionChange = (val: string) => {
-    setDescriptionMd(val)
     scheduleAutoSave({ descriptionMd: val })
   }
 
   const handlePriorityChange = (val: TaskPriority) => {
-    setPriority(val)
     scheduleAutoSave({ priority: val })
   }
 
   const handleStatusChange = (val: TaskStatus) => {
-    setStatus(val)
     scheduleAutoSave({ status: val })
   }
 
   const handleDueDateChange = (val: string) => {
-    setDueDate(val)
-    scheduleAutoSave({ dueDate: val ? new Date(val).toISOString() : null })
+    scheduleAutoSave({ dueDate: val || null })
   }
 
   const handleTagsChange = (val: string) => {
-    setTagsInput(val)
+    setRawTags(val)
     const tags = val
-      .split(",")
+      .split(',')
       .map((t) => t.trim())
       .filter(Boolean)
     scheduleAutoSave({ tags })
   }
 
-  const handleQuadrantChange = (val: TaskQuadrant | "") => {
-    setQuadrant(val)
+  const handleQuadrantChange = (val: TaskQuadrant | '') => {
     scheduleAutoSave({ quadrant: val || null })
   }
 
   const handleRecurringChange = (checked: boolean) => {
-    setIsRecurring(checked)
     scheduleAutoSave({ isRecurring: checked, ...(!checked && { rrule: null }) })
   }
 
   const handleRruleChange = (val: string) => {
-    setRrule(val)
     scheduleAutoSave({ rrule: val || null })
   }
 
   const handleDelete = () => {
     deleteTask.mutate(id, {
-      onSuccess: () => router.push("/tasks"),
+      onSuccess: () => {
+        draft.discard()
+        router.push('/tasks')
+      },
     })
   }
 
   if (isLoading) {
-    return (
-      <div className="py-12 text-center text-muted-foreground">
-        Loading task...
-      </div>
-    )
+    return <div className="py-12 text-center text-muted-foreground">Loading task...</div>
   }
 
   if (!task) {
-    return (
-      <div className="py-12 text-center text-muted-foreground">
-        Task not found.
-      </div>
-    )
+    return <div className="py-12 text-center text-muted-foreground">Task not found.</div>
   }
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => router.push("/tasks")}>
+        <Button variant="ghost" size="icon" onClick={() => router.push('/tasks')}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div className="flex-1">
           <PriorityBadge priority={priority} />
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => enterFocusMode(id)}
-        >
+        <Button variant="outline" size="sm" onClick={() => enterFocusMode(id)}>
           <Focus className="mr-1 h-4 w-4" />
           Focus
         </Button>
-        <Button
-          variant="destructive"
-          size="sm"
-          onClick={() => setShowDeleteConfirm(true)}
-        >
+        <Button variant="destructive" size="sm" onClick={() => setShowDeleteConfirm(true)}>
           <Trash2 className="mr-1 h-4 w-4" />
           Delete
         </Button>
@@ -204,13 +179,9 @@ export default function TaskDetailPage() {
               onClick={handleDelete}
               disabled={deleteTask.isPending}
             >
-              {deleteTask.isPending ? "Deleting..." : "Confirm Delete"}
+              {deleteTask.isPending ? 'Deleting...' : 'Confirm Delete'}
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowDeleteConfirm(false)}
-            >
+            <Button variant="outline" size="sm" onClick={() => setShowDeleteConfirm(false)}>
               Cancel
             </Button>
           </div>
@@ -222,6 +193,7 @@ export default function TaskDetailPage() {
         value={title}
         onChange={(e) => handleTitleChange(e.target.value)}
         className="text-xl font-bold border-none px-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+        aria-label="Task title"
         placeholder="Task title..."
       />
 
@@ -266,6 +238,11 @@ export default function TaskDetailPage() {
         </div>
       </div>
 
+      <section className="surface p-5">
+        <h2 className="mb-4 text-sm font-semibold">Connect this action to your plan</h2>
+        <TaskPlanningFields value={value ?? {}} onChange={draft.change} />
+      </section>
+
       {/* Tags */}
       <div className="space-y-1">
         <Label htmlFor="detail-tags">Tags</Label>
@@ -286,15 +263,13 @@ export default function TaskDetailPage() {
               key={opt.value}
               type="button"
               className={cn(
-                "rounded-md border px-3 py-2 text-sm text-left transition-colors",
+                'rounded-md border px-3 py-2 text-sm text-left transition-colors',
                 opt.color,
                 quadrant === opt.value
-                  ? "ring-2 ring-ring ring-offset-1"
-                  : "opacity-60 hover:opacity-100"
+                  ? 'ring-2 ring-ring ring-offset-1'
+                  : 'opacity-60 hover:opacity-100'
               )}
-              onClick={() =>
-                handleQuadrantChange(quadrant === opt.value ? "" : opt.value)
-              }
+              onClick={() => handleQuadrantChange(quadrant === opt.value ? '' : opt.value)}
             >
               {opt.label}
             </button>
@@ -326,7 +301,14 @@ export default function TaskDetailPage() {
           <Label htmlFor="detail-recurring">Recurring task</Label>
         </div>
         {isRecurring && (
-          <Select value={rrule} onChange={(e) => handleRruleChange(e.target.value)}>
+          <Select
+            aria-label="Repeat frequency"
+            value={rrule}
+            onChange={(e) => handleRruleChange(e.target.value)}
+          >
+            {rrule && !supportedRecurrence(rrule) && (
+              <option value={rrule}>Unsupported: {rrule}</option>
+            )}
             <option value="">Select frequency...</option>
             <option value="FREQ=DAILY">Daily</option>
             <option value="FREQ=WEEKLY">Weekly</option>
@@ -334,6 +316,58 @@ export default function TaskDetailPage() {
           </Select>
         )}
       </div>
+
+      {isRecurring && (
+        <div className="space-y-3">
+          {!supportedRecurrence(rrule) ? (
+            <div className="space-y-2">
+              <Label htmlFor="detail-recurrence-rule">Recurrence rule</Label>
+              <Input
+                id="detail-recurrence-rule"
+                value={rrule}
+                onChange={(event) => handleRruleChange(event.target.value)}
+              />
+              <p role="status" className="text-sm text-muted-foreground">
+                This rule is preserved, but automatic repeats support daily, weekly or monthly
+                schedules only.
+              </p>
+            </div>
+          ) : (
+            <>
+              <p className="text-xs text-muted-foreground">
+                {value?.routinePaused
+                  ? 'Routine paused. Resume whenever it feels right.'
+                  : 'Completing or skipping creates one next occurrence. Missed days do not pile up.'}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="outline"
+                  disabled={routineAction.isPending || draft.state !== 'saved'}
+                  onClick={() =>
+                    routineAction.mutate({ id, action: value?.routinePaused ? 'resume' : 'pause' })
+                  }
+                >
+                  {value?.routinePaused ? 'Resume routine' : 'Pause routine'}
+                </Button>
+                {status !== 'completed' && status !== 'cancelled' && (
+                  <Button
+                    variant="ghost"
+                    disabled={routineAction.isPending || draft.state !== 'saved'}
+                    onClick={() => routineAction.mutate({ id, action: 'skip' })}
+                  >
+                    Skip this occurrence
+                  </Button>
+                )}
+              </div>
+              {routineAction.isError && (
+                <p role="alert" className="text-sm text-destructive">
+                  Could not update this routine. Please try again.
+                </p>
+              )}
+            </>
+          )}
+        </div>
+      )}
 
       {/* Subtasks */}
       <SubtaskList parentTaskId={id} subtasks={task.subtasks ?? []} />
@@ -352,9 +386,7 @@ export default function TaskDetailPage() {
       />
 
       {/* Save indicator */}
-      {updateTask.isPending && (
-        <p className="text-xs text-muted-foreground text-right">Saving...</p>
-      )}
+      <SaveStatus {...draft} />
     </div>
   )
 }

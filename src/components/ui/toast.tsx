@@ -17,11 +17,14 @@ export function Toast() {
   if (!message) return null
 
   return (
-    <div className="fixed bottom-4 right-4 z-[100] animate-in fade-in slide-in-from-bottom-4">
+    <div className="fixed bottom-20 left-4 right-4 z-[100] motion-panel sm:left-auto lg:bottom-5">
       <div
+        role={type === 'success' ? 'status' : 'alert'}
         className={cn(
-          'flex items-center gap-2 border-2 border-retro-dark px-4 py-3 text-sm font-medium text-white shadow-hard',
-          type === 'success' ? 'bg-green-600' : 'bg-red-600'
+          'flex items-center gap-2 rounded-2xl border px-4 py-3 text-sm font-medium shadow-soft-lg',
+          type === 'success'
+            ? 'border-primary/15 bg-popover text-foreground'
+            : 'border-destructive/25 bg-popover text-destructive'
         )}
       >
         {type === 'success' ? (

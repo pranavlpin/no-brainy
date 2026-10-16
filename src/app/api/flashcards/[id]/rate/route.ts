@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withAuth } from '@/lib/auth/middleware'
 import { rateCardSchema } from '@/lib/validations/flashcards'
+import { todayInTimezone, addCalendarDays } from '@/lib/dates/calendar'
 import { nextReview } from '@/lib/flashcards/sm2'
 import { ZodError } from 'zod'
 import type { FlashcardResponse } from '@/lib/types/flashcards'
@@ -92,9 +93,9 @@ export const POST = withAuth(async (req: NextRequest, user) => {
     const result = nextReview(card.interval, card.easeFactor, numericRating)
 
     // Calculate nextReviewAt: today + interval days
-    const nextReviewDate = new Date()
-    nextReviewDate.setHours(0, 0, 0, 0)
-    nextReviewDate.setDate(nextReviewDate.getDate() + result.interval)
+    const nextReviewDate = new Date(
+      addCalendarDays(todayInTimezone(user.timezone), result.interval)
+    )
 
     // Update card
     const updatedCard = await prisma.flashcard.update({

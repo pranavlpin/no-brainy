@@ -1,74 +1,46 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
+import { ZodError } from 'zod'
+import type { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { withAuth } from '@/lib/auth/middleware'
-import type { AuthUser } from '@/lib/types/auth'
-
-export interface NotificationPreferences {
-  dueTasks: boolean
-  overdueTasks: boolean
-  habitReminders: boolean
-  flashcardReminders: boolean
-  dailyReviewReminders: boolean
-}
-
-const DEFAULTS: NotificationPreferences = {
-  dueTasks: true,
-  overdueTasks: true,
-  habitReminders: true,
-  flashcardReminders: true,
-  dailyReviewReminders: true,
-}
-
-export const GET = withAuth(async (_req: NextRequest, user: AuthUser) => {
+import { reminderPreferences, reminderSchema } from '@/lib/reviews/reminders'
+export const GET = withAuth(async (_req, user) => {
   const prefs = (user.preferences ?? {}) as Record<string, unknown>
-  const notifPrefs = (prefs.notificationPreferences ?? {}) as Partial<NotificationPreferences>
-
   return NextResponse.json({
     success: true,
-    data: { ...DEFAULTS, ...notifPrefs },
+    data: reminderPreferences(prefs.notificationPreferences),
   })
 })
-
-export const PUT = withAuth(async (req: NextRequest, user: AuthUser) => {
+export const PUT = withAuth(async (req, user) => {
   try {
-    const body = await req.json()
-    const incoming = body as Partial<NotificationPreferences>
-
-    // Validate all values are booleans
-    const validKeys = Object.keys(DEFAULTS) as (keyof NotificationPreferences)[]
-    const notifPrefs: Record<string, boolean> = {}
-    for (const key of validKeys) {
-      if (key in incoming && typeof incoming[key] === 'boolean') {
-        notifPrefs[key] = incoming[key]
-      }
-    }
-
-    const currentPrefs = (user.preferences ?? {}) as Record<string, unknown>
-    const updatedPrefs = {
-      ...currentPrefs,
-      notificationPreferences: {
-        ...DEFAULTS,
-        ...((currentPrefs.notificationPreferences ?? {}) as Record<string, boolean>),
-        ...notifPrefs,
-      },
-    }
-
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { preferences: updatedPrefs },
+    const patch = reminderSchema.partial().parse(await req.json())
+    const data = await prisma.$transaction(async (db) => {
+      const current = await db.user.update({
+        where: { id: user.id },
+        data: { lastActiveAt: new Date() },
+      })
+      const prefs = (current.preferences ?? {}) as Record<string, Prisma.JsonValue>
+      const next = { ...reminderPreferences(prefs.notificationPreferences), ...patch }
+      await db.user.update({
+        where: { id: user.id },
+        data: { preferences: { ...prefs, notificationPreferences: next } },
+      })
+      return next
     })
-
-    return NextResponse.json({
-      success: true,
-      data: updatedPrefs.notificationPreferences,
-    })
-  } catch {
+    return NextResponse.json({ success: true, data })
+  } catch (error) {
     return NextResponse.json(
       {
         success: false,
-        error: { code: 'INTERNAL_ERROR', message: 'An unexpected error occurred' },
+        error: {
+          code: 'PREFERENCES_ERROR',
+          message:
+            error instanceof ZodError
+              ? 'Choose a valid time and reminder preference'
+              : 'Could not save preferences. Try again.',
+        },
       },
-      { status: 500 }
+      { status: error instanceof ZodError ? 400 : 500 }
     )
   }
 })

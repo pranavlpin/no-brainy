@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma'
 import { withAuth } from '@/lib/auth/middleware'
 import { weeklyQuerySchema } from '@/lib/validations/reviews'
 import { ZodError } from 'zod'
+import { reviewActivity } from '@/lib/reviews/server'
+import { todayInTimezone } from '@/lib/dates/calendar'
 import type { ApiResponse } from '@/lib/types/api'
 
 interface WeeklySummaryResponse {
@@ -51,9 +53,8 @@ function getWeekStartDate(weekStr: string): Date {
 /**
  * Get the current ISO week string.
  */
-function getCurrentISOWeek(): string {
-  const now = new Date()
-  const d = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()))
+function getCurrentISOWeek(timezone: string): string {
+  const d = new Date(todayInTimezone(timezone))
   const dayNum = d.getUTCDay() || 7
   d.setUTCDate(d.getUTCDate() + 4 - dayNum)
   const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1))
@@ -70,7 +71,7 @@ export const GET = withAuth(async (req: NextRequest, user) => {
     })
 
     const query = weeklyQuerySchema.parse(queryObj)
-    const week = query.week ?? getCurrentISOWeek()
+    const week = query.week ?? getCurrentISOWeek(user.timezone)
 
     const monday = getWeekStartDate(week)
     const sunday = new Date(monday)
@@ -99,25 +100,22 @@ export const GET = withAuth(async (req: NextRequest, user) => {
       const date = new Date(monday)
       date.setUTCDate(monday.getUTCDate() + i)
       const dateStr = date.toISOString().split('T')[0]
-      const review = reviews.find(
-        (r) => r.reviewDate.toISOString().split('T')[0] === dateStr
-      )
+      const review = reviews.find((r) => r.reviewDate.toISOString().split('T')[0] === dateStr)
 
-      if (review) {
-        totalTasksCompleted += review.tasksCompleted
-        totalTasksMissed += review.tasksMissed
-        totalNotesCreated += review.notesCreated
-        totalCardsReviewed += review.cardsReviewed
-      }
+      const activity = await reviewActivity(user, dateStr)
+      totalTasksCompleted += activity.tasksCompleted
+      totalTasksMissed += activity.tasksMissed
+      totalNotesCreated += activity.notesCreated
+      totalCardsReviewed += activity.cardsReviewed
 
       dailyBreakdown.push({
         date: dateStr,
-        tasksCompleted: review?.tasksCompleted ?? 0,
-        tasksMissed: review?.tasksMissed ?? 0,
-        notesCreated: review?.notesCreated ?? 0,
-        cardsReviewed: review?.cardsReviewed ?? 0,
+        tasksCompleted: activity.tasksCompleted,
+        tasksMissed: activity.tasksMissed,
+        notesCreated: activity.notesCreated,
+        cardsReviewed: activity.cardsReviewed,
         mood: review?.mood ?? null,
-        hasReview: !!review,
+        hasReview: !!(review?.closedAt || review?.reflectionMd),
       })
     }
 
@@ -128,6 +126,7 @@ export const GET = withAuth(async (req: NextRequest, user) => {
     // Streak: consecutive days with a review ending at the most recent reviewed day
     let streak = 0
     const reviewDates = reviews
+      .filter((review) => review.closedAt || review.reflectionMd)
       .map((r) => r.reviewDate.toISOString().split('T')[0])
       .sort()
       .reverse()

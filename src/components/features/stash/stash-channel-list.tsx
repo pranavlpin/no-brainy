@@ -15,7 +15,11 @@ interface StashChannelListProps {
   onSearchQueryChange: (q: string) => void
 }
 
-export function StashChannelList({ activeChannelId, searchQuery, onSearchQueryChange }: StashChannelListProps) {
+export function StashChannelList({
+  activeChannelId,
+  searchQuery,
+  onSearchQueryChange,
+}: StashChannelListProps) {
   const router = useRouter()
   const { data: channels, isLoading } = useChannels()
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -94,7 +98,7 @@ export function StashChannelList({ activeChannelId, searchQuery, onSearchQueryCh
                 <button
                   type="button"
                   onClick={() => setDialogOpen(true)}
-                  className="mt-4 border-2 border-retro-dark bg-retro-blue px-3 py-1.5 font-mono text-xs font-bold text-white shadow-hard hover-shadow-grow"
+                  className="mt-4 border-2 border-retro-dark bg-retro-blue px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:shadow-md"
                 >
                   <Plus className="mr-1 inline h-3.5 w-3.5" />
                   New channel

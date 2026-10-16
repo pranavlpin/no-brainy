@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { ArrowLeft, Pin, PinOff, Trash2, Share2, Link2, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -21,14 +21,15 @@ import { apiClient } from '@/lib/api-client'
 import type { AIActionResponse } from '@/lib/ai/types'
 import type { LinkedItemData } from '@/components/linking/linked-item'
 
-type SaveStatus = 'idle' | 'saving' | 'saved'
+import { useDraftSave } from '@/hooks/use-draft-save'
+import { SaveStatus } from '@/components/ui/save-status'
 
 export default function NoteDetailPage() {
   const params = useParams()
   const router = useRouter()
   const noteId = params.id as string
 
-  const { data: note, isLoading, error } = useNote(noteId)
+  const { data: note, isLoading, error, refetch } = useNote(noteId)
   const updateNote = useUpdateNote()
   const deleteNote = useDeleteNote()
   const { data: noteLinks } = useNoteLinks(noteId)
@@ -42,81 +43,28 @@ export default function NoteDetailPage() {
     extra: l.extra,
   }))
 
-  const [title, setTitle] = useState('')
-  const [content, setContent] = useState('')
-  const [tags, setTags] = useState<string[]>([])
-  const [isPinned, setIsPinned] = useState(false)
-  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
+  const draft = useDraftSave(
+    'note',
+    note,
+    (patch, version) =>
+      updateNote.mutateAsync({ ...patch, id: noteId, expectedUpdatedAt: version }),
+    async () => (await refetch()).data
+  )
+  const title = draft.value?.title ?? ''
+  const content = draft.value?.contentMd ?? ''
+  const tags = draft.value?.tags ?? []
+  const isPinned = draft.value?.isPinned ?? false
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [isExtractingActions, setIsExtractingActions] = useState(false)
-  const [extractedActions, setExtractedActions] = useState<Array<{ title: string; priority: 'urgent' | 'high' | 'medium' | 'low'; reason: string }> | null>(null)
-  const [initialized, setInitialized] = useState(false)
-
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  // Initialize form when note loads
-  useEffect(() => {
-    if (note && !initialized) {
-      setTitle(note.title)
-      setContent(note.contentMd)
-      setTags(note.tags)
-      setIsPinned(note.isPinned)
-      setInitialized(true)
-    }
-  }, [note, initialized])
-
-  const saveNote = useCallback(
-    (updates: { title?: string; contentMd?: string; tags?: string[]; isPinned?: boolean }) => {
-      setSaveStatus('saving')
-      updateNote.mutate(
-        { id: noteId, ...updates },
-        {
-          onSuccess: () => setSaveStatus('saved'),
-          onError: () => setSaveStatus('idle'),
-        }
-      )
-    },
-    [noteId, updateNote]
-  )
-
-  // Auto-save debounced
-  const debouncedSave = useCallback(
-    (updates: { title?: string; contentMd?: string; tags?: string[]; isPinned?: boolean }) => {
-      if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
-      saveTimerRef.current = setTimeout(() => {
-        saveNote(updates)
-      }, 500)
-    },
-    [saveNote]
-  )
-
-  // Cleanup timer on unmount
-  useEffect(() => {
-    return () => {
-      if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
-    }
-  }, [])
-
-  const handleTitleChange = (newTitle: string) => {
-    setTitle(newTitle)
-    debouncedSave({ title: newTitle, contentMd: content, tags, isPinned })
-  }
-
-  const handleContentChange = (newContent: string) => {
-    setContent(newContent)
-    debouncedSave({ title, contentMd: newContent, tags, isPinned })
-  }
-
-  const handleTagsChange = (newTags: string[]) => {
-    setTags(newTags)
-    saveNote({ title, contentMd: content, tags: newTags, isPinned })
-  }
-
-  const handlePinToggle = () => {
-    const newPinned = !isPinned
-    setIsPinned(newPinned)
-    saveNote({ title, contentMd: content, tags, isPinned: newPinned })
-  }
+  const [extractedActions, setExtractedActions] = useState<Array<{
+    title: string
+    priority: 'urgent' | 'high' | 'medium' | 'low'
+    reason: string
+  }> | null>(null)
+  const handleTitleChange = (title: string) => draft.change({ title })
+  const handleContentChange = (contentMd: string) => draft.change({ contentMd })
+  const handleTagsChange = (tags: string[]) => draft.change({ tags })
+  const handlePinToggle = () => draft.change({ isPinned: !isPinned })
 
   const [shareUrl, setShareUrl] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
@@ -131,7 +79,7 @@ export default function NoteDetailPage() {
 
   const handleShareToggle = () => {
     const newPublic = !note?.isPublic
-    updateNote.mutate({ id: noteId, isPublic: newPublic })
+    draft.change({ isPublic: newPublic })
   }
 
   const handleCopyLink = () => {
@@ -144,16 +92,12 @@ export default function NoteDetailPage() {
 
   const handleDelete = () => {
     deleteNote.mutate(noteId, {
-      onSuccess: () => router.push('/notes'),
+      onSuccess: () => {
+        draft.discard()
+        router.push('/notes')
+      },
     })
   }
-
-  const saveStatusText =
-    saveStatus === 'saving'
-      ? 'Saving...'
-      : saveStatus === 'saved'
-        ? 'Saved just now'
-        : ''
 
   // Loading state
   if (isLoading) {
@@ -186,16 +130,19 @@ export default function NoteDetailPage() {
   return (
     <div className="mx-auto max-w-4xl space-y-4 p-4 md:p-6">
       {/* Top bar */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <Button variant="ghost" size="sm" onClick={() => router.push('/notes')}>
           <ArrowLeft className="mr-1.5 h-4 w-4" />
           Back
         </Button>
         <div className="flex items-center gap-2">
-          {saveStatusText && (
-            <span className="text-xs text-muted-foreground">{saveStatusText}</span>
-          )}
-          <Button variant="ghost" size="icon" onClick={handlePinToggle} title={isPinned ? 'Unpin' : 'Pin'}>
+          <SaveStatus {...draft} />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handlePinToggle}
+            title={isPinned ? 'Unpin' : 'Pin'}
+          >
             {isPinned ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
           </Button>
           <Button
@@ -208,7 +155,11 @@ export default function NoteDetailPage() {
           </Button>
           {shareUrl && (
             <Button variant="ghost" size="icon" onClick={handleCopyLink} title="Copy share link">
-              {copied ? <Check className="h-4 w-4 text-green-500" /> : <Link2 className="h-4 w-4" />}
+              {copied ? (
+                <Check className="h-4 w-4 text-green-500" />
+              ) : (
+                <Link2 className="h-4 w-4" />
+              )}
             </Button>
           )}
           <Button
@@ -227,6 +178,7 @@ export default function NoteDetailPage() {
         type="text"
         value={title}
         onChange={(e) => handleTitleChange(e.target.value)}
+        aria-label="Note title"
         placeholder="Untitled"
         className="w-full bg-transparent text-2xl font-bold outline-none placeholder:text-muted-foreground/50"
       />
@@ -235,7 +187,12 @@ export default function NoteDetailPage() {
       <TagInput tags={tags} onChange={handleTagsChange} />
 
       {/* Editor */}
-      <MarkdownEditor value={content} onChange={handleContentChange} minHeight="500px" noteId={noteId} />
+      <MarkdownEditor
+        value={content}
+        onChange={handleContentChange}
+        minHeight="500px"
+        noteId={noteId}
+      />
 
       {/* AI Actions */}
       <NoteAIPanel
@@ -252,7 +209,15 @@ export default function NoteDetailPage() {
             setIsExtractingActions(true)
             setExtractedActions(null)
             try {
-              const res = await apiClient<AIActionResponse<{ tasks: Array<{ title: string; priority: 'urgent' | 'high' | 'medium' | 'low'; reason: string }> }>>(`/api/notes/${noteId}/ai/actions`, {
+              const res = await apiClient<
+                AIActionResponse<{
+                  tasks: Array<{
+                    title: string
+                    priority: 'urgent' | 'high' | 'medium' | 'low'
+                    reason: string
+                  }>
+                }>
+              >(`/api/notes/${noteId}/ai/actions`, {
                 method: 'POST',
               })
               setExtractedActions(res.data.tasks)

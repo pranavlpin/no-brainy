@@ -31,14 +31,16 @@ export function StashChannelTile({ channel, isActive }: StashChannelTileProps) {
       href={`/stash/${channel.id}`}
       className={cn(
         'flex items-center gap-3 border-l-2 px-3 py-2.5 transition-colors',
-        isActive
-          ? 'border-retro-blue bg-retro-blue/10'
-          : 'border-transparent hover:bg-retro-blue/5'
+        isActive ? 'border-retro-blue bg-retro-blue/10' : 'border-transparent hover:bg-retro-blue/5'
       )}
     >
       <div
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-retro-blue/10 text-retro-blue font-mono text-sm font-bold"
-        style={channel.color ? { backgroundColor: `${channel.color}20`, color: channel.color } : undefined}
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-retro-blue/10 text-retro-blue text-sm font-bold"
+        style={
+          channel.color
+            ? { backgroundColor: `${channel.color}20`, color: channel.color }
+            : undefined
+        }
       >
         {channel.icon || channel.name.charAt(0).toUpperCase()}
       </div>

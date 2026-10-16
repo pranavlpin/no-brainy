@@ -3,6 +3,7 @@ import { create } from 'zustand'
 type DarkModePreference = 'light' | 'dark' | 'system'
 
 interface DarkModeState {
+  hydrate: () => void
   preference: DarkModePreference
   isDark: boolean
   setPreference: (pref: DarkModePreference) => void
@@ -11,7 +12,12 @@ interface DarkModeState {
 
 function loadPreference(): DarkModePreference {
   if (typeof window === 'undefined') return 'system'
-  const stored = localStorage.getItem('nobrainy-dark-mode')
+  let stored: string | null = null
+  try {
+    stored = localStorage.getItem('nobrainy-dark-mode')
+  } catch {
+    return 'system'
+  }
   if (stored === 'light' || stored === 'dark' || stored === 'system') return stored
   return 'system'
 }
@@ -36,28 +42,31 @@ function applyColorModeClass(isDark: boolean): void {
 }
 
 export const useDarkModeStore = create<DarkModeState>((set, get) => {
-  const preference = loadPreference()
-  const isDark = getIsDark(preference)
-
-  if (typeof window !== 'undefined') {
-    applyColorModeClass(isDark)
-
-    // Listen for system preference changes
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-      const { preference } = get()
-      if (preference === 'system') {
-        const newIsDark = e.matches
-        applyColorModeClass(newIsDark)
-        set({ isDark: newIsDark })
-      }
-    })
-  }
-
+  let listening = false
   return {
-    preference,
-    isDark,
+    preference: 'system',
+    isDark: false,
+    hydrate: () => {
+      const preference = loadPreference()
+      const isDark = getIsDark(preference)
+      applyColorModeClass(isDark)
+      set({ preference, isDark })
+      if (!listening) {
+        listening = true
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (event) => {
+          if (get().preference === 'system') {
+            applyColorModeClass(event.matches)
+            set({ isDark: event.matches })
+          }
+        })
+      }
+    },
     setPreference: (pref: DarkModePreference) => {
-      localStorage.setItem('nobrainy-dark-mode', pref)
+      try {
+        localStorage.setItem('nobrainy-dark-mode', pref)
+      } catch {
+        /* Keep the chosen appearance in memory. */
+      }
       const newIsDark = getIsDark(pref)
       applyColorModeClass(newIsDark)
       set({ preference: pref, isDark: newIsDark })
@@ -65,7 +74,11 @@ export const useDarkModeStore = create<DarkModeState>((set, get) => {
     toggle: () => {
       const { isDark } = get()
       const newPref: DarkModePreference = isDark ? 'light' : 'dark'
-      localStorage.setItem('nobrainy-dark-mode', newPref)
+      try {
+        localStorage.setItem('nobrainy-dark-mode', newPref)
+      } catch {
+        /* Keep the chosen appearance in memory. */
+      }
       applyColorModeClass(!isDark)
       set({ preference: newPref, isDark: !isDark })
     },

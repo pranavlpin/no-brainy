@@ -1,5 +1,6 @@
 'use client'
 
+import { ErrorState } from '@/components/ui/workspace-states'
 import { useState } from 'react'
 import { Plus, Search, Bookmark as BookmarkIcon } from 'lucide-react'
 import { Input } from '@/components/ui/input'
@@ -7,9 +8,19 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { BookmarkCard } from '@/components/bookmarks/bookmark-card'
 import { BookmarkForm } from '@/components/bookmarks/bookmark-form'
 import { BookmarkPreview } from '@/components/bookmarks/bookmark-preview'
-import { useBookmarks, useCreateBookmark, useUpdateBookmark, useDeleteBookmark } from '@/hooks/use-bookmarks'
+import {
+  useBookmarks,
+  useCreateBookmark,
+  useUpdateBookmark,
+  useDeleteBookmark,
+} from '@/hooks/use-bookmarks'
 import { cn } from '@/lib/utils'
-import type { BookmarkResponse, BookmarkFilters, CreateBookmarkRequest, UpdateBookmarkRequest } from '@/lib/types/bookmarks'
+import type {
+  BookmarkResponse,
+  BookmarkFilters,
+  CreateBookmarkRequest,
+  UpdateBookmarkRequest,
+} from '@/lib/types/bookmarks'
 
 export default function BookmarksPage() {
   const [search, setSearch] = useState('')
@@ -21,9 +32,12 @@ export default function BookmarksPage() {
     ...(search.trim() ? { search: search.trim() } : {}),
   }
 
-  const { data: bookmarks, isLoading } = useBookmarks(
-    Object.keys(filters).length > 0 ? filters : undefined
-  )
+  const {
+    data: bookmarks,
+    isLoading,
+    isError,
+    refetch,
+  } = useBookmarks(Object.keys(filters).length > 0 ? filters : undefined)
   const createBookmark = useCreateBookmark()
   const updateBookmark = useUpdateBookmark()
   const deleteBookmark = useDeleteBookmark()
@@ -38,7 +52,7 @@ export default function BookmarksPage() {
     if (!editingBookmark) return
     updateBookmark.mutate(
       { id: editingBookmark.id, data: data as UpdateBookmarkRequest },
-      { onSuccess: () => setEditingBookmark(null) },
+      { onSuccess: () => setEditingBookmark(null) }
     )
   }
 
@@ -56,6 +70,8 @@ export default function BookmarksPage() {
     setShowForm(false)
   }
 
+  if (isError) return <ErrorState retry={() => void refetch()} />
+
   return (
     <div className="flex h-full gap-0">
       {/* Main content */}
@@ -66,11 +82,11 @@ export default function BookmarksPage() {
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <h1 className="font-display text-2xl font-bold text-retro-dark">Bookmarks</h1>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h1 className="display-title">Bookmarks</h1>
           <button
             onClick={() => setShowForm(!showForm)}
-            className="border-2 border-retro-dark bg-retro-blue px-4 py-2 font-mono text-sm font-bold text-white shadow-hard hover-shadow-grow"
+            className="inline-flex items-center rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
           >
             <Plus size={16} className="mr-2 inline" />
             Add Bookmark
@@ -106,7 +122,7 @@ export default function BookmarksPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search bookmarks..."
-            className="rounded-none pl-9"
+            className="pl-9"
           />
         </div>
 
@@ -121,7 +137,7 @@ export default function BookmarksPage() {
             )}
           >
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="border-2 border-retro-dark/10 p-4">
+              <div key={i} className="rounded-xl border border-border p-4">
                 <Skeleton className="mb-2 h-4 w-3/4" />
                 <Skeleton className="mb-2 h-3 w-1/2" />
                 <Skeleton className="h-3 w-full" />
@@ -148,14 +164,14 @@ export default function BookmarksPage() {
             ))}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center border-2 border-dashed border-retro-dark/20 py-16">
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border py-16">
             <BookmarkIcon size={48} className="text-retro-dark/20" />
-            <p className="mt-4 font-mono text-sm text-retro-dark/50">
+            <p className="mt-4 text-sm text-retro-dark/50">
               No bookmarks yet. Add your first bookmark to get started!
             </p>
             <button
               onClick={() => setShowForm(true)}
-              className="mt-4 border-2 border-retro-dark/20 bg-white px-4 py-2 font-mono text-sm font-bold text-retro-dark hover:bg-retro-dark/5"
+              className="mt-4 rounded-xl border border-border bg-card px-4 py-2 text-sm font-bold text-retro-dark hover:bg-retro-dark/5"
             >
               <Plus size={16} className="mr-2 inline" />
               Add Bookmark
@@ -167,10 +183,7 @@ export default function BookmarksPage() {
       {/* Preview panel */}
       {selectedBookmark && (
         <div className="hidden w-[40%] md:block">
-          <BookmarkPreview
-            bookmark={selectedBookmark}
-            onClose={() => setSelectedBookmark(null)}
-          />
+          <BookmarkPreview bookmark={selectedBookmark} onClose={() => setSelectedBookmark(null)} />
         </div>
       )}
     </div>

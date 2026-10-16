@@ -16,14 +16,12 @@ export function BookmarkPreview({ bookmark, onClose }: BookmarkPreviewProps) {
       {/* Header */}
       <div className="flex items-start justify-between gap-2 border-b border-retro-dark/10 p-4">
         <div className="min-w-0 flex-1">
-          <h2 className="font-display text-lg font-bold text-retro-dark">
-            {bookmark.title}
-          </h2>
+          <h2 className="font-display text-lg font-bold text-retro-dark">{bookmark.title}</h2>
           <a
             href={bookmark.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-1 inline-flex items-center gap-1 font-mono text-xs text-retro-blue hover:underline"
+            className="mt-1 inline-flex items-center gap-1 text-xs text-retro-blue hover:underline"
           >
             {bookmark.url}
             <ExternalLink size={12} />

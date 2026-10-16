@@ -1,6 +1,18 @@
 export type GoalStatus = 'active' | 'completed' | 'paused' | 'abandoned'
 
-export interface GoalResponse {
+export interface GrowthFields {
+  successCriteria?: string
+  baseline?: number | null
+  target?: number | null
+  unit?: string | null
+  weeklyPracticeTarget?: number | null
+}
+
+export interface GoalResponse extends GrowthFields {
+  measurement?: number | null
+  measurementDate?: string | null
+  taskPercent?: number
+  outcomePercent?: number | null
   id: string
   userId: string
   title: string
@@ -21,19 +33,20 @@ export interface GoalResponse {
   completedTaskCount?: number
 }
 
-export interface CreateGoalRequest {
+export interface CreateGoalRequest extends GrowthFields {
   title: string
   description?: string
-  category?: string
-  targetDate?: string
-  startDate?: string
-  expenseCategoryId?: string
-  expenseTag?: string
-  targetAmount?: number
+  category?: string | null
+  targetDate?: string | null
+  startDate?: string | null
+  expenseCategoryId?: string | null
+  expenseTag?: string | null
+  targetAmount?: number | null
   status?: GoalStatus
 }
 
-export interface UpdateGoalRequest {
+export interface UpdateGoalRequest extends GrowthFields {
+  expectedUpdatedAt?: string
   title?: string
   description?: string
   category?: string | null

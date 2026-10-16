@@ -26,23 +26,33 @@ function buildGoalQueryString(filters?: GoalFilters): string {
   return qs ? `?${qs}` : ''
 }
 
+/** Load the full owned goal collection for relationship selectors and legacy consumers. */
 export function useGoals(filters?: GoalFilters) {
   return useQuery({
     queryKey: [...GOALS_KEY, filters],
-    queryFn: () =>
-      apiClient<ApiResponse<PaginatedResponse<GoalResponse>>>(
-        `/api/goals${buildGoalQueryString(filters)}`
-      ).then((res) => res.data.items),
+    queryFn: async () => {
+      const items: GoalResponse[] = []
+      let page = 1
+      while (true) {
+        const params = new URLSearchParams(buildGoalQueryString(filters).replace(/^\?/, ''))
+        params.set('page', String(page))
+        params.set('pageSize', '100')
+        const response = await apiClient<ApiResponse<PaginatedResponse<GoalResponse>>>(
+          `/api/goals?${params}`
+        )
+        items.push(...response.data.items)
+        if (!response.data.hasMore) return items
+        if (!response.data.items.length) throw new Error('Goal collection could not finish loading')
+        page++
+      }
+    },
   })
 }
 
 export function useGoal(id: string) {
   return useQuery({
     queryKey: [...GOALS_KEY, id],
-    queryFn: () =>
-      apiClient<ApiResponse<GoalResponse>>(`/api/goals/${id}`).then(
-        (res) => res.data
-      ),
+    queryFn: () => apiClient<ApiResponse<GoalResponse>>(`/api/goals/${id}`).then((res) => res.data),
     enabled: !!id,
   })
 }
@@ -57,6 +67,7 @@ export function useCreateGoal() {
       }).then((res) => res.data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: GOALS_KEY })
+      queryClient.invalidateQueries({ queryKey: ['growth'] })
     },
   })
 }
@@ -71,6 +82,7 @@ export function useUpdateGoal() {
       }).then((res) => res.data),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: GOALS_KEY })
+      queryClient.invalidateQueries({ queryKey: ['growth'] })
       queryClient.invalidateQueries({ queryKey: [...GOALS_KEY, variables.id] })
     },
   })
@@ -85,6 +97,7 @@ export function useDeleteGoal() {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: GOALS_KEY })
+      queryClient.invalidateQueries({ queryKey: ['growth'] })
     },
   })
 }

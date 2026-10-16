@@ -7,48 +7,37 @@ import { Label } from '@/components/ui/label'
 import { Select } from '@/components/ui/select'
 import { SearchableSelect } from '@/components/ui/searchable-select'
 import { useExpenseCategories } from '@/hooks/use-expense-categories'
-import type { GoalResponse, GoalStatus } from '@/lib/types/goals'
+import type { GoalResponse, GoalStatus, CreateGoalRequest } from '@/lib/types/goals'
 
 const CATEGORIES = ['fitness', 'learning', 'work', 'personal', 'financial']
 const STATUSES: GoalStatus[] = ['active', 'completed', 'paused', 'abandoned']
 
 interface GoalFormProps {
   goal?: GoalResponse
-  onSubmit: (data: {
-    title: string
-    description?: string
-    category?: string
-    targetDate?: string
-    startDate?: string
-    expenseCategoryId?: string
-    expenseTag?: string
-    targetAmount?: number
-    status?: GoalStatus
-  }) => void
+  onSubmit: (data: CreateGoalRequest) => void
   onCancel: () => void
   isLoading?: boolean
 }
 
 export function GoalForm({ goal, onSubmit, onCancel, isLoading }: GoalFormProps) {
   const [title, setTitle] = useState(goal?.title ?? '')
+  const [criteria, setCriteria] = useState(goal?.successCriteria ?? '')
+  const [baseline, setBaseline] = useState(goal?.baseline == null ? '' : String(goal.baseline))
+  const [target, setTarget] = useState(goal?.target == null ? '' : String(goal.target))
+  const [unit, setUnit] = useState(goal?.unit ?? '')
+  const [practice, setPractice] = useState(
+    goal?.weeklyPracticeTarget == null ? '' : String(goal.weeklyPracticeTarget)
+  )
   const [description, setDescription] = useState(goal?.description ?? '')
   const [category, setCategory] = useState(goal?.category ?? '')
-  const [targetDate, setTargetDate] = useState(
-    goal?.targetDate ? goal.targetDate.slice(0, 10) : ''
-  )
-  const [startDate, setStartDate] = useState(
-    goal?.startDate ? goal.startDate.slice(0, 10) : ''
-  )
+  const [targetDate, setTargetDate] = useState(goal?.targetDate ? goal.targetDate.slice(0, 10) : '')
+  const [startDate, setStartDate] = useState(goal?.startDate ? goal.startDate.slice(0, 10) : '')
   const [status, setStatus] = useState<GoalStatus>(goal?.status ?? 'active')
   const [targetAmount, setTargetAmount] = useState(
     goal?.targetAmount ? String(goal.targetAmount) : ''
   )
-  const [trackBy, setTrackBy] = useState<'category' | 'tag'>(
-    goal?.expenseTag ? 'tag' : 'category'
-  )
-  const [expenseCategoryId, setExpenseCategoryId] = useState(
-    goal?.expenseCategoryId ?? ''
-  )
+  const [trackBy, setTrackBy] = useState<'category' | 'tag'>(goal?.expenseTag ? 'tag' : 'category')
+  const [expenseCategoryId, setExpenseCategoryId] = useState(goal?.expenseCategoryId ?? '')
   const [expenseTag, setExpenseTag] = useState(goal?.expenseTag ?? '')
 
   const { data: expenseCategories } = useExpenseCategories()
@@ -59,19 +48,26 @@ export function GoalForm({ goal, onSubmit, onCancel, isLoading }: GoalFormProps)
     e.preventDefault()
     const data: Parameters<typeof onSubmit>[0] = {
       title: title.trim(),
-      description: description.trim() || undefined,
-      category: category || undefined,
-      targetDate: targetDate || undefined,
+      description: description.trim(),
+      category: category || null,
+      targetDate: targetDate || null,
+      successCriteria: criteria.trim(),
+      baseline: baseline === '' ? null : Number(baseline),
+      target: target === '' ? null : Number(target),
+      unit: unit.trim() || null,
+      weeklyPracticeTarget: practice === '' ? null : Number(practice),
       status,
     }
 
     if (isFinancial) {
-      data.startDate = startDate || undefined
-      data.targetAmount = targetAmount ? Number(targetAmount) : undefined
+      data.startDate = startDate || null
+      data.targetAmount = targetAmount ? Number(targetAmount) : null
       if (trackBy === 'category' && expenseCategoryId) {
         data.expenseCategoryId = expenseCategoryId
+        data.expenseTag = null
       } else if (trackBy === 'tag' && expenseTag.trim()) {
         data.expenseTag = expenseTag.trim()
+        data.expenseCategoryId = null
       }
     }
 
@@ -103,14 +99,71 @@ export function GoalForm({ goal, onSubmit, onCancel, isLoading }: GoalFormProps)
         />
       </div>
 
+      <div className="space-y-2">
+        <Label htmlFor="goal-criteria">Success criteria</Label>
+        <textarea
+          id="goal-criteria"
+          className="min-h-20 w-full rounded-xl border bg-background p-3 text-sm"
+          maxLength={5000}
+          value={criteria}
+          onChange={(e) => setCriteria(e.target.value)}
+          placeholder="What would tell you this is working? (optional)"
+        />
+      </div>
+      {!isFinancial && (
+        <div className="space-y-4 rounded-2xl bg-muted/40 p-4">
+          <p className="text-xs text-muted-foreground">
+            Optional measurements describe the outcome. Completed actions are tracked separately.
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label htmlFor="goal-baseline">Baseline</Label>
+              <Input
+                id="goal-baseline"
+                type="number"
+                step="any"
+                value={baseline}
+                onChange={(e) => setBaseline(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="goal-target">Target measurement</Label>
+              <Input
+                id="goal-target"
+                type="number"
+                step="any"
+                value={target}
+                onChange={(e) => setTarget(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="goal-unit">Measurement unit</Label>
+              <Input
+                id="goal-unit"
+                maxLength={80}
+                placeholder="Examples, minutes…"
+                value={unit}
+                onChange={(e) => setUnit(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="goal-practice">Weekly practice target</Label>
+              <Input
+                id="goal-practice"
+                type="number"
+                min="1"
+                max="21"
+                value={practice}
+                onChange={(e) => setPractice(e.target.value)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="goal-category">Category</Label>
-          <Select
-            id="goal-category"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-          >
+          <Select id="goal-category" value={category} onChange={(e) => setCategory(e.target.value)}>
             <option value="">None</option>
             {CATEGORIES.map((c) => (
               <option key={c} value={c}>
@@ -129,7 +182,7 @@ export function GoalForm({ goal, onSubmit, onCancel, isLoading }: GoalFormProps)
           >
             {STATUSES.map((s) => (
               <option key={s} value={s}>
-                {s.charAt(0).toUpperCase() + s.slice(1)}
+                {s === 'abandoned' ? 'Archived' : s.charAt(0).toUpperCase() + s.slice(1)}
               </option>
             ))}
           </Select>
@@ -222,7 +275,9 @@ export function GoalForm({ goal, onSubmit, onCancel, isLoading }: GoalFormProps)
                 value={expenseCategoryId}
                 onChange={setExpenseCategoryId}
                 placeholder="Select category..."
-                options={expenseCategories?.map((cat) => ({ value: cat.id, label: cat.name })) ?? []}
+                options={
+                  expenseCategories?.map((cat) => ({ value: cat.id, label: cat.name })) ?? []
+                }
                 className="border-2"
               />
             </div>

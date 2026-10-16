@@ -1,5 +1,6 @@
 'use client'
 
+import { RemoteImage } from '@/components/ui/remote-image'
 import { Globe, Pin, Pencil, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { BookmarkResponse } from '@/lib/types/bookmarks'
@@ -22,20 +23,19 @@ function extractDomain(url: string): string {
 export function BookmarkCard({ bookmark, onClick, onEdit, onDelete }: BookmarkCardProps) {
   return (
     <div
-      onClick={() => onClick(bookmark)}
       className={cn(
-        'group relative flex cursor-pointer flex-col gap-2 border-2 border-retro-dark/20 bg-card p-4 shadow-sm transition-shadow hover:shadow-hard',
+        'group relative flex flex-col gap-2 rounded-xl border border-border bg-card p-4 shadow-sm transition-shadow hover:shadow-md',
         bookmark.isPinned && 'border-retro-blue/40'
       )}
     >
       {/* Action buttons — visible on hover */}
-      <div className="absolute right-2 top-2 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+      <div className="absolute right-2 top-2 z-10 flex gap-1 opacity-100 transition-opacity sm:opacity-0 group-hover:opacity-100 group-focus-within:opacity-100">
         <button
           onClick={(e) => {
             e.stopPropagation()
             onEdit(bookmark)
           }}
-          className="border border-retro-dark/20 bg-white p-1 text-retro-dark/60 hover:bg-retro-blue/10 hover:text-retro-blue"
+          className="border border-retro-dark/20 bg-card p-1 text-retro-dark/60 hover:bg-retro-blue/10 hover:text-retro-blue"
           aria-label="Edit bookmark"
         >
           <Pencil size={14} />
@@ -45,7 +45,7 @@ export function BookmarkCard({ bookmark, onClick, onEdit, onDelete }: BookmarkCa
             e.stopPropagation()
             onDelete(bookmark)
           }}
-          className="border border-retro-dark/20 bg-white p-1 text-retro-dark/60 hover:bg-red-50 hover:text-red-600"
+          className="border border-retro-dark/20 bg-card p-1 text-retro-dark/60 hover:bg-red-50 hover:text-red-600"
           aria-label="Delete bookmark"
         >
           <Trash2 size={14} />
@@ -53,14 +53,15 @@ export function BookmarkCard({ bookmark, onClick, onEdit, onDelete }: BookmarkCa
       </div>
 
       {/* Pin indicator */}
-      {bookmark.isPinned && (
-        <Pin size={14} className="absolute left-2 top-2 text-retro-blue" />
-      )}
+      {bookmark.isPinned && <Pin size={14} className="absolute left-2 top-2 text-retro-blue" />}
 
       {/* Favicon + Title */}
       <div className="flex items-start gap-2">
         {bookmark.favicon ? (
-          <img
+          <RemoteImage
+            width={16}
+            height={16}
+            fallback={<Globe size={16} className="text-muted-foreground" />}
             src={bookmark.favicon}
             alt=""
             className="mt-0.5 h-4 w-4 shrink-0"
@@ -68,21 +69,24 @@ export function BookmarkCard({ bookmark, onClick, onEdit, onDelete }: BookmarkCa
         ) : (
           <Globe size={16} className="mt-0.5 shrink-0 text-retro-dark/40" />
         )}
-        <h3 className="line-clamp-1 text-sm font-semibold text-retro-dark">
-          {bookmark.title}
+        <h3 className="line-clamp-1 pr-12 text-sm font-semibold text-foreground">
+          <button
+            type="button"
+            onClick={() => onClick(bookmark)}
+            aria-label={`Open ${bookmark.title}`}
+            className="text-left hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            {bookmark.title}
+          </button>
         </h3>
       </div>
 
       {/* URL domain */}
-      <p className="font-mono text-xs text-retro-dark/50">
-        {extractDomain(bookmark.url)}
-      </p>
+      <p className="text-xs text-retro-dark/50">{extractDomain(bookmark.url)}</p>
 
       {/* Description preview */}
       {bookmark.description && (
-        <p className="line-clamp-2 text-xs text-retro-dark/60">
-          {bookmark.description}
-        </p>
+        <p className="line-clamp-2 text-xs text-retro-dark/60">{bookmark.description}</p>
       )}
 
       {/* Tags */}

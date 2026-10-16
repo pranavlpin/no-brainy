@@ -7,7 +7,6 @@ import { signIn } from 'next-auth/react'
 import { Mail, Lock, User, Loader2 } from 'lucide-react'
 import { registerSchema, type RegisterInput } from '@/lib/validations/auth'
 import { Input } from '@/components/ui/input'
-import { GoogleButton } from '@/components/auth/google-button'
 
 export function RegisterForm() {
   const router = useRouter()
@@ -76,7 +75,7 @@ export function RegisterForm() {
         return
       }
 
-      router.push('/notes')
+      router.push('/today')
     } catch {
       setServerError('An unexpected error occurred')
     } finally {
@@ -87,21 +86,21 @@ export function RegisterForm() {
   return (
     <div className="w-full max-w-sm space-y-6">
       <div className="space-y-2 text-center">
-        <h1 className="font-display text-2xl font-bold tracking-tight text-retro-dark">Create an account</h1>
-        <p className="text-sm text-muted-foreground">
-          Enter your details to get started
-        </p>
+        <h1 className="font-display text-2xl font-bold tracking-tight text-retro-dark">
+          Create an account
+        </h1>
+        <p className="text-sm text-muted-foreground">Enter your details to get started</p>
       </div>
 
       <form onSubmit={onSubmit} className="space-y-4">
         {serverError && (
-          <div className="border-2 border-red-300 bg-red-50 p-3 text-sm text-red-600">
+          <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">
             {serverError}
           </div>
         )}
 
         <div className="space-y-2">
-          <label htmlFor="name" className="font-mono text-xs uppercase tracking-wider text-retro-dark/70">
+          <label htmlFor="name" className="text-xs font-medium text-muted-foreground">
             Name
           </label>
           <div className="relative">
@@ -111,17 +110,15 @@ export function RegisterForm() {
               name="name"
               type="text"
               placeholder="Your name"
-              className="rounded-none border-2 border-retro-dark/30 pl-9 focus:border-retro-blue"
+              className="pl-9"
               disabled={isLoading}
             />
           </div>
-          {errors.name && (
-            <p className="text-xs text-red-500">{errors.name}</p>
-          )}
+          {errors.name && <p className="text-xs text-red-500">{errors.name}</p>}
         </div>
 
         <div className="space-y-2">
-          <label htmlFor="email" className="font-mono text-xs uppercase tracking-wider text-retro-dark/70">
+          <label htmlFor="email" className="text-xs font-medium text-muted-foreground">
             Email
           </label>
           <div className="relative">
@@ -131,17 +128,15 @@ export function RegisterForm() {
               name="email"
               type="email"
               placeholder="you@example.com"
-              className="rounded-none border-2 border-retro-dark/30 pl-9 focus:border-retro-blue"
+              className="pl-9"
               disabled={isLoading}
             />
           </div>
-          {errors.email && (
-            <p className="text-xs text-red-500">{errors.email}</p>
-          )}
+          {errors.email && <p className="text-xs text-red-500">{errors.email}</p>}
         </div>
 
         <div className="space-y-2">
-          <label htmlFor="password" className="font-mono text-xs uppercase tracking-wider text-retro-dark/70">
+          <label htmlFor="password" className="text-xs font-medium text-muted-foreground">
             Password
           </label>
           <div className="relative">
@@ -151,18 +146,16 @@ export function RegisterForm() {
               name="password"
               type="password"
               placeholder="At least 8 characters"
-              className="rounded-none border-2 border-retro-dark/30 pl-9 focus:border-retro-blue"
+              className="pl-9"
               disabled={isLoading}
             />
           </div>
-          {errors.password && (
-            <p className="text-xs text-red-500">{errors.password}</p>
-          )}
+          {errors.password && <p className="text-xs text-red-500">{errors.password}</p>}
         </div>
 
         <button
           type="submit"
-          className="flex w-full items-center justify-center border-2 border-retro-dark bg-retro-blue py-2.5 font-mono font-bold text-sm text-white shadow-hard hover-shadow-grow disabled:opacity-50"
+          className="flex w-full items-center justify-center rounded-xl bg-primary py-3 font-medium text-sm text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
           disabled={isLoading}
         >
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -170,23 +163,9 @@ export function RegisterForm() {
         </button>
       </form>
 
-      {/* OAuth section — hidden for now, will add back later
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t-2 border-retro-dark/15" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-white px-2 font-mono text-muted-foreground">
-            Or continue with
-          </span>
-        </div>
-      </div>
-      <GoogleButton />
-      */}
-
       <p className="text-center text-sm text-muted-foreground">
         Already have an account?{' '}
-        <Link href="/login" className="font-mono font-medium text-retro-blue hover:underline">
+        <Link href="/login" className="font-medium text-retro-blue hover:underline">
           Sign in
         </Link>
       </p>

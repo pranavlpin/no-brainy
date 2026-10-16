@@ -1,5 +1,6 @@
 'use client'
 
+import { ErrorState } from '@/components/ui/workspace-states'
 import { useState } from 'react'
 import { Plus, Sparkles, Loader2, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -17,7 +18,7 @@ export default function BudgetsPage(): React.ReactElement {
   const [aiLoading, setAiLoading] = useState(false)
   const [aiError, setAiError] = useState<string | null>(null)
 
-  const { data: budgets, isLoading } = useBudgets()
+  const { data: budgets, isLoading, isError, refetch } = useBudgets()
   const createBudget = useCreateBudget()
   const updateBudget = useUpdateBudget()
   const deleteBudget = useDeleteBudget()
@@ -27,7 +28,12 @@ export default function BudgetsPage(): React.ReactElement {
     if (editingBudget) {
       updateBudget.mutate(
         { id: editingBudget.id, data },
-        { onSuccess: () => { setEditingBudget(null); setShowForm(false) } }
+        {
+          onSuccess: () => {
+            setEditingBudget(null)
+            setShowForm(false)
+          },
+        }
       )
     } else {
       createBudget.mutate(data, {
@@ -51,33 +57,34 @@ export default function BudgetsPage(): React.ReactElement {
     setAiLoading(true)
     setAiError(null)
     try {
-      const res = await apiClient<{ success: true; data: { analysis: string } }>('/api/budgets/ai', {
-        method: 'POST',
-      })
+      const res = await apiClient<{ success: true; data: { analysis: string } }>(
+        '/api/budgets/ai',
+        {
+          method: 'POST',
+        }
+      )
       setAiAnalysis(res.data.analysis)
     } catch (err: unknown) {
-      const message = err && typeof err === 'object' && 'error' in err
-        ? (err as { error: { message: string } }).error.message
-        : 'Failed to analyze budgets'
+      const message =
+        err && typeof err === 'object' && 'error' in err
+          ? (err as { error: { message: string } }).error.message
+          : 'Failed to analyze budgets'
       setAiError(message)
     } finally {
       setAiLoading(false)
     }
   }
 
+  if (isError) return <ErrorState retry={() => void refetch()} />
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="font-display text-2xl font-bold text-retro-dark">Budgets</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="display-title">Budgets</h1>
         <div className="flex items-center gap-2">
           {aiEnabled && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleAIAnalysis}
-              disabled={aiLoading}
-            >
+            <Button variant="outline" size="sm" onClick={handleAIAnalysis} disabled={aiLoading}>
               {aiLoading ? (
                 <Loader2 className="h-4 w-4 mr-1 animate-spin" />
               ) : (
@@ -88,7 +95,7 @@ export default function BudgetsPage(): React.ReactElement {
           )}
           <button
             onClick={() => setShowForm(!showForm)}
-            className="border-2 border-retro-dark bg-retro-blue px-4 py-2 font-mono text-sm font-bold text-white shadow-hard hover-shadow-grow"
+            className="inline-flex items-center rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
           >
             <Plus className="mr-2 inline h-4 w-4" />
             New Budget
@@ -99,16 +106,24 @@ export default function BudgetsPage(): React.ReactElement {
       {/* AI Analysis Panel */}
       {(aiAnalysis || aiError) && (
         <div className="border-2 border-retro-blue/20 bg-retro-blue/5 p-4">
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-retro-blue" />
-              <span className="font-mono text-xs uppercase tracking-wider text-retro-dark/60">AI Budget Advice</span>
+              <span className="text-xs uppercase tracking-wider text-retro-dark/60">
+                AI Budget Advice
+              </span>
             </div>
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="sm" onClick={handleAIAnalysis} disabled={aiLoading}>
                 {aiLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Refresh'}
               </Button>
-              <button onClick={() => { setAiAnalysis(null); setAiError(null) }} className="text-muted-foreground hover:text-foreground">
+              <button
+                onClick={() => {
+                  setAiAnalysis(null)
+                  setAiError(null)
+                }}
+                className="text-muted-foreground hover:text-foreground"
+              >
                 <X className="h-4 w-4" />
               </button>
             </div>
@@ -136,7 +151,10 @@ export default function BudgetsPage(): React.ReactElement {
         <BudgetForm
           budget={editingBudget ?? undefined}
           onSubmit={handleCreate}
-          onCancel={() => { setShowForm(false); setEditingBudget(null) }}
+          onCancel={() => {
+            setShowForm(false)
+            setEditingBudget(null)
+          }}
           isPending={editingBudget ? updateBudget.isPending : createBudget.isPending}
         />
       )}
@@ -156,13 +174,13 @@ export default function BudgetsPage(): React.ReactElement {
           ))}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center border-2 border-dashed border-retro-dark/20 py-16 text-center">
-          <p className="font-mono text-sm text-muted-foreground">
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border py-16 text-center">
+          <p className="text-sm text-muted-foreground">
             No budgets yet. Set spending limits or savings targets to track your finances.
           </p>
           <button
             onClick={() => setShowForm(true)}
-            className="mt-4 border-2 border-retro-dark/20 bg-white px-4 py-2 font-mono text-sm font-bold text-retro-dark hover:bg-muted"
+            className="mt-4 rounded-xl border border-border bg-card px-4 py-2 text-sm font-bold text-retro-dark hover:bg-muted"
           >
             <Plus className="mr-2 inline h-4 w-4" />
             Create First Budget

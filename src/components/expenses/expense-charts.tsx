@@ -10,7 +10,12 @@ import { TopCategoriesBar } from './charts/top-categories-bar'
 import { useExpenseTrends, useExpenseStats } from '@/hooks/use-expense-trends'
 import { formatINR, getCurrentMonth, formatMonthLabel } from '@/lib/expenses/formatters'
 
-function StatCard({ label, value, subtext, trend }: {
+function StatCard({
+  label,
+  value,
+  subtext,
+  trend,
+}: {
   label: string
   value: string
   subtext?: string
@@ -18,7 +23,7 @@ function StatCard({ label, value, subtext, trend }: {
 }): React.ReactElement {
   return (
     <div className="border-2 border-retro-dark/15 p-4">
-      <p className="font-mono text-xs text-muted-foreground">{label}</p>
+      <p className="text-xs text-muted-foreground">{label}</p>
       <p className="mt-1 text-2xl font-bold">{value}</p>
       {(subtext || trend !== undefined) && (
         <div className="mt-1 flex items-center gap-1 text-xs">
@@ -31,8 +36,17 @@ function StatCard({ label, value, subtext, trend }: {
               ) : (
                 <Minus className="h-3 w-3 text-muted-foreground" />
               )}
-              <span className={trend > 0 ? 'text-red-500' : trend < 0 ? 'text-green-500' : 'text-muted-foreground'}>
-                {trend > 0 ? '+' : ''}{trend}%
+              <span
+                className={
+                  trend > 0
+                    ? 'text-red-500'
+                    : trend < 0
+                      ? 'text-green-500'
+                      : 'text-muted-foreground'
+                }
+              >
+                {trend > 0 ? '+' : ''}
+                {trend}%
               </span>
             </>
           )}
@@ -62,7 +76,11 @@ export function ExpenseCharts(): React.ReactElement {
   }
 
   if (!trends || !stats) {
-    return <div className="py-12 text-center text-muted-foreground">No expense data available yet. Add some expenses to see charts.</div>
+    return (
+      <div className="py-12 text-center text-muted-foreground">
+        No expense data available yet. Add some expenses to see charts.
+      </div>
+    )
   }
 
   const categoryTotals = trends.categories.map((c) => ({
@@ -79,7 +97,12 @@ export function ExpenseCharts(): React.ReactElement {
       {/* Date range */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
         <div className="flex items-center gap-2">
-          <label htmlFor="fromMonth" className="font-mono text-xs uppercase tracking-wider text-retro-dark/60">From</label>
+          <label
+            htmlFor="fromMonth"
+            className="text-xs uppercase tracking-wider text-retro-dark/60"
+          >
+            From
+          </label>
           <Input
             id="fromMonth"
             type="month"
@@ -89,7 +112,9 @@ export function ExpenseCharts(): React.ReactElement {
           />
         </div>
         <div className="flex items-center gap-2">
-          <label htmlFor="toMonth" className="font-mono text-xs uppercase tracking-wider text-retro-dark/60">To</label>
+          <label htmlFor="toMonth" className="text-xs uppercase tracking-wider text-retro-dark/60">
+            To
+          </label>
           <Input
             id="toMonth"
             type="month"
@@ -101,7 +126,7 @@ export function ExpenseCharts(): React.ReactElement {
         {!isCurrentMonth && (
           <button
             onClick={() => setSelectedMonth(currentMonth)}
-            className="font-mono text-xs text-retro-blue hover:underline"
+            className="text-xs text-retro-blue hover:underline"
           >
             Reset to this month
           </button>
@@ -116,14 +141,8 @@ export function ExpenseCharts(): React.ReactElement {
           trend={stats.changePercent}
           subtext="vs prev month"
         />
-        <StatCard
-          label="Transactions"
-          value={String(stats.transactionCount)}
-        />
-        <StatCard
-          label="Average"
-          value={formatINR(stats.average)}
-        />
+        <StatCard label="Transactions" value={String(stats.transactionCount)} />
+        <StatCard label="Average" value={formatINR(stats.average)} />
         <StatCard
           label="Top Category"
           value={stats.topCategory?.categoryName || '-'}

@@ -6,7 +6,11 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { SearchableSelect } from '@/components/ui/searchable-select'
 import { useExpenseCategories } from '@/hooks/use-expense-categories'
-import type { CreateExpenseRequest, UpdateExpenseRequest, ExpenseResponse } from '@/lib/types/expenses'
+import type {
+  CreateExpenseRequest,
+  UpdateExpenseRequest,
+  ExpenseResponse,
+} from '@/lib/types/expenses'
 
 interface ExpenseFormProps {
   expense?: ExpenseResponse
@@ -15,7 +19,12 @@ interface ExpenseFormProps {
   isPending?: boolean
 }
 
-export function ExpenseForm({ expense, onSubmit, onCancel, isPending }: ExpenseFormProps): React.ReactElement {
+export function ExpenseForm({
+  expense,
+  onSubmit,
+  onCancel,
+  isPending,
+}: ExpenseFormProps): React.ReactElement {
   const { data: categories } = useExpenseCategories()
 
   const [name, setName] = useState(expense?.name ?? '')
@@ -38,7 +47,12 @@ export function ExpenseForm({ expense, onSubmit, onCancel, isPending }: ExpenseF
       amount: parseFloat(amount),
       date,
       categoryId,
-      tags: tags ? tags.split(',').map((t) => t.trim()).filter(Boolean) : [],
+      tags: tags
+        ? tags
+            .split(',')
+            .map((t) => t.trim())
+            .filter(Boolean)
+        : [],
       notes: notes.trim() || undefined,
     }
     onSubmit(data)
@@ -47,7 +61,9 @@ export function ExpenseForm({ expense, onSubmit, onCancel, isPending }: ExpenseF
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label htmlFor="name" className="font-mono text-xs uppercase tracking-wider text-retro-dark/70">Name</label>
+        <label htmlFor="name" className="text-xs uppercase tracking-wider text-retro-dark/70">
+          Name
+        </label>
         <Input
           id="name"
           value={name}
@@ -59,7 +75,9 @@ export function ExpenseForm({ expense, onSubmit, onCancel, isPending }: ExpenseF
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label htmlFor="amount" className="font-mono text-xs uppercase tracking-wider text-retro-dark/70">Amount (₹)</label>
+          <label htmlFor="amount" className="text-xs uppercase tracking-wider text-retro-dark/70">
+            Amount (₹)
+          </label>
           <Input
             id="amount"
             type="number"
@@ -71,7 +89,9 @@ export function ExpenseForm({ expense, onSubmit, onCancel, isPending }: ExpenseF
           />
         </div>
         <div>
-          <label htmlFor="date" className="font-mono text-xs uppercase tracking-wider text-retro-dark/70">Date</label>
+          <label htmlFor="date" className="text-xs uppercase tracking-wider text-retro-dark/70">
+            Date
+          </label>
           <Input
             id="date"
             type="date"
@@ -83,7 +103,9 @@ export function ExpenseForm({ expense, onSubmit, onCancel, isPending }: ExpenseF
       </div>
 
       <div>
-        <label htmlFor="category" className="font-mono text-xs uppercase tracking-wider text-retro-dark/70">Category</label>
+        <label htmlFor="category" className="text-xs uppercase tracking-wider text-retro-dark/70">
+          Category
+        </label>
         <SearchableSelect
           id="category"
           value={categoryId}
@@ -95,7 +117,9 @@ export function ExpenseForm({ expense, onSubmit, onCancel, isPending }: ExpenseF
       </div>
 
       <div>
-        <label htmlFor="tags" className="font-mono text-xs uppercase tracking-wider text-retro-dark/70">Tags (comma separated)</label>
+        <label htmlFor="tags" className="text-xs uppercase tracking-wider text-retro-dark/70">
+          Tags (comma separated)
+        </label>
         <Input
           id="tags"
           value={tags}
@@ -105,7 +129,9 @@ export function ExpenseForm({ expense, onSubmit, onCancel, isPending }: ExpenseF
       </div>
 
       <div>
-        <label htmlFor="notes" className="font-mono text-xs uppercase tracking-wider text-retro-dark/70">Notes (optional)</label>
+        <label htmlFor="notes" className="text-xs uppercase tracking-wider text-retro-dark/70">
+          Notes (optional)
+        </label>
         <Input
           id="notes"
           value={notes}
@@ -121,7 +147,7 @@ export function ExpenseForm({ expense, onSubmit, onCancel, isPending }: ExpenseF
         <button
           type="submit"
           disabled={isPending || !name || !amount || !categoryId}
-          className="border-2 border-retro-dark bg-retro-blue px-4 py-2 font-mono text-sm font-bold text-white shadow-hard hover-shadow-grow disabled:opacity-50"
+          className="inline-flex items-center rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 disabled:opacity-50"
         >
           {isPending ? 'Saving...' : expense ? 'Update' : 'Add Expense'}
         </button>

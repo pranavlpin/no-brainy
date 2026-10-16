@@ -51,9 +51,11 @@ export function NoteCard({ note, onClick, onTogglePin }: NoteCardProps) {
       role="button"
       tabIndex={0}
       onClick={onClick}
-      onKeyDown={(e) => { if (e.key === 'Enter') onClick() }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') onClick()
+      }}
       className={cn(
-        'group relative w-full rounded-lg bg-white p-4 text-left shadow-sm cursor-pointer',
+        'group relative w-full rounded-lg bg-card p-4 text-left shadow-sm cursor-pointer',
         'border border-border transition-shadow hover:shadow-md',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
         optimisticPinned && 'border-retro-blue/30 bg-retro-blue/5'
@@ -64,7 +66,9 @@ export function NoteCard({ note, onClick, onTogglePin }: NoteCardProps) {
         role="button"
         tabIndex={0}
         onClick={handlePinClick}
-        onKeyDown={(e) => { if (e.key === 'Enter') handlePinClick(e as unknown as React.MouseEvent) }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') handlePinClick(e as unknown as React.MouseEvent)
+        }}
         className={cn(
           'absolute right-3 top-3 p-1 transition-opacity z-10',
           optimisticPinned
@@ -80,11 +84,7 @@ export function NoteCard({ note, onClick, onTogglePin }: NoteCardProps) {
         {note.title || 'Untitled'}
       </h3>
 
-      {preview && (
-        <p className="mt-1.5 text-sm text-muted-foreground line-clamp-3">
-          {preview}
-        </p>
-      )}
+      {preview && <p className="mt-1.5 text-sm text-muted-foreground line-clamp-3">{preview}</p>}
 
       {note.tags.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-1">
@@ -99,9 +99,7 @@ export function NoteCard({ note, onClick, onTogglePin }: NoteCardProps) {
         </div>
       )}
 
-      <p className="mt-3 text-xs text-muted-foreground">
-        {relativeTime(note.updatedAt)}
-      </p>
+      <p className="mt-3 text-xs text-muted-foreground">{relativeTime(note.updatedAt)}</p>
     </div>
   )
 }

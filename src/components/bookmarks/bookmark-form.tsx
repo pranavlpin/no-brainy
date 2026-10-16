@@ -2,7 +2,11 @@
 
 import { useState } from 'react'
 import { Input } from '@/components/ui/input'
-import type { BookmarkResponse, CreateBookmarkRequest, UpdateBookmarkRequest } from '@/lib/types/bookmarks'
+import type {
+  BookmarkResponse,
+  CreateBookmarkRequest,
+  UpdateBookmarkRequest,
+} from '@/lib/types/bookmarks'
 
 interface BookmarkFormProps {
   bookmark?: BookmarkResponse
@@ -32,12 +36,9 @@ export function BookmarkForm({ bookmark, onSubmit, onCancel, isLoading }: Bookma
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="space-y-4 border-2 border-retro-dark/20 bg-card p-4"
-    >
+    <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-border bg-card p-4">
       <div>
-        <label className="mb-1 block font-mono text-xs uppercase tracking-wider text-retro-dark/70">
+        <label className="mb-1 block text-xs uppercase tracking-wider text-retro-dark/70">
           Title
         </label>
         <Input
@@ -50,7 +51,7 @@ export function BookmarkForm({ bookmark, onSubmit, onCancel, isLoading }: Bookma
       </div>
 
       <div>
-        <label className="mb-1 block font-mono text-xs uppercase tracking-wider text-retro-dark/70">
+        <label className="mb-1 block text-xs uppercase tracking-wider text-retro-dark/70">
           URL
         </label>
         <Input
@@ -64,7 +65,7 @@ export function BookmarkForm({ bookmark, onSubmit, onCancel, isLoading }: Bookma
       </div>
 
       <div>
-        <label className="mb-1 block font-mono text-xs uppercase tracking-wider text-retro-dark/70">
+        <label className="mb-1 block text-xs uppercase tracking-wider text-retro-dark/70">
           Description
         </label>
         <textarea
@@ -72,12 +73,12 @@ export function BookmarkForm({ bookmark, onSubmit, onCancel, isLoading }: Bookma
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Optional description"
           rows={2}
-          className="w-full rounded-none border-2 border-retro-dark/20 bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-retro-blue"
+          className="w-full rounded-none rounded-xl border border-border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-retro-blue"
         />
       </div>
 
       <div>
-        <label className="mb-1 block font-mono text-xs uppercase tracking-wider text-retro-dark/70">
+        <label className="mb-1 block text-xs uppercase tracking-wider text-retro-dark/70">
           Tags (comma-separated)
         </label>
         <Input
@@ -92,14 +93,14 @@ export function BookmarkForm({ bookmark, onSubmit, onCancel, isLoading }: Bookma
         <button
           type="submit"
           disabled={isLoading}
-          className="border-2 border-retro-dark bg-retro-blue px-4 py-2 font-mono text-sm font-bold text-white shadow-hard hover-shadow-grow disabled:opacity-50"
+          className="inline-flex items-center rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 disabled:opacity-50"
         >
           {isLoading ? 'Saving...' : bookmark ? 'Update Bookmark' : 'Save Bookmark'}
         </button>
         <button
           type="button"
           onClick={onCancel}
-          className="border-2 border-retro-dark/20 bg-white px-4 py-2 font-mono text-sm font-bold text-retro-dark hover:bg-retro-dark/5"
+          className="rounded-xl border border-border bg-card px-4 py-2 text-sm font-bold text-retro-dark hover:bg-retro-dark/5"
         >
           Cancel
         </button>

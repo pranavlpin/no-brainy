@@ -118,13 +118,16 @@ export default function ThemeBuilderPage(): JSX.Element {
     setStartFrom(presetKey)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleColorChange = useCallback((key: string, value: string) => {
-    setColors((prev) => {
-      const next = { ...prev, [key]: value }
-      applyLiveColors(next)
-      return next
-    })
-  }, [applyLiveColors])
+  const handleColorChange = useCallback(
+    (key: string, value: string) => {
+      setColors((prev) => {
+        const next = { ...prev, [key]: value }
+        applyLiveColors(next)
+        return next
+      })
+    },
+    [applyLiveColors]
+  )
 
   const handleStartFrom = (preset: ThemeName): void => {
     setStartFrom(preset)
@@ -181,7 +184,9 @@ export default function ThemeBuilderPage(): JSX.Element {
       if (stored === 'custom') {
         const activeId = localStorage.getItem('nobrainy-active-custom-theme')
         if (activeId) {
-          const customs = JSON.parse(localStorage.getItem('nobrainy-custom-themes') || '[]') as Array<{ id: string; colors: Record<string, string> }>
+          const customs = JSON.parse(
+            localStorage.getItem('nobrainy-custom-themes') || '[]'
+          ) as Array<{ id: string; colors: Record<string, string> }>
           const active = customs.find((c) => c.id === activeId)
           if (active) {
             Object.entries(active.colors).forEach(([k, v]) => {
@@ -207,9 +212,7 @@ export default function ThemeBuilderPage(): JSX.Element {
           <ArrowLeft className="h-4 w-4" />
         </Link>
         <div>
-          <h1 className="font-display text-xl font-bold text-retro-dark">
-            Theme Builder
-          </h1>
+          <h1 className="font-display text-xl font-bold text-retro-dark">Theme Builder</h1>
           <p className="text-sm text-retro-dark/60">
             Create a custom color palette for your workspace.
           </p>
@@ -219,7 +222,7 @@ export default function ThemeBuilderPage(): JSX.Element {
       {/* Name + Start From */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
         <div className="flex-1">
-          <label className="font-mono text-xs uppercase tracking-wider text-retro-dark/60 mb-1 block">
+          <label className="text-xs uppercase tracking-wider text-retro-dark/60 mb-1 block">
             Theme Name
           </label>
           <Input
@@ -230,7 +233,7 @@ export default function ThemeBuilderPage(): JSX.Element {
           />
         </div>
         <div>
-          <label className="font-mono text-xs uppercase tracking-wider text-retro-dark/60 mb-1 block">
+          <label className="text-xs uppercase tracking-wider text-retro-dark/60 mb-1 block">
             Start From
           </label>
           <select
@@ -269,7 +272,7 @@ export default function ThemeBuilderPage(): JSX.Element {
       </div>
 
       {/* Bottom bar: saved themes + actions */}
-      <div className="rounded-lg border-2 border-retro-dark/10 bg-card p-4 space-y-4">
+      <div className="rounded-lg rounded-xl border border-border bg-card p-4 space-y-4">
         <div className="flex flex-wrap items-center gap-2">
           <Button onClick={handleSave} className="gap-1.5">
             <Save className="h-4 w-4" />
@@ -283,9 +286,7 @@ export default function ThemeBuilderPage(): JSX.Element {
 
         {customThemes.length > 0 && (
           <div className="space-y-2">
-            <p className="font-mono text-xs uppercase tracking-wider text-retro-dark/60">
-              Saved Themes
-            </p>
+            <p className="text-xs uppercase tracking-wider text-retro-dark/60">Saved Themes</p>
             <div className="flex flex-wrap gap-2">
               {customThemes.map((ct) => (
                 <div

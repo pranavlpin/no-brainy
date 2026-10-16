@@ -1,15 +1,12 @@
 'use client'
 
+import { RemoteImage } from '@/components/ui/remote-image'
+import { BookExperiment } from '@/components/growth/book-experiment'
+
 import { useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import {
-  ArrowLeft,
-  BookOpen,
-  Loader2,
-  Trash2,
-  X,
-} from 'lucide-react'
+import { ArrowLeft, BookOpen, Loader2, Trash2, X } from 'lucide-react'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -30,9 +27,21 @@ import type { AIActionResponse } from '@/lib/ai/types'
 import type { BookStatus, UpdateBookRequest } from '@/lib/types/books'
 
 const statusOptions: { value: BookStatus; label: string; className: string }[] = [
-  { value: 'want_to_read', label: 'Want to Read', className: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' },
-  { value: 'reading', label: 'Reading', className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
-  { value: 'completed', label: 'Completed', className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' },
+  {
+    value: 'want_to_read',
+    label: 'Want to Read',
+    className: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
+  },
+  {
+    value: 'reading',
+    label: 'Reading',
+    className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+  },
+  {
+    value: 'completed',
+    label: 'Completed',
+    className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+  },
 ]
 
 const contentTabs = [
@@ -74,9 +83,17 @@ export default function BookDetailPage() {
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [genreInput, setGenreInput] = useState('')
   const [isDistilling, setIsDistilling] = useState(false)
-  const [distillResult, setDistillResult] = useState<{ title: string; contentMd: string; suggestedTags: string[] } | null>(null)
+  const [distillResult, setDistillResult] = useState<{
+    title: string
+    contentMd: string
+    suggestedTags: string[]
+  } | null>(null)
   const [isExtractingActions, setIsExtractingActions] = useState(false)
-  const [extractedActions, setExtractedActions] = useState<Array<{ title: string; priority: 'urgent' | 'high' | 'medium' | 'low'; reason: string }> | null>(null)
+  const [extractedActions, setExtractedActions] = useState<Array<{
+    title: string
+    priority: 'urgent' | 'high' | 'medium' | 'low'
+    reason: string
+  }> | null>(null)
 
   const save = useCallback(
     (data: UpdateBookRequest) => {
@@ -133,7 +150,14 @@ export default function BookDetailPage() {
         {/* Cover */}
         <div className="shrink-0">
           {book.coverUrl ? (
-            <img
+            <RemoteImage
+              width={480}
+              height={640}
+              fallback={
+                <div className="flex aspect-[3/4] w-48 items-center justify-center rounded-2xl bg-primary/10">
+                  <BookOpen size={64} className="text-primary/50" />
+                </div>
+              }
               src={book.coverUrl}
               alt={book.title}
               className="aspect-[3/4] w-48 rounded-lg object-cover shadow-md"
@@ -152,18 +176,12 @@ export default function BookDetailPage() {
 
         {/* Metadata */}
         <div className="flex flex-1 flex-col gap-4">
-          {book.author && (
-            <p className="text-lg text-muted-foreground">by {book.author}</p>
-          )}
+          {book.author && <p className="text-lg text-muted-foreground">by {book.author}</p>}
 
           {/* Rating */}
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium">Rating:</span>
-            <StarRating
-              value={book.rating}
-              onChange={(rating) => save({ rating })}
-              size={22}
-            />
+            <StarRating value={book.rating} onChange={(rating) => save({ rating })} size={22} />
           </div>
 
           {/* Status */}
@@ -231,9 +249,7 @@ export default function BookDetailPage() {
                   {g}
                   <button
                     type="button"
-                    onClick={() =>
-                      save({ genre: book.genre.filter((x) => x !== g) })
-                    }
+                    onClick={() => save({ genre: book.genre.filter((x) => x !== g) })}
                     className="hover:text-destructive"
                   >
                     <X size={12} />
@@ -293,17 +309,11 @@ export default function BookDetailPage() {
           )}
 
           {activeTab === 'key-ideas' && (
-            <KeyIdeasEditor
-              ideas={keyIdeas}
-              onChange={(keyIdeas) => save({ keyIdeas })}
-            />
+            <KeyIdeasEditor ideas={keyIdeas} onChange={(keyIdeas) => save({ keyIdeas })} />
           )}
 
           {activeTab === 'quotes' && (
-            <QuotesEditor
-              quotes={quotes}
-              onChange={(quotes) => save({ quotes })}
-            />
+            <QuotesEditor quotes={quotes} onChange={(quotes) => save({ quotes })} />
           )}
 
           {activeTab === 'learnings' && (
@@ -316,12 +326,19 @@ export default function BookDetailPage() {
           )}
 
           {activeTab === 'application' && (
-            <MarkdownEditor
-              value={book.applicationMd}
-              onChange={(applicationMd) => save({ applicationMd })}
-              placeholder="How will you apply what you learned?"
-              minHeight="300px"
-            />
+            <>
+              <BookExperiment
+                bookId={book.id}
+                title={book.title}
+                application={book.applicationMd}
+              />
+              <MarkdownEditor
+                value={book.applicationMd}
+                onChange={(applicationMd) => save({ applicationMd })}
+                placeholder="How will you apply what you learned?"
+                minHeight="300px"
+              />
+            </>
           )}
         </div>
       </div>
@@ -335,7 +352,9 @@ export default function BookDetailPage() {
               setIsDistilling(true)
               setDistillResult(null)
               try {
-                const res = await apiClient<AIActionResponse<{ title: string; contentMd: string; suggestedTags: string[] }>>(`/api/books/${id}/ai/distill`, {
+                const res = await apiClient<
+                  AIActionResponse<{ title: string; contentMd: string; suggestedTags: string[] }>
+                >(`/api/books/${id}/ai/distill`, {
                   method: 'POST',
                 })
                 setDistillResult(res.data)
@@ -353,7 +372,15 @@ export default function BookDetailPage() {
               setIsExtractingActions(true)
               setExtractedActions(null)
               try {
-                const res = await apiClient<AIActionResponse<{ tasks: Array<{ title: string; priority: 'urgent' | 'high' | 'medium' | 'low'; reason: string }> }>>(`/api/books/${id}/ai/actions`, {
+                const res = await apiClient<
+                  AIActionResponse<{
+                    tasks: Array<{
+                      title: string
+                      priority: 'urgent' | 'high' | 'medium' | 'low'
+                      reason: string
+                    }>
+                  }>
+                >(`/api/books/${id}/ai/actions`, {
                   method: 'POST',
                 })
                 setExtractedActions(res.data.tasks)

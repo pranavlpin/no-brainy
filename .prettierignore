@@ -1,0 +1,9 @@
+node_modules/
+.next/
+evidences/
+pnpm-lock.yaml
+next-env.d.ts
+docs/plans/
+docs/tasks/
+docs/test-plans/
+.env*

@@ -1,5 +1,6 @@
 'use client'
 
+import { ErrorState } from '@/components/ui/workspace-states'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Plus, Layers } from 'lucide-react'
@@ -14,34 +15,42 @@ import { useDecks, useCreateDeck } from '@/hooks/use-flashcards'
 
 export default function FlashcardsPage() {
   const router = useRouter()
-  const { data, isLoading } = useDecks()
+  const { data, isLoading, isError, refetch } = useDecks()
   const createDeck = useCreateDeck()
 
   const [showCreate, setShowCreate] = useState(false)
+  const [createError, setCreateError] = useState('')
   const [newName, setNewName] = useState('')
   const [newDesc, setNewDesc] = useState('')
   const [newTags, setNewTags] = useState<string[]>([])
 
   const handleCreate = async () => {
     if (!newName.trim()) return
-    const deck = await createDeck.mutateAsync({
-      name: newName.trim(),
-      descriptionMd: newDesc || undefined,
-      tags: newTags.length > 0 ? newTags : undefined,
-    })
-    setShowCreate(false)
-    setNewName('')
-    setNewDesc('')
-    setNewTags([])
-    router.push(`/flashcards/${deck.id}`)
+    setCreateError('')
+    try {
+      const deck = await createDeck.mutateAsync({
+        name: newName.trim(),
+        descriptionMd: newDesc || undefined,
+        tags: newTags.length > 0 ? newTags : undefined,
+      })
+      setShowCreate(false)
+      setNewName('')
+      setNewDesc('')
+      setNewTags([])
+      router.push(`/flashcards/${deck.id}`)
+    } catch {
+      setCreateError('Could not create the deck. Your entries are kept; please retry.')
+    }
   }
 
   const decks = data ?? []
 
+  if (isError) return <ErrorState retry={() => void refetch()} />
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="font-display text-2xl font-bold text-retro-dark">Flashcards</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="display-title">Flashcards</h1>
         <Button onClick={() => setShowCreate(true)}>
           <Plus className="mr-2 h-4 w-4" />
           New Deck
@@ -91,9 +100,17 @@ export default function FlashcardsPage() {
         onConfirm={handleCreate}
       >
         <div className="space-y-4">
+          {createError && (
+            <p role="alert" className="text-sm text-destructive">
+              {createError}
+            </p>
+          )}
           <div>
-            <Label className="mb-1 block">Name</Label>
+            <Label htmlFor="deck-name" className="mb-1 block">
+              Name
+            </Label>
             <Input
+              id="deck-name"
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               placeholder="Deck name"
@@ -101,8 +118,11 @@ export default function FlashcardsPage() {
             />
           </div>
           <div>
-            <Label className="mb-1 block">Description</Label>
+            <Label htmlFor="deck-description" className="mb-1 block">
+              Description
+            </Label>
             <Input
+              id="deck-description"
               value={newDesc}
               onChange={(e) => setNewDesc(e.target.value)}
               placeholder="Optional description"

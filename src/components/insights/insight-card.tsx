@@ -11,6 +11,7 @@ import {
   X,
   type LucideIcon,
 } from 'lucide-react'
+import ReactMarkdown from 'react-markdown'
 import { cn } from '@/lib/utils'
 
 interface InsightCardProps {
@@ -24,7 +25,7 @@ interface InsightCardProps {
 }
 
 const typeConfig: Record<string, { icon: LucideIcon; color: string; label: string }> = {
-  procrastination: { icon: Clock, color: 'text-orange-500', label: 'Procrastination' },
+  procrastination: { icon: Clock, color: 'text-orange-500', label: 'Follow-through' },
   workload: { icon: Layers, color: 'text-indigo-500', label: 'Workload' },
   priority: { icon: Target, color: 'text-red-500', label: 'Priority' },
   streak: { icon: TrendingUp, color: 'text-green-500', label: 'Streak' },
@@ -33,7 +34,10 @@ const typeConfig: Record<string, { icon: LucideIcon; color: string; label: strin
   topic: { icon: Tag, color: 'text-teal-500', label: 'Topics' },
 }
 
-const severityStyles: Record<string, { border: string; bg: string; badge: string; badgeText: string }> = {
+const severityStyles: Record<
+  string,
+  { border: string; bg: string; badge: string; badgeText: string }
+> = {
   positive: {
     border: 'border-l-green-500',
     bg: 'bg-green-50 dark:bg-green-950/20',
@@ -99,18 +103,10 @@ export function InsightCard({
               {sev.badgeText}
             </span>
           </div>
-          <p
-            className="text-sm text-foreground [&_strong]:font-bold"
-            dangerouslySetInnerHTML={{
-              __html: contentMd
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                .replace(/`(.*?)`/g, '<code class="rounded bg-muted px-1 py-0.5 text-xs font-mono">$1</code>'),
-            }}
-          />
-          <p className="mt-1 text-xs text-muted-foreground">
-            Generated {timeAgo(generatedAt)}
-          </p>
+          <div className="prose prose-sm max-w-none text-foreground prose-a:text-primary dark:prose-invert">
+            <ReactMarkdown skipHtml>{contentMd}</ReactMarkdown>
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">Generated {timeAgo(generatedAt)}</p>
         </div>
 
         <button

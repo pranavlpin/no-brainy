@@ -1,5 +1,6 @@
 'use client'
 
+import { ErrorState } from '@/components/ui/workspace-states'
 import { useState } from 'react'
 import { Plus, Search, Film, Upload, RefreshCw } from 'lucide-react'
 import { Input } from '@/components/ui/input'
@@ -66,7 +67,10 @@ export default function WatchlistPage(): JSX.Element {
   const [editingItem, setEditingItem] = useState<WatchlistItemResponse | null>(null)
   const [showImport, setShowImport] = useState(false)
 
-  const [sortBy, sortOrder] = sort.split(':') as [WatchlistFilters['sortBy'], WatchlistFilters['sortOrder']]
+  const [sortBy, sortOrder] = sort.split(':') as [
+    WatchlistFilters['sortBy'],
+    WatchlistFilters['sortOrder'],
+  ]
 
   const filters: WatchlistFilters = {
     ...(tab !== 'all' ? { type: tab as WatchlistType } : {}),
@@ -77,11 +81,12 @@ export default function WatchlistPage(): JSX.Element {
   }
 
   const hasFilters = Object.keys(filters).length > 2 // sortBy and sortOrder always present
-  const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } = useWatchlist(
-    hasFilters || filters.sortBy !== 'updatedAt' || filters.sortOrder !== 'desc'
-      ? filters
-      : undefined
-  )
+  const { data, isLoading, isError, refetch, hasNextPage, fetchNextPage, isFetchingNextPage } =
+    useWatchlist(
+      hasFilters || filters.sortBy !== 'updatedAt' || filters.sortOrder !== 'desc'
+        ? filters
+        : undefined
+    )
 
   const items = data?.items ?? []
   const totalCount = data?.total ?? 0
@@ -110,25 +115,29 @@ export default function WatchlistPage(): JSX.Element {
     deleteMutation.mutate(id)
   }
 
+  if (isError) return <ErrorState retry={() => void refetch()} />
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="font-display text-2xl font-bold text-retro-dark">Watchlist</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="display-title">Watchlist</h1>
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => bulkMetadata.mutate()}
             disabled={bulkMetadata.isPending}
-            className="border border-retro-blue/30 bg-background px-3 py-2 font-mono text-sm text-retro-dark hover:bg-retro-blue/5 disabled:opacity-50"
+            className="border border-retro-blue/30 bg-background px-3 py-2 text-sm text-retro-dark hover:bg-retro-blue/5 disabled:opacity-50"
           >
-            <RefreshCw size={16} className={`mr-2 inline ${bulkMetadata.isPending ? 'animate-spin' : ''}`} />
+            <RefreshCw
+              size={16}
+              className={`mr-2 inline ${bulkMetadata.isPending ? 'animate-spin' : ''}`}
+            />
             {bulkMetadata.isPending ? 'Fetching...' : 'Update Details'}
           </button>
           <button
             type="button"
             onClick={() => setShowImport(true)}
-            className="border border-retro-blue/30 bg-background px-3 py-2 font-mono text-sm text-retro-dark hover:bg-retro-blue/5"
+            className="border border-retro-blue/30 bg-background px-3 py-2 text-sm text-retro-dark hover:bg-retro-blue/5"
           >
             <Upload size={16} className="mr-2 inline" />
             Import
@@ -139,7 +148,7 @@ export default function WatchlistPage(): JSX.Element {
               setShowAddForm(!showAddForm)
               setEditingItem(null)
             }}
-            className="border-2 border-retro-dark bg-retro-blue px-4 py-2 font-mono text-sm font-bold text-white shadow-hard hover-shadow-grow"
+            className="inline-flex items-center rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
           >
             <Plus size={16} className="mr-2 inline" />
             Add
@@ -175,7 +184,7 @@ export default function WatchlistPage(): JSX.Element {
             className={cn(
               'rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
               tab === t.value
-                ? 'bg-retro-blue/10 text-retro-dark font-mono border-b-2 border-retro-blue'
+                ? 'bg-retro-blue/10 text-foreground border-b-2 border-retro-blue'
                 : 'text-retro-dark/40 hover:text-foreground'
             )}
           >
@@ -207,15 +216,11 @@ export default function WatchlistPage(): JSX.Element {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search watchlist..."
-            className="rounded-none pl-9"
+            className="pl-9"
           />
         </div>
 
-        <Select
-          value={sort}
-          onChange={(e) => setSort(e.target.value)}
-          className="w-48"
-        >
+        <Select value={sort} onChange={(e) => setSort(e.target.value)} className="w-48">
           {sortOptions.map((opt) => (
             <option key={opt.value} value={opt.value}>
               {opt.label}
@@ -228,7 +233,7 @@ export default function WatchlistPage(): JSX.Element {
       {isLoading ? (
         <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="flex flex-col overflow-hidden border-2 border-retro-dark/10">
+            <div key={i} className="flex flex-col overflow-hidden rounded-xl border border-border">
               <Skeleton className="aspect-[16/10] w-full rounded-none" />
               <div className="space-y-2 p-3">
                 <Skeleton className="h-4 w-3/4" />
@@ -240,8 +245,9 @@ export default function WatchlistPage(): JSX.Element {
       ) : items.length > 0 ? (
         <div className="space-y-4">
           {bulkMetadata.isSuccess && (
-            <div className="border-2 border-retro-mint/30 bg-retro-mint/5 p-3 font-mono text-sm text-retro-dark">
-              Updated {bulkMetadata.data.data.updated} item{bulkMetadata.data.data.updated !== 1 ? 's' : ''}
+            <div className="border-2 border-retro-mint/30 bg-retro-mint/5 p-3 text-sm text-retro-dark">
+              Updated {bulkMetadata.data.data.updated} item
+              {bulkMetadata.data.data.updated !== 1 ? 's' : ''}
               {bulkMetadata.data.data.failed > 0 && `, ${bulkMetadata.data.data.failed} not found`}
             </div>
           )}
@@ -263,23 +269,23 @@ export default function WatchlistPage(): JSX.Element {
               <button
                 onClick={() => fetchNextPage()}
                 disabled={isFetchingNextPage}
-                className="font-mono text-sm text-retro-blue hover:underline disabled:opacity-50"
+                className="text-sm text-retro-blue hover:underline disabled:opacity-50"
               >
-                {isFetchingNextPage ? 'Loading more...' : `Load more (showing ${items.length} of ${totalCount})`}
+                {isFetchingNextPage
+                  ? 'Loading more...'
+                  : `Load more (showing ${items.length} of ${totalCount})`}
               </button>
             </div>
           )}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-retro-dark/20 py-16">
+        <div className="flex flex-col items-center justify-center rounded-lg rounded-2xl border border-dashed border-border py-16">
           <Film size={48} className="text-muted-foreground/40" />
-          <p className="mt-4 font-mono text-sm text-muted-foreground">
-            {emptyMessages[tab]}
-          </p>
+          <p className="mt-4 text-sm text-muted-foreground">{emptyMessages[tab]}</p>
           <button
             type="button"
             onClick={() => setShowAddForm(true)}
-            className="mt-4 border-2 border-retro-dark/20 bg-background px-4 py-2 font-mono text-sm font-bold text-retro-dark hover:bg-muted"
+            className="mt-4 rounded-xl border border-border bg-background px-4 py-2 text-sm font-bold text-retro-dark hover:bg-muted"
           >
             <Plus size={16} className="mr-2 inline" />
             Add Item

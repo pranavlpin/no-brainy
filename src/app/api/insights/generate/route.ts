@@ -1,93 +1,62 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withAI } from '@/lib/ai/middleware'
-import { callAI } from '@/lib/ai/call-ai'
+import { callAI, AIError } from '@/lib/ai/call-ai'
 import { handleAIError } from '@/lib/ai/error-handler'
 import { insightGeneratePrompt } from '@/lib/ai/prompts'
-import { aggregateUserData, type InsightModule } from '@/lib/ai/insights/aggregate-user-data'
-
-interface GeneratedInsight {
-  insightType: string
-  contentMd: string
-  severity: string
-  relatedEntity: string | null
-}
-
-interface InsightGenerationResult {
-  insights: GeneratedInsight[]
-}
-
-export const POST = withAI(async (req: NextRequest, { user, apiKey, preferredModel }) => {
+import { aggregateUserData } from '@/lib/ai/insights/aggregate-user-data'
+import { contextSchema, validateAIOutput } from '@/lib/ai/validation'
+const escapeLabel = (value: string) => value.replace(/[\\\[\]()]/g, '\\$&')
+export const POST = withAI(async (req, { user, apiKey, preferredModel }) => {
   try {
-    // Parse optional modules and date range from request body
-    let selectedModules: InsightModule[] | undefined
-    let dateFrom: string | undefined
-    let dateTo: string | undefined
-    try {
-      const body = await req.json()
-      if (body.modules && Array.isArray(body.modules)) {
-        selectedModules = body.modules as InsightModule[]
-      }
-      if (body.dateFrom) dateFrom = body.dateFrom as string
-      if (body.dateTo) dateTo = body.dateTo as string
-    } catch {
-      // No body or invalid JSON — use defaults
-    }
-
-    // Delete expired insights
-    await prisma.insight.deleteMany({
-      where: {
-        userId: user.id,
-        validUntil: { lt: new Date() },
-      },
-    })
-
-    // Aggregate user data (only selected modules, within date range)
-    const data = await aggregateUserData(user.id, selectedModules, dateFrom, dateTo)
-
-    // Call AI (use preferred model if set, otherwise prompt default)
-    const result = await callAI<InsightGenerationResult>({
+    const input = contextSchema.parse(await req.json().catch(() => ({})))
+    const data = await aggregateUserData(user.id, input.modules, input.dateFrom, input.dateTo)
+    const result = await callAI<unknown>({
       apiKey,
-      model: preferredModel || insightGeneratePrompt.model,
+      model: preferredModel ?? insightGeneratePrompt.model,
       systemPrompt: insightGeneratePrompt.systemPrompt,
-      userPrompt: insightGeneratePrompt.userPrompt(data, { from: dateFrom, to: dateTo }),
+      userPrompt: insightGeneratePrompt.userPrompt(data),
       maxTokens: insightGeneratePrompt.maxTokens,
       temperature: insightGeneratePrompt.temperature,
       responseFormat: 'json',
     })
-
-    const validUntil = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days from now
-
-    // Bulk insert new insights
-    const insightData = result.data.insights.map((insight) => ({
-      userId: user.id,
-      insightType: insight.insightType,
-      contentMd: insight.contentMd,
-      severity: insight.severity,
-      relatedEntity: insight.relatedEntity,
-      validUntil,
-    }))
-
-    // Delete old non-dismissed insights before inserting new ones
-    await prisma.insight.deleteMany({
-      where: {
-        userId: user.id,
-        isDismissed: false,
-      },
-    })
-
-    const created = await Promise.all(
-      insightData.map((data) =>
-        prisma.insight.create({ data })
+    const output = validateAIOutput('insights', result.data),
+      sources = new Map((data.sources ?? []).map((s) => [s.id, s]))
+    if (output.insights.some((item) => item.sourceIds.some((id) => !sources.has(id))))
+      throw new AIError(
+        'The observation referenced unavailable evidence. Please retry.',
+        'AI_INVALID_RESPONSE'
       )
-    )
-
+    const created = await prisma.$transaction(async (db) => {
+      await db.user.update({ where: { id: user.id }, data: { lastActiveAt: new Date() } })
+      await db.insight.deleteMany({
+        where: {
+          userId: user.id,
+          OR: [{ isDismissed: false }, { validUntil: { lt: new Date() } }],
+        },
+      })
+      const saved = []
+      for (const insight of output.insights) {
+        const refs = [...new Set(insight.sourceIds)].map((id) => sources.get(id)!)
+        saved.push(
+          await db.insight.create({
+            data: {
+              userId: user.id,
+              insightType: insight.insightType,
+              contentMd: `${insight.contentMd}\n\nContext: ${data.window?.from} – ${data.window?.to} (${data.window?.timezone}). Current goal and budget status is a snapshot.\n\nSources: ${refs.map((s) => `[${escapeLabel(s.title)} · ${s.date}](${s.href})`).join(', ')}`,
+              severity: insight.severity,
+              relatedEntity: insight.relatedEntity,
+              relatedIds: refs.map((s) => s.id),
+              validUntil: new Date(Date.now() + 7 * 86400000),
+            },
+          })
+        )
+      }
+      return saved
+    })
     return NextResponse.json({
       success: true,
-      data: {
-        insights: created,
-        generatedAt: new Date().toISOString(),
-      },
+      data: { insights: created, generatedAt: new Date().toISOString() },
       model: result.model,
       tokensUsed: result.tokensUsed,
     })

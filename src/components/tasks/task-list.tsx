@@ -1,12 +1,13 @@
-"use client"
+'use client'
 
-import { useRouter } from "next/navigation"
-import { cn } from "@/lib/utils"
-import { PriorityBadge } from "./priority-badge"
-import { Badge } from "@/components/ui/badge"
-import { useUpdateTask } from "@/hooks/use-tasks"
-import { ListChecks } from "lucide-react"
-import type { TaskResponse } from "@/lib/types/tasks"
+import Link from 'next/link'
+import { addCalendarDays } from '@/lib/dates/calendar'
+import { cn } from '@/lib/utils'
+import { PriorityBadge } from './priority-badge'
+import { Badge } from '@/components/ui/badge'
+import { useUpdateTask } from '@/hooks/use-tasks'
+import { ListChecks } from 'lucide-react'
+import type { TaskResponse } from '@/lib/types/tasks'
 
 interface TaskListItem extends TaskResponse {
   subtasksCount?: number
@@ -14,38 +15,36 @@ interface TaskListItem extends TaskResponse {
 
 interface TaskListProps {
   tasks: TaskListItem[]
+  today?: string
 }
 
-function isOverdue(dueDate: string | null, status: string): boolean {
-  if (!dueDate || status === "completed" || status === "cancelled") return false
-  return new Date(dueDate) < new Date()
+function isOverdue(dueDate: string | null, status: string, today?: string): boolean {
+  return (
+    !!dueDate &&
+    !!today &&
+    status !== 'completed' &&
+    status !== 'cancelled' &&
+    dueDate.slice(0, 10) < today
+  )
 }
 
-function formatDueDate(dueDate: string): string {
-  const date = new Date(dueDate)
-  const today = new Date()
-  const tomorrow = new Date()
-  tomorrow.setDate(tomorrow.getDate() + 1)
-
-  if (date.toDateString() === today.toDateString()) return "Today"
-  if (date.toDateString() === tomorrow.toDateString()) return "Tomorrow"
-
-  return date.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
+function formatDueDate(dueDate: string, today?: string): string {
+  const label = dueDate.slice(0, 10)
+  if (label === today) return 'Today'
+  if (today && label === addCalendarDays(today, 1)) return 'Tomorrow'
+  return new Date(`${label}T00:00:00Z`).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    timeZone: 'UTC',
   })
 }
 
-export function TaskList({ tasks }: TaskListProps) {
-  const router = useRouter()
+export function TaskList({ tasks, today }: TaskListProps) {
   const updateTask = useUpdateTask()
 
-  const handleToggle = (
-    e: React.MouseEvent,
-    task: TaskListItem
-  ) => {
+  const handleToggle = (e: React.MouseEvent, task: TaskListItem) => {
     e.stopPropagation()
-    const newStatus = task.status === "completed" ? "pending" : "completed"
+    const newStatus = task.status === 'completed' ? 'pending' : 'completed'
     updateTask.mutate({ id: task.id, data: { status: newStatus } })
   }
 
@@ -59,20 +58,27 @@ export function TaskList({ tasks }: TaskListProps) {
 
   return (
     <div className="divide-y divide-border rounded-md border border-border">
+      {updateTask.isError && (
+        <p role="alert" className="p-3 text-sm text-destructive">
+          Could not update this task. Please try again.
+        </p>
+      )}
       {tasks.map((task) => {
-        const overdue = isOverdue(task.dueDate, task.status)
-        const completed = task.status === "completed"
+        const overdue = isOverdue(task.dueDate, task.status, today)
+        const completed = task.status === 'completed'
 
         return (
           <div
             key={task.id}
             className="flex items-center gap-3 px-4 py-3 hover:bg-accent/50 cursor-pointer transition-colors"
-            onClick={() => router.push(`/tasks/${task.id}`)}
+            data-testid={`task-${task.id}`}
           >
             {/* Checkbox */}
             <input
               type="checkbox"
               checked={completed}
+              aria-label={`Complete ${task.title}`}
+              disabled={updateTask.isPending}
               onClick={(e) => handleToggle(e, task)}
               onChange={() => {}}
               className="h-4 w-4 shrink-0 rounded border-gray-300 cursor-pointer"
@@ -80,14 +86,15 @@ export function TaskList({ tasks }: TaskListProps) {
 
             {/* Title + tags */}
             <div className="flex-1 min-w-0">
-              <span
+              <Link
+                href={`/tasks/${task.id}`}
                 className={cn(
-                  "text-sm font-medium",
-                  completed && "line-through text-muted-foreground"
+                  'text-sm font-medium',
+                  completed && 'line-through text-muted-foreground'
                 )}
               >
                 {task.title}
-              </span>
+              </Link>
               {task.tags.length > 0 && (
                 <div className="flex gap-1 mt-1 flex-wrap">
                   {task.tags.map((tag) => (
@@ -110,15 +117,15 @@ export function TaskList({ tasks }: TaskListProps) {
             {/* Due date */}
             <span
               className={cn(
-                "text-xs shrink-0 w-16 text-right",
+                'text-xs shrink-0 w-16 text-right',
                 task.dueDate
                   ? overdue
-                    ? "text-red-600 font-medium"
-                    : "text-muted-foreground"
-                  : "text-transparent"
+                    ? 'text-red-600 font-medium'
+                    : 'text-muted-foreground'
+                  : 'text-transparent'
               )}
             >
-              {task.dueDate ? formatDueDate(task.dueDate) : "—"}
+              {task.dueDate ? formatDueDate(task.dueDate, today) : '—'}
             </span>
 
             {/* Priority badge */}

@@ -2,24 +2,24 @@
 export interface AIActionResponse<T> {
   success: true
   data: T
-  model: string        // which model was used
-  tokensUsed?: number  // optional: total_tokens from usage
+  model: string // which model was used
+  tokensUsed?: number // optional: total_tokens from usage
 }
 
 // Note AI
 export interface NoteSummary {
-  bullets: string[]   // 3-5 bullet points
+  bullets: string[] // 3-5 bullet points
 }
 
 export interface NoteInsights {
   insights: Array<{
-    title: string      // short label
+    title: string // short label
     description: string // 1-2 sentence explanation
   }>
 }
 
 export interface TagSuggestions {
-  tags: string[]       // 3-8 suggested tags
+  tags: string[] // 3-8 suggested tags
 }
 
 // Flashcard AI
@@ -47,19 +47,28 @@ export interface PrioritySuggestion {
 
 export interface TaskPrioritizationResult {
   suggestions: PrioritySuggestion[]
-  reasoning: string   // overall explanation
+  reasoning: string // overall explanation
 }
 
 // Daily Plan AI
 export interface DailyPlanSuggestion {
+  planDate?: string
+  sources?: {
+    id: string
+    title: string
+    estimatedMinutes: number | null
+    dueDate: string | null
+    plannedDate: string | null
+  }[]
+  warnings?: string[]
   suggestedTaskIds: string[]
   reasoning: string
-  briefMd: string     // markdown morning brief
+  briefMd: string // markdown morning brief
 }
 
 // Review AI
 export interface ReviewSummary {
-  summaryMd: string   // natural language recap
+  summaryMd: string // natural language recap
 }
 
 // Coach AI (streamed -- individual messages, not a typed response)

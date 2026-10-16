@@ -17,7 +17,12 @@ interface ExpenseListProps {
   isDeleting?: boolean
 }
 
-export function ExpenseList({ expenses, onEdit, onDelete, isDeleting }: ExpenseListProps): React.ReactElement {
+export function ExpenseList({
+  expenses,
+  onEdit,
+  onDelete,
+  isDeleting,
+}: ExpenseListProps): React.ReactElement {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [bulkCategoryId, setBulkCategoryId] = useState('')
   const { data: categories } = useExpenseCategories()
@@ -55,7 +60,7 @@ export function ExpenseList({ expenses, onEdit, onDelete, isDeleting }: ExpenseL
           setSelectedIds(new Set())
           setBulkCategoryId('')
         },
-      },
+      }
     )
   }
 
@@ -82,11 +87,21 @@ export function ExpenseList({ expenses, onEdit, onDelete, isDeleting }: ExpenseL
                   title={allSelected ? 'Deselect all' : 'Select all'}
                 />
               </th>
-              <th className="pb-3 pr-4 font-mono text-xs uppercase tracking-wider text-retro-dark/50">Date</th>
-              <th className="pb-3 pr-4 font-mono text-xs uppercase tracking-wider text-retro-dark/50">Name</th>
-              <th className="pb-3 pr-4 font-mono text-xs uppercase tracking-wider text-retro-dark/50">Category</th>
-              <th className="pb-3 pr-4 font-mono text-xs uppercase tracking-wider text-retro-dark/50">Tags</th>
-              <th className="pb-3 pr-4 text-right font-mono text-xs uppercase tracking-wider text-retro-dark/50">Amount</th>
+              <th className="pb-3 pr-4 text-xs uppercase tracking-wider text-retro-dark/50">
+                Date
+              </th>
+              <th className="pb-3 pr-4 text-xs uppercase tracking-wider text-retro-dark/50">
+                Name
+              </th>
+              <th className="pb-3 pr-4 text-xs uppercase tracking-wider text-retro-dark/50">
+                Category
+              </th>
+              <th className="pb-3 pr-4 text-xs uppercase tracking-wider text-retro-dark/50">
+                Tags
+              </th>
+              <th className="pb-3 pr-4 text-right text-xs uppercase tracking-wider text-retro-dark/50">
+                Amount
+              </th>
               <th className="pb-3 w-20"></th>
             </tr>
           </thead>
@@ -167,10 +182,8 @@ export function ExpenseList({ expenses, onEdit, onDelete, isDeleting }: ExpenseL
 
       {/* Floating bulk action bar */}
       {someSelected && (
-        <div className="sticky bottom-4 mt-4 flex items-center justify-between gap-3 border-2 border-retro-dark bg-white p-3 shadow-hard">
-          <span className="font-mono text-xs text-retro-dark/60">
-            {selectedIds.size} selected
-          </span>
+        <div className="sticky bottom-4 mt-4 flex flex-wrap items-center justify-between gap-3 gap-3 border-2 border-retro-dark bg-card p-3 shadow-hard">
+          <span className="text-xs text-retro-dark/60">{selectedIds.size} selected</span>
           <div className="flex items-center gap-2">
             <Tags className="h-4 w-4 text-retro-dark/40" />
             <SearchableSelect
@@ -183,13 +196,13 @@ export function ExpenseList({ expenses, onEdit, onDelete, isDeleting }: ExpenseL
             <button
               onClick={handleBulkCategoryChange}
               disabled={!bulkCategoryId || bulkUpdate.isPending}
-              className="border-2 border-retro-dark bg-retro-blue px-3 py-1 font-mono text-xs font-bold text-white shadow-hard hover-shadow-grow disabled:opacity-50"
+              className="border-2 border-retro-dark bg-retro-blue px-3 py-1 text-xs font-bold text-white shadow-sm hover:shadow-md disabled:opacity-50"
             >
               {bulkUpdate.isPending ? 'Updating...' : 'Apply'}
             </button>
             <button
               onClick={() => setSelectedIds(new Set())}
-              className="font-mono text-xs text-retro-dark/50 hover:text-retro-dark"
+              className="text-xs text-retro-dark/50 hover:text-retro-dark"
             >
               Cancel
             </button>

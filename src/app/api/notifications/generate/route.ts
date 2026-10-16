@@ -1,183 +1,104 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { createHash } from 'node:crypto'
+import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withAuth } from '@/lib/auth/middleware'
-
-export const POST = withAuth(async (_req: NextRequest, user) => {
+import { todayInTimezone } from '@/lib/dates/calendar'
+import { reminderPreferences, reminderClock, isQuiet } from '@/lib/reviews/reminders'
+export const POST = withAuth(async (_req, user) => {
   try {
-    const now = new Date()
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    const todayEnd = new Date(todayStart)
-    todayEnd.setDate(todayEnd.getDate() + 1)
-
-    // Load user preferences to check which notification types are enabled
-    const prefs = (user.preferences ?? {}) as Record<string, unknown>
-    const notifPrefs = (prefs.notificationPreferences ?? {}) as Record<string, boolean>
-    const isEnabled = (type: string) => notifPrefs[type] !== false // default enabled
-
-    const created: string[] = []
-
-    // 1. Due today tasks
-    if (isEnabled('dueTasks')) {
-      const dueTodayTasks = await prisma.task.findMany({
-        where: {
-          userId: user.id,
-          dueDate: { gte: todayStart, lt: todayEnd },
-          status: { not: 'completed' },
-        },
+    const today = todayInTimezone(user.timezone),
+      clock = reminderClock(user.timezone)
+    const generated = await prisma.$transaction(async (db) => {
+      const current = await db.user.update({
+        where: { id: user.id },
+        data: { lastActiveAt: new Date() },
       })
-
-      for (const task of dueTodayTasks) {
-        const exists = await prisma.notification.findFirst({
-          where: {
-            userId: user.id,
-            type: 'due_today',
-            relatedId: task.id,
-            createdAt: { gte: todayStart, lt: todayEnd },
-          },
+      const prefs = reminderPreferences(
+        (current.preferences as Record<string, unknown> | null)?.notificationPreferences
+      )
+      if (!prefs.enabled || isQuiet(prefs, clock)) return []
+      const created: string[] = []
+      const add = async (
+        type: string,
+        title: string,
+        body: string,
+        relatedEntity: string,
+        relatedId: string | null
+      ) => {
+        const id =
+          'nr' +
+          createHash('sha256')
+            .update([user.id, today, type, relatedId].join(':'))
+            .digest('hex')
+            .slice(0, 30)
+        if (await db.notification.findUnique({ where: { id } })) return
+        await db.notification.create({
+          data: { id, userId: user.id, type, title, body, relatedEntity, relatedId },
         })
-        if (!exists) {
-          await prisma.notification.create({
-            data: {
-              userId: user.id,
-              type: 'due_today',
-              title: 'Task due today',
-              body: task.title,
-              relatedEntity: 'task',
-              relatedId: task.id,
-            },
-          })
-          created.push(`due_today:${task.id}`)
-        }
+        created.push(id)
       }
-    }
-
-    // 2. Overdue tasks
-    if (isEnabled('overdueTasks')) {
-      const overdueTasks = await prisma.task.findMany({
+      const tasks = await db.task.findMany({
         where: {
           userId: user.id,
-          dueDate: { lt: todayStart },
-          status: { not: 'completed' },
+          status: { in: ['pending', 'in_progress'] },
+          routinePaused: false,
+          OR: [{ goalId: null }, { goal: { status: 'active' } }],
         },
       })
-
-      for (const task of overdueTasks) {
-        const exists = await prisma.notification.findFirst({
-          where: {
-            userId: user.id,
-            type: 'overdue',
-            relatedId: task.id,
-            createdAt: { gte: todayStart, lt: todayEnd },
-          },
+      for (const task of tasks) {
+        const due = task.dueDate?.toISOString().slice(0, 10),
+          planned = task.plannedDate?.toISOString().slice(0, 10)
+        if (prefs.dueTasks && due === today)
+          await add('due_today', 'Task due today', task.title, 'task', task.id)
+        else if (prefs.overdueTasks && due && due < today)
+          await add('overdue', 'A deadline to revisit', task.title, 'task', task.id)
+        else if (prefs.habitReminders && task.isRecurring && planned && planned <= today)
+          await add('routine', 'A practice you planned', task.title, 'task', task.id)
+      }
+      if (prefs.flashcardReminders) {
+        const cards = await db.flashcard.findMany({
+          where: { userId: user.id, nextReviewAt: { lte: new Date(today) } },
+          include: { deck: { select: { name: true } } },
         })
-        if (!exists) {
-          const daysOverdue = Math.floor(
-            (todayStart.getTime() - new Date(task.dueDate!).getTime()) / (1000 * 60 * 60 * 24)
+        const decks = new Map<string, { name: string; count: number }>()
+        for (const card of cards) {
+          const deck = decks.get(card.deckId)
+          if (deck) deck.count++
+          else decks.set(card.deckId, { name: card.deck.name, count: 1 })
+        }
+        for (const [id, deck] of decks)
+          await add(
+            'flashcard_review',
+            'A little learning, when you’re ready',
+            `${deck.count} cards in ${deck.name}`,
+            'deck',
+            id
           )
-          await prisma.notification.create({
-            data: {
-              userId: user.id,
-              type: 'overdue',
-              title: 'Overdue task',
-              body: `${task.title} - This task has been pending ${daysOverdue} day${daysOverdue !== 1 ? 's' : ''}`,
-              relatedEntity: 'task',
-              relatedId: task.id,
-            },
-          })
-          created.push(`overdue:${task.id}`)
-        }
       }
-    }
-
-
-    // 4. Flashcard review reminders - cards due for review
-    if (isEnabled('flashcardReminders')) {
-      const dueCards = await prisma.flashcard.findMany({
-        where: {
-          userId: user.id,
-          nextReviewAt: { lte: todayEnd },
-        },
-        include: { deck: { select: { id: true, name: true } } },
-      })
-
-      // Group by deck
-      const deckMap = new Map<string, { name: string; count: number }>()
-      for (const card of dueCards) {
-        const existing = deckMap.get(card.deckId)
-        if (existing) {
-          existing.count++
-        } else {
-          deckMap.set(card.deckId, { name: card.deck.name, count: 1 })
-        }
-      }
-
-      for (const [deckId, info] of Array.from(deckMap)) {
-        const exists = await prisma.notification.findFirst({
-          where: {
-            userId: user.id,
-            type: 'flashcard_review',
-            relatedId: deckId,
-            createdAt: { gte: todayStart, lt: todayEnd },
-          },
+      if (prefs.dailyReviewReminders && clock >= prefs.reviewTime) {
+        const review = await db.dailyReview.findUnique({
+          where: { userId_reviewDate: { userId: user.id, reviewDate: new Date(today) } },
         })
-        if (!exists) {
-          await prisma.notification.create({
-            data: {
-              userId: user.id,
-              type: 'flashcard_review',
-              title: 'Cards due for review',
-              body: `${info.count} card${info.count !== 1 ? 's' : ''} due in "${info.name}"`,
-              relatedEntity: 'deck',
-              relatedId: deckId,
-            },
-          })
-          created.push(`flashcard_review:${deckId}`)
-        }
+        if (!review?.closedAt && !review?.reflectionMd)
+          await add(
+            'daily_review',
+            'A moment to close the day',
+            'Notice what moved forward and choose a gentle next step.',
+            'review',
+            null
+          )
       }
-    }
-
-    // 5. Daily review reminder - no review created today
-    if (isEnabled('dailyReviewReminders')) {
-      const todayReview = await prisma.dailyReview.findFirst({
-        where: {
-          userId: user.id,
-          reviewDate: { gte: todayStart, lt: todayEnd },
-        },
-      })
-
-      if (!todayReview) {
-        const exists = await prisma.notification.findFirst({
-          where: {
-            userId: user.id,
-            type: 'daily_review',
-            createdAt: { gte: todayStart, lt: todayEnd },
-          },
-        })
-        if (!exists) {
-          await prisma.notification.create({
-            data: {
-              userId: user.id,
-              type: 'daily_review',
-              title: 'Daily review',
-              body: "You haven't completed your daily review yet",
-              relatedEntity: 'review',
-              relatedId: null,
-            },
-          })
-          created.push('daily_review')
-        }
-      }
-    }
-
+      return created
+    })
     return NextResponse.json({
       success: true,
-      data: { generated: created.length, notifications: created },
+      data: { generated: generated.length, notifications: generated },
     })
   } catch {
     return NextResponse.json(
       {
         success: false,
-        error: { code: 'INTERNAL_ERROR', message: 'An unexpected error occurred' },
+        error: { code: 'REMINDER_ERROR', message: 'Could not check reminders. Try again later.' },
       },
       { status: 500 }
     )

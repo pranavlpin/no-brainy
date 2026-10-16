@@ -31,14 +31,19 @@ interface ExpenseImportWizardProps {
   onComplete: () => void
 }
 
-export function ExpenseImportWizard({ onClose, onComplete }: ExpenseImportWizardProps): React.ReactElement {
+export function ExpenseImportWizard({
+  onClose,
+  onComplete,
+}: ExpenseImportWizardProps): React.ReactElement {
   const [step, setStep] = useState<Step>('upload')
   const [isUploading, setIsUploading] = useState(false)
   const [isImporting, setIsImporting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [parseData, setParseData] = useState<ParseResponse | null>(null)
   const [categoryOverrides, setCategoryOverrides] = useState<Record<number, string>>({})
-  const [importResult, setImportResult] = useState<{ created: number } | null>(null)
+  const [importResult, setImportResult] = useState<{ created: number; skipped?: number } | null>(
+    null
+  )
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const { data: categories } = useExpenseCategories()
@@ -128,7 +133,7 @@ export function ExpenseImportWizard({ onClose, onComplete }: ExpenseImportWizard
       <div className="fixed inset-0 bg-black/50" onClick={onClose} />
       <div className="relative z-50 w-full max-w-4xl max-h-[85vh] rounded-lg bg-background shadow-lg flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-border px-6 py-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-6 py-4">
           <h2 className="text-lg font-semibold">
             {step === 'upload' && 'Import Expenses'}
             {step === 'preview' && 'Review & Confirm'}
@@ -190,7 +195,9 @@ export function ExpenseImportWizard({ onClose, onComplete }: ExpenseImportWizard
                   {parseData.format.toUpperCase()} format
                 </span>
                 <span>{parseData.totalRows} transactions</span>
-                <span className="font-medium text-foreground">{formatINR(parseData.totalAmount)}</span>
+                <span className="font-medium text-foreground">
+                  {formatINR(parseData.totalAmount)}
+                </span>
               </div>
 
               {parseData.errors.length > 0 && (
@@ -222,12 +229,21 @@ export function ExpenseImportWizard({ onClose, onComplete }: ExpenseImportWizard
                           </td>
                           <td className="px-3 py-2">
                             <Select
-                              value={categoryOverrides[idx] || row.suggestedCategorySlug || 'unknown'}
-                              onChange={(e) => setCategoryOverrides({ ...categoryOverrides, [idx]: e.target.value })}
+                              value={
+                                categoryOverrides[idx] || row.suggestedCategorySlug || 'unknown'
+                              }
+                              onChange={(e) =>
+                                setCategoryOverrides({
+                                  ...categoryOverrides,
+                                  [idx]: e.target.value,
+                                })
+                              }
                               className="w-36 h-8 text-xs"
                             >
                               {categories?.map((c) => (
-                                <option key={c.slug} value={c.slug}>{c.name}</option>
+                                <option key={c.slug} value={c.slug}>
+                                  {c.name}
+                                </option>
                               ))}
                             </Select>
                           </td>
@@ -251,7 +267,8 @@ export function ExpenseImportWizard({ onClose, onComplete }: ExpenseImportWizard
               </div>
               <h3 className="mt-4 text-xl font-semibold">Import Successful</h3>
               <p className="mt-2 text-muted-foreground">
-                {importResult.created} expense{importResult.created !== 1 ? 's' : ''} imported successfully.
+                {importResult.created} expense{importResult.created !== 1 ? 's' : ''} imported
+                successfully. {importResult.skipped ?? 0} matching imported transactions skipped.
               </p>
             </div>
           )}
@@ -261,7 +278,13 @@ export function ExpenseImportWizard({ onClose, onComplete }: ExpenseImportWizard
         <div className="border-t border-border px-6 py-4 flex justify-end gap-3">
           {step === 'preview' && (
             <>
-              <Button variant="outline" onClick={() => { setStep('upload'); setParseData(null) }}>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setStep('upload')
+                  setParseData(null)
+                }}
+              >
                 Back
               </Button>
               <Button onClick={handleConfirm} disabled={isImporting}>
@@ -270,7 +293,12 @@ export function ExpenseImportWizard({ onClose, onComplete }: ExpenseImportWizard
             </>
           )}
           {step === 'done' && (
-            <Button onClick={() => { onComplete(); onClose() }}>
+            <Button
+              onClick={() => {
+                onComplete()
+                onClose()
+              }}
+            >
               Done
             </Button>
           )}

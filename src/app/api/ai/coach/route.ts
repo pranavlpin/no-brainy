@@ -1,140 +1,93 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getAuthUser } from '@/lib/auth/middleware'
-import { getUserApiKey } from '@/lib/ai/get-api-key'
+import { NextResponse } from 'next/server'
+import { withAI } from '@/lib/ai/middleware'
 import { createOpenAIClient } from '@/lib/ai/openai-client'
 import { coachPrompt } from '@/lib/ai/prompts/coach'
+import { handleAIError } from '@/lib/ai/error-handler'
+import { aggregateUserData } from '@/lib/ai/insights/aggregate-user-data'
+import { coachInputSchema } from '@/lib/ai/validation'
 import { prisma } from '@/lib/prisma'
-import { aggregateUserData, type InsightModule } from '@/lib/ai/insights/aggregate-user-data'
-import type { CoachMessage } from '@/lib/ai/types'
-
-export async function POST(req: NextRequest) {
-  // 1. Authenticate
-  const user = await getAuthUser()
-  if (!user) {
-    return NextResponse.json(
-      { success: false, error: { code: 'UNAUTHORIZED', message: 'Authentication required' } },
-      { status: 401 }
-    )
-  }
-
-  const apiKey = await getUserApiKey(user.id)
-  if (!apiKey) {
-    return NextResponse.json(
-      {
-        success: false,
-        error: {
-          code: 'AI_NOT_CONFIGURED',
-          message: 'OpenAI API key not configured. Add your key in Settings to use AI features.',
-        },
-      },
-      { status: 403 }
-    )
-  }
-
-  // Parse body
-  const body = await req.json() as {
-    messages: CoachMessage[]
-    context?: { modules: string[]; dateFrom: string; dateTo: string }
-  }
-  const { messages, context } = body
-
-  if (!Array.isArray(messages) || messages.length === 0) {
-    return NextResponse.json(
-      { success: false, error: { code: 'BAD_REQUEST', message: 'messages array is required' } },
-      { status: 400 }
-    )
-  }
-
-  // 2. Fetch user context
-  const now = new Date()
-  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-
-  const [activeTasks, completedThisWeek, recentNotes] = await Promise.all([
-    prisma.task.findMany({
-      where: { userId: user.id, status: { in: ['pending', 'in_progress'] } },
-      select: { title: true, priority: true, status: true, dueDate: true },
-      orderBy: { createdAt: 'desc' },
-      take: 5,
-    }),
-    prisma.task.count({
-      where: { userId: user.id, status: 'completed', completedAt: { gte: weekAgo } },
-    }),
-    prisma.note.findMany({
-      where: { userId: user.id, isDeleted: false },
-      select: { title: true, tags: true, updatedAt: true },
-      orderBy: { updatedAt: 'desc' },
-      take: 3,
-    }),
-  ])
-
-  // 3. Aggregate attached context data if provided
-  let contextData = ''
-  if (context && context.modules.length > 0) {
-    const aggregated = await aggregateUserData(
-      user.id,
-      context.modules as InsightModule[],
-      context.dateFrom,
-      context.dateTo
-    )
-    contextData = `\n\n--- USER DATA CONTEXT (${context.dateFrom} to ${context.dateTo}) ---\n${JSON.stringify(aggregated, null, 2)}\n--- END CONTEXT ---`
-  }
-
-  // 4. Build system prompt
-  const systemPrompt =
-    coachPrompt.systemPrompt({
-      userName: user.name || 'there',
-      tasks: activeTasks.map((t) => ({
-        title: t.title,
-        priority: t.priority,
-        status: t.status,
-        dueDate: t.dueDate,
-      })),
-      notes: recentNotes.map((n) => ({
-        title: n.title,
-        tags: n.tags,
-        updatedAt: n.updatedAt,
-      })),
-      habits: [],
-      timezone: user.timezone || 'UTC',
-    }) + `\n\nAdditional context: User completed ${completedThisWeek} task(s) this week.` + contextData
-
-  // 4. Create OpenAI client and stream
-  const client = createOpenAIClient(apiKey)
-
+import { todayInTimezone } from '@/lib/dates/calendar'
+import { weekStartFor } from '@/lib/growth/progress'
+export const POST = withAI(async (req, { user, apiKey, preferredModel }) => {
   try {
-    const stream = await client.chat.completions.create({
-      model: coachPrompt.model,
-      messages: [
-        { role: 'system' as const, content: systemPrompt },
-        ...messages.map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content })),
-      ],
-      stream: true,
-      max_tokens: coachPrompt.maxTokens,
-      temperature: coachPrompt.temperature,
-    })
-
+    const { messages, context } = coachInputSchema.parse(await req.json())
+    const today = todayInTimezone(user.timezone)
+    const [tasks, notes, plan, review, data] = await Promise.all([
+      prisma.task.findMany({
+        where: {
+          userId: user.id,
+          status: { in: ['pending', 'in_progress'] },
+          routinePaused: false,
+          OR: [{ goalId: null }, { goal: { status: 'active' } }],
+        },
+        orderBy: [{ updatedAt: 'desc' }, { id: 'asc' }],
+        take: 20,
+      }),
+      prisma.note.findMany({
+        where: { userId: user.id, isDeleted: false },
+        orderBy: { updatedAt: 'desc' },
+        take: 3,
+      }),
+      prisma.dayPlan.findUnique({
+        where: { userId_planDate: { userId: user.id, planDate: new Date(today) } },
+      }),
+      prisma.dailyReview.findUnique({
+        where: { userId_reviewDate: { userId: user.id, reviewDate: new Date(today) } },
+      }),
+      aggregateUserData(
+        user.id,
+        context?.modules ?? ['tasks', 'goals', 'notes'],
+        context?.dateFrom ?? weekStartFor(today),
+        context?.dateTo ?? today
+      ),
+    ])
+    const systemPrompt =
+      coachPrompt.systemPrompt({
+        userName: user.name || 'there',
+        tasks,
+        notes,
+        habits: [],
+        timezone: user.timezone,
+      }) +
+      `\nSelected bounded evidence: ${JSON.stringify(data)}\nCurrent plan snapshot: ${JSON.stringify(plan ? { date: today, mainOutcome: plan.mainOutcome, availableMinutes: plan.availableMinutes, bufferMinutes: plan.bufferMinutes, focusTaskIds: plan.focusTaskIds } : null)}\nCurrent reflection: ${JSON.stringify(review ? { date: today, whatMoved: review.whatMoved, blockers: review.blockers, tomorrowTaskId: review.tomorrowTaskId } : null)}\nActive action references: ${JSON.stringify(tasks.map((t) => ({ id: t.id, title: t.title, estimatedMinutes: t.estimatedMinutes, plannedDate: t.plannedDate, goalId: t.goalId, projectId: t.projectId })))}`
+    const stream = await createOpenAIClient(apiKey).chat.completions.create(
+      {
+        model: preferredModel ?? coachPrompt.model,
+        messages: [{ role: 'system', content: systemPrompt }, ...messages],
+        stream: true,
+        max_tokens: coachPrompt.maxTokens,
+        temperature: coachPrompt.temperature,
+      },
+      { signal: req.signal }
+    )
     const encoder = new TextEncoder()
     const readable = new ReadableStream({
       async start(controller) {
         try {
           for await (const chunk of stream) {
             const content = chunk.choices[0]?.delta?.content
-            if (content) {
+            if (content)
               controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content })}\n\n`))
-            }
           }
           controller.enqueue(encoder.encode('data: [DONE]\n\n'))
           controller.close()
-        } catch (err) {
-          const message = err instanceof Error ? err.message : 'Stream error'
-          controller.enqueue(
-            encoder.encode(`data: ${JSON.stringify({ error: message })}\n\n`)
-          )
-          controller.close()
+        } catch {
+          try {
+            controller.enqueue(
+              encoder.encode(
+                `data: ${JSON.stringify({ error: 'The response stopped. Retry when ready; your workspace is unchanged.' })}\n\n`
+              )
+            )
+            controller.close()
+          } catch {
+            /* The reader disconnected. */
+          }
         }
       },
+      cancel() {
+        stream.controller.abort()
+      },
     })
-
     return new Response(readable, {
       headers: {
         'Content-Type': 'text/event-stream',
@@ -142,11 +95,7 @@ export async function POST(req: NextRequest) {
         Connection: 'keep-alive',
       },
     })
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'AI request failed'
-    return NextResponse.json(
-      { success: false, error: { code: 'AI_ERROR', message } },
-      { status: 500 }
-    )
+  } catch (error) {
+    return handleAIError(error)
   }
-}
+})

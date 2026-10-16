@@ -1,8 +1,18 @@
 'use client'
 
+import { ErrorState } from '@/components/ui/workspace-states'
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import { Plus, Upload, List, TableProperties, BarChart3, Settings2, PenLine, Sheet } from 'lucide-react'
+import {
+  Plus,
+  Upload,
+  List,
+  TableProperties,
+  BarChart3,
+  Settings2,
+  PenLine,
+  Sheet,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ExpenseList } from '@/components/expenses/expense-list'
 import { ExpenseForm } from '@/components/expenses/expense-form'
@@ -12,9 +22,19 @@ import { ExpenseMatrix } from '@/components/expenses/expense-matrix'
 import { ExpenseImportWizard } from '@/components/expenses/expense-import-wizard'
 import { ExpenseCharts } from '@/components/expenses/expense-charts'
 import { ExpenseAIPanel } from '@/components/expenses/expense-ai-panel'
-import { useExpenses, useCreateExpense, useUpdateExpense, useDeleteExpense } from '@/hooks/use-expenses'
+import {
+  useExpenses,
+  useCreateExpense,
+  useUpdateExpense,
+  useDeleteExpense,
+} from '@/hooks/use-expenses'
 import { formatINR, getCurrentMonth, getMonthDateRange } from '@/lib/expenses/formatters'
-import type { ExpenseFilters, ExpenseResponse, CreateExpenseRequest, UpdateExpenseRequest } from '@/lib/types/expenses'
+import type {
+  ExpenseFilters,
+  ExpenseResponse,
+  CreateExpenseRequest,
+  UpdateExpenseRequest,
+} from '@/lib/types/expenses'
 
 type Tab = 'create' | 'list' | 'summary' | 'charts'
 type CreateMode = 'single' | 'bulk'
@@ -42,7 +62,8 @@ export default function ExpensesPage(): React.ReactElement {
     sortOrder: 'desc',
   })
 
-  const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } = useExpenses(filters)
+  const { data, isLoading, isError, refetch, hasNextPage, fetchNextPage, isFetchingNextPage } =
+    useExpenses(filters)
   const createExpense = useCreateExpense()
   const updateExpense = useUpdateExpense()
   const deleteExpense = useDeleteExpense()
@@ -63,7 +84,7 @@ export default function ExpensesPage(): React.ReactElement {
     if (!editingExpense) return
     updateExpense.mutate(
       { id: editingExpense.id, data: formData as UpdateExpenseRequest },
-      { onSuccess: () => setEditingExpense(undefined) },
+      { onSuccess: () => setEditingExpense(undefined) }
     )
   }
 
@@ -81,9 +102,9 @@ export default function ExpensesPage(): React.ReactElement {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-display text-2xl font-bold text-retro-dark">Expenses</h1>
+          <h1 className="display-title">Expenses</h1>
           <div className="mt-1 h-1 w-12 rounded-full bg-retro-mint" />
           {activeTab === 'list' && totalCount > 0 && (
             <p className="text-sm text-muted-foreground mt-1">
@@ -126,7 +147,7 @@ export default function ExpensesPage(): React.ReactElement {
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`flex items-center gap-2 px-4 py-2.5 font-mono text-sm font-medium transition-colors ${
+            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors ${
               activeTab === tab.key
                 ? 'border-b-2 border-retro-blue text-retro-dark'
                 : 'text-retro-dark/40 hover:text-retro-dark/70'
@@ -145,10 +166,10 @@ export default function ExpensesPage(): React.ReactElement {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setCreateMode('bulk')}
-              className={`flex items-center gap-2 border-2 px-3 py-1.5 font-mono text-xs font-bold transition-colors ${
+              className={`flex items-center gap-2 border-2 px-3 py-1.5 text-xs font-bold transition-colors ${
                 createMode === 'bulk'
                   ? 'border-retro-dark bg-retro-dark text-white'
-                  : 'border-retro-dark/30 bg-white text-retro-dark hover:border-retro-dark/60'
+                  : 'border-retro-dark/30 bg-card text-retro-dark hover:border-retro-dark/60'
               }`}
             >
               <Sheet className="h-3.5 w-3.5" />
@@ -156,10 +177,10 @@ export default function ExpensesPage(): React.ReactElement {
             </button>
             <button
               onClick={() => setCreateMode('single')}
-              className={`flex items-center gap-2 border-2 px-3 py-1.5 font-mono text-xs font-bold transition-colors ${
+              className={`flex items-center gap-2 border-2 px-3 py-1.5 text-xs font-bold transition-colors ${
                 createMode === 'single'
                   ? 'border-retro-dark bg-retro-dark text-white'
-                  : 'border-retro-dark/30 bg-white text-retro-dark hover:border-retro-dark/60'
+                  : 'border-retro-dark/30 bg-card text-retro-dark hover:border-retro-dark/60'
               }`}
             >
               <PenLine className="h-3.5 w-3.5" />
@@ -175,7 +196,9 @@ export default function ExpensesPage(): React.ReactElement {
                 isPending={createExpense.isPending}
               />
               {createExpense.isSuccess && (
-                <p className="mt-3 text-sm text-green-600 font-medium">Expense added successfully!</p>
+                <p className="mt-3 text-sm text-green-600 font-medium">
+                  Expense added successfully!
+                </p>
               )}
             </div>
           ) : (
@@ -187,7 +210,9 @@ export default function ExpensesPage(): React.ReactElement {
       {activeTab === 'list' && (
         <div className="space-y-4">
           <ExpenseFiltersBar filters={filters} onFiltersChange={setFilters} />
-          {isLoading ? (
+          {isError ? (
+            <ErrorState retry={() => void refetch()} />
+          ) : isLoading ? (
             <div className="py-12 text-center text-muted-foreground">Loading expenses...</div>
           ) : (
             <>
@@ -202,9 +227,11 @@ export default function ExpensesPage(): React.ReactElement {
                   <button
                     onClick={() => fetchNextPage()}
                     disabled={isFetchingNextPage}
-                    className="font-mono text-sm text-retro-blue hover:underline disabled:opacity-50"
+                    className="text-sm text-retro-blue hover:underline disabled:opacity-50"
                   >
-                    {isFetchingNextPage ? 'Loading more...' : `Load more (showing ${expenses.length} of ${totalCount})`}
+                    {isFetchingNextPage
+                      ? 'Loading more...'
+                      : `Load more (showing ${expenses.length} of ${totalCount})`}
                   </button>
                 </div>
               )}

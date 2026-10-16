@@ -11,12 +11,10 @@ export default function StashLayout({ children }: { children: React.ReactNode })
   const [searchQuery, setSearchQuery] = useState('')
 
   return (
-    <div className="flex h-[calc(100vh-3.5rem)] w-full">
+    <div className="flex min-w-0 h-[calc(100dvh-10rem)] w-full overflow-hidden rounded-2xl border bg-card">
       <div
         className={
-          activeChannelId
-            ? 'hidden md:flex md:w-80 md:shrink-0'
-            : 'flex w-full md:w-80 md:shrink-0'
+          activeChannelId ? 'hidden md:flex md:w-80 md:shrink-0' : 'flex w-full md:w-80 md:shrink-0'
         }
       >
         <StashChannelList
@@ -25,7 +23,16 @@ export default function StashLayout({ children }: { children: React.ReactNode })
           onSearchQueryChange={setSearchQuery}
         />
       </div>
-      <main className="flex flex-1 flex-col">{children}</main>
+      <section
+        aria-label="Stash content"
+        className={
+          activeChannelId
+            ? 'flex min-w-0 flex-1 flex-col'
+            : 'hidden min-w-0 flex-1 flex-col md:flex'
+        }
+      >
+        {children}
+      </section>
     </div>
   )
 }

@@ -5,6 +5,11 @@ import { usePathname } from 'next/navigation'
 import { ChevronRight } from 'lucide-react'
 
 const labelMap: Record<string, string> = {
+  today: 'Today',
+  inbox: 'Inbox',
+  projects: 'Projects',
+  growth: 'Growth',
+  library: 'Library',
   notes: 'Notes',
   tasks: 'Tasks',
   books: 'Books',
@@ -26,10 +31,10 @@ export function Breadcrumbs() {
   }
 
   return (
-    <nav className="flex items-center gap-1 text-sm">
+    <nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-1 text-sm">
       {segments.map((segment, index) => {
         const href = '/' + segments.slice(0, index + 1).join('/')
-        const label = labelMap[segment] ?? segment
+        const label = labelMap[segment] ?? (segment.length > 18 ? 'Details' : segment)
         const isLast = index === segments.length - 1
 
         return (

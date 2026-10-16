@@ -32,6 +32,7 @@ export interface CreateNoteRequest {
 }
 
 export interface UpdateNoteRequest {
+  expectedUpdatedAt?: string
   title?: string
   contentMd?: string
   tags?: string[]

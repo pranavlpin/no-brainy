@@ -12,12 +12,19 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "test": "vitest run",
+    "lint": "eslint --ext .js,.mjs,.ts,.tsx src test scripts *.config.* --max-warnings=0",
+    "test": "npm run test:node && vitest run",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "typecheck": "tsc --noEmit",
+    "test:node": "node scripts/run-node-tests.mjs",
+    "test:integration": "node scripts/run-isolated-tests.mjs integration",
+    "test:e2e": "node scripts/run-isolated-tests.mjs e2e",
+    "doctor": "node scripts/check-environment.mjs --test",
+    "format:check": "node scripts/check-format.mjs",
+    "format": "node scripts/check-format.mjs --write"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.20.1",
@@ -75,6 +82,11 @@
     "seed": "tsx prisma/seed.ts"
   },
   "devDependencies": {
+    "@playwright/test": "1.64.1",
+    "@testing-library/dom": "10.4.2",
+    "@testing-library/jest-dom": "6.9.1",
+    "@testing-library/react": "16.3.3",
+    "@testing-library/user-event": "14.6.8",
     "@types/bcryptjs": "^2.4.6",
     "@types/d3-drag": "^3.0.7",
     "@types/d3-force": "^3.0.10",
@@ -89,6 +101,7 @@
     "eslint-config-next": "^14.2.35",
     "jsdom": "^25.0.1",
     "postcss": "^8.5.10",
+    "prettier": "3.9.10",
     "prisma": "^5.22.0",
     "tailwindcss": "^3.4.17",
     "tsx": "^4.21.0",

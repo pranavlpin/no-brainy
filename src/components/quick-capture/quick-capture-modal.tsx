@@ -1,208 +1,244 @@
 'use client'
 
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { Inbox, FileText, CheckSquare, ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { Dialog } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { useCreateNote } from '@/hooks/use-notes'
-import { useCreateTask } from '@/hooks/use-tasks'
+import { Input } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
+import { useAuth } from '@/hooks/use-auth'
+import { useCreateCapture, useProcessCapture } from '@/hooks/use-inbox'
 import { useToast } from '@/hooks/use-toast'
-import type { TaskPriority } from '@/lib/types/tasks'
+import { readCaptureDraft, writeCaptureDraft, type CaptureDraft } from '@/lib/inbox/drafts'
 
-type CaptureType = 'note' | 'task'
-
-const priorities: { value: TaskPriority; label: string }[] = [
-  { value: 'low', label: 'Low' },
-  { value: 'medium', label: 'Medium' },
-  { value: 'high', label: 'High' },
-  { value: 'urgent', label: 'Urgent' },
-]
-
-interface QuickCaptureModalProps {
-  open: boolean
-  onClose: () => void
+const memoryDrafts = new Map<string, CaptureDraft>()
+const emptyDraft = (): CaptureDraft => ({
+  content: '',
+  requestId: crypto.randomUUID(),
+  type: 'inbox',
+  priority: 'medium',
+  dueDate: '',
+})
+const storage = () => {
+  try {
+    return localStorage
+  } catch {
+    return undefined
+  }
 }
 
-export function QuickCaptureModal({ open, onClose }: QuickCaptureModalProps) {
-  const [type, setType] = useState<CaptureType>('note')
-  const [content, setContent] = useState('')
-  const [priority, setPriority] = useState<TaskPriority>('medium')
-  const [dueDate, setDueDate] = useState('')
-  const inputRef = useRef<HTMLInputElement>(null)
-
-  const createNote = useCreateNote()
-  const createTask = useCreateTask()
-  const toast = useToast()
-
-  const reset = useCallback(() => {
-    setContent('')
-    setType('note')
-    setPriority('medium')
-    setDueDate('')
-  }, [])
-
-  const handleClose = useCallback(() => {
-    reset()
-    onClose()
-  }, [onClose, reset])
-
-  useEffect(() => {
-    if (open) {
-      // Small delay to allow the modal to render before focusing
-      const timer = setTimeout(() => inputRef.current?.focus(), 50)
-      return () => clearTimeout(timer)
-    }
-  }, [open])
-
-  useEffect(() => {
-    if (!open) return
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.preventDefault()
-        handleClose()
-      }
-    }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  }, [open, handleClose])
-
-  const handleSubmit = useCallback(async () => {
-    const trimmed = content.trim()
-    if (!trimmed) return
-
-    try {
-      if (type === 'note') {
-        await createNote.mutateAsync({ title: trimmed })
-        toast.show('Note created!')
-      } else {
-        await createTask.mutateAsync({
-          title: trimmed,
-          priority,
-          dueDate: dueDate || undefined,
-        })
-        toast.show('Task created!')
-      }
-      handleClose()
-    } catch {
-      toast.show('Failed to create. Please try again.', 'error')
-    }
-  }, [content, type, priority, dueDate, createNote, createTask, toast, handleClose])
-
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault()
-        handleSubmit()
-      }
-    },
-    [handleSubmit]
-  )
-
+/** Capture is available from every workspace, including Focus, without requiring classification. */
+export function QuickCaptureModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { user } = useAuth()
   if (!open) return null
+  if (!user?.id)
+    return (
+      <Dialog open onClose={onClose} title="Quick capture">
+        <p role="status" className="text-sm text-muted-foreground">
+          Loading your personal workspace…
+        </p>
+      </Dialog>
+    )
+  return <CaptureEditor key={user.id} owner={user.id} onClose={onClose} />
+}
 
-  const isSubmitting = createNote.isPending || createTask.isPending
-
+function CaptureEditor({ owner, onClose }: { owner: string; onClose: () => void }) {
+  const [draft, setDraft] = useState(
+    () => memoryDrafts.get(owner) ?? readCaptureDraft(storage(), owner) ?? emptyDraft()
+  )
+  const [durable, setDurable] = useState(true)
+  const initial = useRef(draft)
+  useEffect(() => {
+    setDurable(writeCaptureDraft(storage(), owner, initial.current))
+  }, [owner])
+  const [pending, setPending] = useState(false)
+  const [error, setError] = useState('')
+  const [captured, setCaptured] = useState(false)
+  const submitting = useRef(false)
+  const create = useCreateCapture()
+  const process = useProcessCapture()
+  const toast = useToast()
+  const persist = (next: CaptureDraft) => {
+    memoryDrafts.set(owner, next)
+    setDurable(writeCaptureDraft(storage(), owner, next))
+    setDraft(next)
+  }
+  const submit = async () => {
+    if (submitting.current || !draft.content.trim()) return
+    submitting.current = true
+    setPending(true)
+    setError('')
+    try {
+      const capture = await create.mutateAsync({
+        content: draft.content.trim(),
+        clientRequestId: draft.requestId,
+      })
+      setCaptured(true)
+      if (draft.type !== 'inbox')
+        await process.mutateAsync({
+          id: capture.id,
+          kind: draft.type,
+          priority: draft.priority,
+          dueDate: draft.dueDate || null,
+        })
+      persist(emptyDraft())
+      toast.show(
+        draft.type === 'inbox'
+          ? 'Saved to Inbox.'
+          : `${draft.type === 'task' ? 'Task' : 'Note'} saved. Original kept in Inbox.`
+      )
+      onClose()
+    } catch (failure) {
+      const message =
+        failure && typeof failure === 'object' && 'error' in failure
+          ? (failure as { error?: { message?: string } }).error?.message
+          : null
+      setError(message ?? 'Could not finish saving. Your input is kept; retry when you are ready.')
+    } finally {
+      submitting.current = false
+      setPending(false)
+    }
+  }
   return (
-    <div className="fixed inset-0 z-[60] flex items-start justify-center pt-[20vh]">
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/50 animate-in fade-in duration-150"
-        onClick={handleClose}
-      />
-
-      {/* Modal */}
-      <div className="relative z-[61] w-full max-w-lg rounded-xl bg-white p-6 shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-200">
-        {/* Input */}
-        <input
-          ref={inputRef}
-          type="text"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Quick capture... (note or task)"
-          className="w-full border-0 bg-transparent text-lg font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-0"
-          disabled={isSubmitting}
+    <Dialog
+      open
+      onClose={() => {
+        if (!submitting.current) onClose()
+      }}
+      title="Quick capture"
+      description="Get it out of your head. Decide what it means later."
+    >
+      <div className="space-y-5">
+        <textarea
+          autoFocus
+          aria-label="Capture text"
+          data-testid="capture-input"
+          value={draft.content}
+          maxLength={30000}
+          disabled={pending}
+          onChange={(event) => persist({ ...draft, content: event.target.value })}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' && !event.shiftKey) {
+              event.preventDefault()
+              void submit()
+            }
+          }}
+          placeholder="A thought, a task, a useful link…"
+          className="min-h-32 w-full resize-y rounded-2xl border border-border/70 bg-background/60 p-4 text-base leading-7 outline-none focus:ring-2 focus:ring-primary/30"
         />
-
-        <div className="mt-4 flex flex-col gap-4">
-          {/* Type toggle */}
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-500">Type:</span>
-            <div className="flex rounded-lg bg-gray-100 p-0.5">
-              <button
-                type="button"
-                onClick={() => setType('note')}
-                className={cn(
-                  'rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
-                  type === 'note'
-                    ? 'bg-blue-600 text-white shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                )}
-              >
-                Note
-              </button>
-              <button
-                type="button"
-                onClick={() => setType('task')}
-                className={cn(
-                  'rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
-                  type === 'task'
-                    ? 'bg-green-600 text-white shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                )}
-              >
-                Task
-              </button>
-            </div>
-          </div>
-
-          {/* Task-specific fields */}
-          {type === 'task' && (
-            <div className="flex flex-wrap items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-150">
-              {/* Priority */}
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-500">Priority:</span>
-                <select
-                  value={priority}
-                  onChange={(e) => setPriority(e.target.value as TaskPriority)}
-                  className="rounded-md border border-gray-200 bg-white px-2 py-1 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  {priorities.map((p) => (
-                    <option key={p.value} value={p.value}>
-                      {p.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Due date */}
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-500">Due:</span>
-                <input
-                  type="date"
-                  value={dueDate}
-                  onChange={(e) => setDueDate(e.target.value)}
-                  className="rounded-md border border-gray-200 bg-white px-2 py-1 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Footer */}
-          <div className="flex items-center justify-between border-t border-gray-100 pt-3">
-            <p className="text-xs text-gray-400">
-              Press <kbd className="rounded border border-gray-200 bg-gray-50 px-1 py-0.5 text-[10px] font-mono">Enter</kbd> to submit,{' '}
-              <kbd className="rounded border border-gray-200 bg-gray-50 px-1 py-0.5 text-[10px] font-mono">Esc</kbd> to close
-            </p>
-            <Button
-              size="sm"
-              onClick={handleSubmit}
-              disabled={!content.trim() || isSubmitting}
+        <div className="flex flex-wrap gap-2" aria-label="Capture destination">
+          {(
+            [
+              { type: 'inbox', label: 'Inbox', icon: Inbox },
+              { type: 'task', label: 'Task', icon: CheckSquare },
+              { type: 'note', label: 'Note', icon: FileText },
+            ] as const
+          ).map((item) => (
+            <button
+              key={item.type}
+              type="button"
+              aria-pressed={draft.type === item.type}
+              disabled={pending}
+              onClick={() => persist({ ...draft, type: item.type })}
+              className={cn(
+                'flex items-center gap-2 rounded-xl border px-4 py-2 text-sm transition-colors',
+                draft.type === item.type
+                  ? 'border-primary/30 bg-primary/10 text-primary'
+                  : 'border-border text-muted-foreground hover:bg-muted'
+              )}
             >
-              {isSubmitting ? 'Creating...' : 'Create'}
-            </Button>
-          </div>
+              <item.icon className="h-4 w-4" />
+              {item.label}
+            </button>
+          ))}
         </div>
+        {draft.type === 'task' && (
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-2 text-sm">
+              <label htmlFor="quick-capture-priority">Priority</label>
+              <Select
+                id="quick-capture-priority"
+                value={draft.priority}
+                disabled={pending}
+                onChange={(event) =>
+                  persist({ ...draft, priority: event.target.value as CaptureDraft['priority'] })
+                }
+              >
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+                <option value="urgent">Urgent</option>
+              </Select>
+            </div>
+            <label className="space-y-2 text-sm">
+              Deadline
+              <Input
+                type="date"
+                disabled={pending}
+                value={draft.dueDate}
+                onChange={(event) => persist({ ...draft, dueDate: event.target.value })}
+              />
+            </label>
+          </div>
+        )}
+        <p role="status" className="text-xs leading-5 text-muted-foreground">
+          {pending
+            ? 'Saving…'
+            : captured && error
+              ? 'Original saved in Inbox. Finishing the destination is still pending.'
+              : draft.content
+                ? durable
+                  ? 'Draft on this device · server save not yet confirmed'
+                  : 'Device storage is unavailable. Your draft is in memory; keep this tab open and retry saving.'
+                : 'Enter to save · Shift + Enter for a new line'}
+        </p>
+        {error && (
+          <p role="alert" className="rounded-xl bg-destructive/5 p-3 text-sm text-destructive">
+            {error}
+          </p>
+        )}
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-4">
+          <Button
+            variant="ghost"
+            disabled={pending}
+            onClick={() => {
+              persist(emptyDraft())
+              setError('')
+              setCaptured(false)
+            }}
+          >
+            Discard draft
+          </Button>
+          <Button
+            data-testid="capture-save"
+            disabled={pending || !draft.content.trim()}
+            onClick={() => void submit()}
+            className="gap-3"
+          >
+            {pending
+              ? 'Saving…'
+              : error
+                ? 'Retry save'
+                : draft.type === 'inbox'
+                  ? 'Save to Inbox'
+                  : `Create ${draft.type}`}
+            <ArrowRight className="h-4 w-4" />
+          </Button>
+        </div>
+        {error && (
+          <button
+            className="text-xs text-primary underline"
+            onClick={() => {
+              persist({ ...draft, requestId: crypto.randomUUID() })
+              setError('')
+              setCaptured(false)
+            }}
+          >
+            Keep this text as a new capture
+          </button>
+        )}
       </div>
-    </div>
+    </Dialog>
   )
 }
