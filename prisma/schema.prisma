@@ -44,7 +44,30 @@ model User {
   stashChannels     StashChannel[]
   stashMessages     StashMessage[]
   focusSessions     FocusSession[]
+  captures          Capture[]
   @@map("users")
+}
+
+/// A raw thought or link waiting to be processed into a task, note, bookmark, or someday item.
+model Capture {
+  id              String    @id @default(cuid())
+  userId          String
+  /// Client-generated id so a retried request never creates a duplicate.
+  clientRequestId String
+  content         String    @db.Text
+  sourceUrl       String?
+  /// inbox | processed | someday | archived
+  state           String    @default("inbox")
+  /// task | note | bookmark
+  destinationType String?
+  destinationId   String?
+  processedAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([userId, clientRequestId])
+  @@index([userId, state, createdAt])
+  @@map("captures")
 }
 
 model UserSession {

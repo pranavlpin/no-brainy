@@ -8,6 +8,8 @@ export interface NavBadges {
   cardsDue: number
   overdueTasks: number
   unreadNotifications: number
+  /** Captures waiting to be processed. */
+  inboxCount: number
 }
 
 export const NAV_BADGES_KEY = ['nav', 'badges'] as const

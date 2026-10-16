@@ -41,3 +41,12 @@ Inbox list with To process / Someday / Processed / Archived views, search, pagin
 ## Risks and open questions
 
 - Stash remains for files and sensitive channels; no automatic import into Inbox. **Ruling applied.**
+
+## Refinements (while the branch was open)
+
+- Processing into a task sets `plannedDate` (and optionally `dueDate`) and `priorityRank`; project linkage waits for T18, which extends the processor.
+- Undo is a dedicated `POST /api/inbox/[id]/undo` that deletes the destination the conversion created (only if still owned) and reopens the capture; the acceptance branch kept the destination, which left orphans after a wrong decision.
+- The natural-language parser now distinguishes a planned day ("tomorrow", "on friday") from a deadline ("by friday", "due 2026-11-01"); the chip shows "By …" for deadlines. Home's quick add plans for today instead of setting a deadline.
+- The capture modal's kind chip cycles task, note, inbox; Shift+Enter always saves to the Inbox regardless of the chip.
+- The bottom bar's right slot is Inbox; Stash stays reachable from the sidebar and command palette.
+- `GOTO` chord `g i` opens the Inbox.

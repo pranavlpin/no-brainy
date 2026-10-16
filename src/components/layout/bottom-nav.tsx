@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Archive, CheckSquare, Menu, Plus, Sun } from 'lucide-react'
+import { CheckSquare, Inbox, Menu, Plus, Sun } from 'lucide-react'
 import { useCommandStore } from '@/stores/command-store'
 import { useUIStore } from '@/stores/ui-store'
 import { cn } from '@/lib/utils'
@@ -13,10 +13,10 @@ const TABS = [
   { href: '/tasks', label: 'Tasks', icon: CheckSquare },
 ] as const
 
-const TABS_RIGHT = [{ href: '/stash', label: 'Stash', icon: Archive }] as const
+const TABS_RIGHT = [{ href: '/inbox', label: 'Inbox', icon: Inbox }] as const
 
 /**
- * Phone navigation: Today, Tasks, a raised capture button, Stash, and the
+ * Phone navigation: Today, Tasks, a raised capture button, Inbox, and the
  * menu drawer. Slides away while a dialog is open or while typing.
  */
 export function BottomNav() {

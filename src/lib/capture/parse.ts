@@ -1,7 +1,7 @@
 import { addDays, dateFromKey, isValidDateKey, relativeDayLabel } from '@/lib/dates'
 import type { TaskPriority } from '@/lib/types/tasks'
 
-export type CaptureKind = 'task' | 'note'
+export type CaptureKind = 'task' | 'note' | 'inbox'
 
 export interface CaptureGoal {
   id: string
@@ -11,10 +11,15 @@ export interface CaptureGoal {
 export interface ParsedCapture {
   kind: CaptureKind
   title: string
-  /** `YYYY-MM-DD` when a date phrase was found. */
+  /**
+   * `YYYY-MM-DD` when a date phrase was found. A plain date ("tomorrow",
+   * "on friday") is the day you plan to do it; "by", "before", "until" or
+   * "due" make it a deadline instead.
+   */
+  plannedDate?: string
   dueDate?: string
   /** Human label for the chip, e.g. "Tomorrow" or "Fri, 23 Oct". */
-  dueLabel?: string
+  dateLabel?: string
   tags: string[]
   priority?: TaskPriority
   goalId?: string
@@ -55,7 +60,9 @@ const PRIORITIES: Record<string, TaskPriority> = {
   '4': 'low',
 }
 
-const DANGLING = new Set(['on', 'by', 'at', 'due', 'until', 'till', 'before'])
+const DANGLING = new Set(['on', 'by', 'at', 'due', 'until', 'till', 'before', 'for'])
+/** Prepositions that turn a date into a deadline rather than a planned day. */
+const DEADLINE_WORDS = new Set(['by', 'due', 'until', 'till', 'before'])
 
 function nextWeekday(today: string, target: number): string {
   const dow = dateFromKey(today).getUTCDay()
@@ -125,17 +132,20 @@ export function parseCapture(
 ): ParsedCapture {
   let text = raw.trim().replace(/\s+/g, ' ')
   let kind: CaptureKind = 'task'
-  const prefix = /^(note|task)\s*:\s*/i.exec(text)
+  const prefix = /^(note|task|inbox)\s*:\s*/i.exec(text)
   if (prefix) {
     kind = prefix[1].toLowerCase() as CaptureKind
     text = text.slice(prefix[0].length)
   }
+  // Inbox keeps the raw thought verbatim; nothing is parsed out of it.
+  if (kind === 'inbox') return { kind, title: text.trim(), tags: [] }
 
   const words = text.split(' ').filter(Boolean)
   const keep: (string | null)[] = [...words]
   const tags: string[] = []
   let priority: TaskPriority | undefined
-  let dueDate: string | undefined
+  let dateKey: string | undefined
+  let deadline = false
   let goalId: string | undefined
   let goalTitle: string | undefined
   let goalQuery: string | undefined
@@ -186,15 +196,19 @@ export function parseCapture(
       continue
     }
 
-    if (dueDate === undefined) {
+    if (dateKey === undefined) {
       const date = readDate(words, i, opts.today)
       if (date) {
-        dueDate = date.key
+        dateKey = date.key
         for (let k = i; k < i + date.used; k++) keep[k] = null
-        // Drop a dangling preposition right before the date phrase.
+        // Drop a dangling preposition right before the date phrase; a
+        // deadline word makes this a due date instead of a planned day.
         let p = i - 1
         while (p >= 0 && keep[p] === null) p--
-        if (p >= 0 && DANGLING.has(words[p].toLowerCase())) keep[p] = null
+        if (p >= 0 && DANGLING.has(words[p].toLowerCase())) {
+          deadline = DEADLINE_WORDS.has(words[p].toLowerCase())
+          keep[p] = null
+        }
         i += date.used - 1
         continue
       }
@@ -207,9 +221,10 @@ export function parseCapture(
     .trim()
 
   const parsed: ParsedCapture = { kind, title, tags }
-  if (dueDate) {
-    parsed.dueDate = dueDate
-    parsed.dueLabel = relativeDayLabel(dueDate, opts.today)
+  if (dateKey) {
+    if (deadline) parsed.dueDate = dateKey
+    else parsed.plannedDate = dateKey
+    parsed.dateLabel = relativeDayLabel(dateKey, opts.today)
   }
   if (priority) parsed.priority = priority
   if (goalId) {

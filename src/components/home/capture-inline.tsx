@@ -11,7 +11,7 @@ interface CaptureInlineProps {
   className?: string
 }
 
-/** One-line task capture that lands the task on today's list. */
+/** One-line task capture that plans the task for today. */
 export function CaptureInline({ today, className }: CaptureInlineProps) {
   const [title, setTitle] = useState('')
   const createTask = useCreateTask()
@@ -21,7 +21,7 @@ export function CaptureInline({ today, className }: CaptureInlineProps) {
     const trimmed = title.trim()
     if (!trimmed || createTask.isPending) return
     createTask.mutate(
-      { title: trimmed, dueDate: today },
+      { title: trimmed, plannedDate: today },
       {
         onSuccess: () => {
           setTitle('')
