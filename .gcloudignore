@@ -1,0 +1,7 @@
+# Build context for Cloud Build: everything git ignores, plus the repo itself.
+#!include:.gitignore
+.git
+.gitignore
+evidences/
+node_modules/
+.next/

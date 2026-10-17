@@ -227,6 +227,8 @@ export GCP_PROJECT_ID=your-project
 ./scripts/deploy.sh production
 ```
 
+Without a local Docker daemon the script builds both images in Cloud Build from `cloudbuild.yaml` (the `cloudbuild.googleapis.com` API must be enabled); `.gcloudignore` keeps `.env`, `node_modules`, `.next`, and `evidences/` out of the upload. Production keeps one warm instance (`--min-instances=1`), staging scales to zero.
+
 ### Manual Docker Build and Deploy
 
 ```bash
