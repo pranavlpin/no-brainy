@@ -9,9 +9,18 @@ export function ThemeInitializer(): null {
   const customThemes = useThemeStore((s) => s.customThemes)
   const activeCustomThemeId = useThemeStore((s) => s.activeCustomThemeId)
   const isDark = useDarkModeStore((s) => s.isDark)
+  const darkHydrated = useDarkModeStore((s) => s.hydrated)
+  const hydrateDark = useDarkModeStore((s) => s.hydrate)
 
-  // Sync dark mode class
+  // Load the saved mode after mount; the pre-paint script in the root layout
+  // already applied the class, so this only brings the store up to date.
   useLayoutEffect(() => {
+    hydrateDark()
+  }, [hydrateDark])
+
+  // Sync dark mode class once the store reflects the saved preference.
+  useLayoutEffect(() => {
+    if (!darkHydrated) return
     const html = document.documentElement
     if (isDark) {
       html.classList.add('dark')
@@ -20,7 +29,7 @@ export function ThemeInitializer(): null {
       html.classList.add('light')
       html.classList.remove('dark')
     }
-  }, [isDark])
+  }, [isDark, darkHydrated])
 
   useLayoutEffect(() => {
     const html = document.documentElement

@@ -5,14 +5,24 @@ type DarkModePreference = 'light' | 'dark' | 'system'
 interface DarkModeState {
   preference: DarkModePreference
   isDark: boolean
+  /** True once the persisted preference has been loaded on the client. */
+  hydrated: boolean
+  /** Load the saved preference after mount; the first render stays server-identical. */
+  hydrate: () => void
   setPreference: (pref: DarkModePreference) => void
   toggle: () => void
 }
 
+const STORAGE_KEY = 'nobrainy-dark-mode'
+
 function loadPreference(): DarkModePreference {
   if (typeof window === 'undefined') return 'system'
-  const stored = localStorage.getItem('nobrainy-dark-mode')
-  if (stored === 'light' || stored === 'dark' || stored === 'system') return stored
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    if (stored === 'light' || stored === 'dark' || stored === 'system') return stored
+  } catch {
+    /* storage unavailable */
+  }
   return 'system'
 }
 
@@ -35,39 +45,51 @@ function applyColorModeClass(isDark: boolean): void {
   }
 }
 
-export const useDarkModeStore = create<DarkModeState>((set, get) => {
-  const preference = loadPreference()
-  const isDark = getIsDark(preference)
+function persist(pref: DarkModePreference): void {
+  try {
+    localStorage.setItem(STORAGE_KEY, pref)
+  } catch {
+    /* storage unavailable */
+  }
+}
 
-  if (typeof window !== 'undefined') {
+let listening = false
+
+/**
+ * Dark-mode preference. The initial state matches what the server rendered
+ * (light, system preference) so hydration never sees a different tree; the
+ * saved choice is applied by `hydrate()` after mount.
+ */
+export const useDarkModeStore = create<DarkModeState>((set, get) => ({
+  preference: 'system',
+  isDark: false,
+  hydrated: false,
+  hydrate: () => {
+    const preference = loadPreference()
+    const isDark = getIsDark(preference)
     applyColorModeClass(isDark)
-
-    // Listen for system preference changes
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-      const { preference } = get()
-      if (preference === 'system') {
-        const newIsDark = e.matches
-        applyColorModeClass(newIsDark)
-        set({ isDark: newIsDark })
-      }
-    })
-  }
-
-  return {
-    preference,
-    isDark,
-    setPreference: (pref: DarkModePreference) => {
-      localStorage.setItem('nobrainy-dark-mode', pref)
-      const newIsDark = getIsDark(pref)
-      applyColorModeClass(newIsDark)
-      set({ preference: pref, isDark: newIsDark })
-    },
-    toggle: () => {
-      const { isDark } = get()
-      const newPref: DarkModePreference = isDark ? 'light' : 'dark'
-      localStorage.setItem('nobrainy-dark-mode', newPref)
-      applyColorModeClass(!isDark)
-      set({ preference: newPref, isDark: !isDark })
-    },
-  }
-})
+    set({ preference, isDark, hydrated: true })
+    if (!listening && typeof window !== 'undefined') {
+      listening = true
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+        if (get().preference === 'system') {
+          applyColorModeClass(e.matches)
+          set({ isDark: e.matches })
+        }
+      })
+    }
+  },
+  setPreference: (pref: DarkModePreference) => {
+    persist(pref)
+    const isDark = getIsDark(pref)
+    applyColorModeClass(isDark)
+    set({ preference: pref, isDark })
+  },
+  toggle: () => {
+    const { isDark } = get()
+    const pref: DarkModePreference = isDark ? 'light' : 'dark'
+    persist(pref)
+    applyColorModeClass(!isDark)
+    set({ preference: pref, isDark: !isDark })
+  },
+}))

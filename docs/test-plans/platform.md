@@ -35,3 +35,8 @@ Section-wise test plan for the `platform` module. Append new sections per task; 
 ## T22 — Workspace states and context
 
 - Component: `PageHeader`, `LoadingState`, `ErrorState`, `EmptyState` render their roles and actions; the top-bar context select stores the choice and the task list filters by it while keeping unclassified tasks.
+
+## T29 — Dark-mode hydration and app icon (bug fix)
+
+- Scope: unit (regression tests written first, failing).
+- Unit: the dark-mode store starts light even when `localStorage` holds `dark`, and `hydrate()` loads it and sets the `dark` class; `src/app/icon.svg` does not exist while `public/icon.svg` does and the root metadata lists it; the root layout applies the saved mode before paint.
