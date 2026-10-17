@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withAuth } from '@/lib/auth/middleware'
+import { dayBoundsUtc, todayKey, userTimezone } from '@/lib/dates'
 import { updateDeckSchema } from '@/lib/validations/flashcards'
 import { ZodError } from 'zod'
 import type { DeckResponse } from '@/lib/types/flashcards'
@@ -36,12 +37,12 @@ export const GET = withAuth(async (req: NextRequest, user) => {
       )
     }
 
-    const now = new Date()
-    now.setHours(0, 0, 0, 0)
+    // Same boundary as the sidebar badge, Today, and the review session.
+    const { start: today } = dayBoundsUtc(todayKey(userTimezone(user)))
     const dueCount = deck.flashcards.filter(
-      c => c.state !== 'mastered' && c.nextReviewAt <= now
+      (c) => c.state !== 'mastered' && c.nextReviewAt <= today
     ).length
-    const newCount = deck.flashcards.filter(c => c.state === 'new').length
+    const newCount = deck.flashcards.filter((c) => c.state === 'new').length
 
     const response: ApiResponse<DeckResponse> = {
       success: true,

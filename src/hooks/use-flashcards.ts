@@ -115,10 +115,11 @@ export function useDeckCards(deckId: string, filters?: CardFilters) {
 export function useCreateCard() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (data: CreateFlashcardRequest) => {
-      const res = await apiClient<ApiResponse<FlashcardResponse>>('/api/flashcards', {
+    mutationFn: async ({ deckId, ...card }: CreateFlashcardRequest) => {
+      // Cards are created under their deck; there is no /api/flashcards collection.
+      const res = await apiClient<ApiResponse<FlashcardResponse>>(`/api/decks/${deckId}/cards`, {
         method: 'POST',
-        body: JSON.stringify(data),
+        body: JSON.stringify(card),
       })
       return res.data
     },
