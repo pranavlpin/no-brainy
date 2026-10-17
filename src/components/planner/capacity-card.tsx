@@ -45,7 +45,12 @@ function NumberField({
   max?: number
 }) {
   const [draft, setDraft] = useState(String(value))
-  useEffect(() => setDraft(String(value)), [value])
+  const [focused, setFocused] = useState(false)
+  // Follow the server value only while the field is not being edited, so a
+  // background refetch never wipes a half-typed number.
+  useEffect(() => {
+    if (!focused) setDraft(String(value))
+  }, [value, focused])
   const commit = () => {
     const n = Number.parseInt(draft, 10)
     const next = Number.isFinite(n) ? Math.min(Math.max(n, 0), max) : value
@@ -65,7 +70,11 @@ function NumberField({
         max={max}
         value={draft}
         onChange={(e) => setDraft(e.target.value)}
-        onBlur={commit}
+        onFocus={() => setFocused(true)}
+        onBlur={() => {
+          setFocused(false)
+          commit()
+        }}
         onKeyDown={(e) => {
           if (e.key === 'Enter') (e.target as HTMLInputElement).blur()
         }}

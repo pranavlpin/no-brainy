@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withAuth } from '@/lib/auth/middleware'
+import { personalSettings } from '@/lib/settings/personal'
 import { dateParamSchema } from '@/lib/validations/planner'
 import type { TimeBlock } from '@/lib/types/planner'
 import { formatTask } from '@/lib/tasks/format'
@@ -46,6 +47,8 @@ export const GET = withAuth(async (req: NextRequest, user) => {
     })
 
     if (!dayPlan) {
+      // A day without a plan yet shows the same defaults today would be created with.
+      const defaults = personalSettings(user.timezone ?? 'UTC', user.preferences)
       return NextResponse.json({
         success: true,
         data: {
@@ -56,10 +59,10 @@ export const GET = withAuth(async (req: NextRequest, user) => {
           timeBlocks: [],
           aiBriefMd: null,
           intentMd: null,
-          availableMinutes: 180,
-          bufferMinutes: 15,
-          workStart: null,
-          workEnd: null,
+          availableMinutes: defaults.availableMinutes,
+          bufferMinutes: defaults.bufferMinutes,
+          workStart: defaults.workStart,
+          workEnd: defaults.workEnd,
           createdAt: null,
           focusTasks: [],
           tasksDueOnDate: tasksDueOnDate.map(formatTask),

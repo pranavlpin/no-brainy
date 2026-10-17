@@ -30,6 +30,7 @@ export interface CarryForwardData {
 }
 
 export const TODAY_PLAN_KEY = ['planner', 'today'] as const
+const PLAN_MUTATION_KEY = ['planner', 'update'] as const
 
 type TodayCache = ApiResponse<TodayPlanData> | undefined
 
@@ -79,6 +80,7 @@ export function useUpdatePlan() {
     UpdateDayPlanRequest,
     { previous: TodayCache }
   >({
+    mutationKey: PLAN_MUTATION_KEY,
     mutationFn: (data) =>
       apiClient<ApiResponse<TodayPlanData>>('/api/planner/today', {
         method: 'PUT',
@@ -115,7 +117,13 @@ export function useUpdatePlan() {
     onError: (_error, _vars, context) => {
       if (context?.previous) queryClient.setQueryData(TODAY_PLAN_KEY, context.previous)
     },
-    onSettled: () => invalidatePlanner(queryClient),
+    // Refetch only once the last overlapping save has settled; refetching after
+    // the first would overwrite the optimistic value of the one still in flight.
+    onSettled: () => {
+      if (queryClient.isMutating({ mutationKey: PLAN_MUTATION_KEY }) <= 1) {
+        invalidatePlanner(queryClient)
+      }
+    },
   })
 }
 

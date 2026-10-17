@@ -12,3 +12,10 @@
 - Unit: `planCapacity` counts each task once (max of estimate and blocked time), keeps unknown estimates as unknown, adds buffer and unlinked blocks, detects overlaps, caps available minutes to the working window.
 - Integration: today payload returns capacity fields and `plannedTasks`; `PUT` persists them; triage keep/move set `plannedDate` and leave `dueDate` unchanged.
 - Component: `CapacityCard` shows over-capacity and unknown-estimate messages; `TimeBlockForm` rejects end before start and submits a block.
+
+## T25 — Other-day defaults and capacity edits (bug fix)
+
+- Scope: unit + component + integration (regression tests written first, failing).
+- Integration: `GET /api/planner/2026-10-20` with no plan returns the user's personal `availableMinutes`/`bufferMinutes`/work window.
+- Component: typing into the buffer field keeps the typed value when the card re-renders with a new server `availableMinutes`.
+- Unit: two overlapping `useUpdatePlan` mutations invalidate the planner once, after the last one settles.
