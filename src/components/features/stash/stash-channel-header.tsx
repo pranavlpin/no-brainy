@@ -31,7 +31,11 @@ export function StashChannelHeader({
         <div className="flex items-center gap-2 min-w-0">
           <div
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-retro-blue/10 text-retro-blue font-mono text-sm font-bold"
-            style={channel.color ? { backgroundColor: `${channel.color}20`, color: channel.color } : undefined}
+            style={
+              channel.color
+                ? { backgroundColor: `${channel.color}20`, color: channel.color }
+                : undefined
+            }
           >
             {channel.icon || channel.name.charAt(0).toUpperCase()}
           </div>
@@ -39,27 +43,28 @@ export function StashChannelHeader({
             <div className="flex items-center gap-1.5">
               <h1 className="truncate text-sm font-semibold">{channel.name}</h1>
               {channel.isSensitive && (
-                <Lock className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-label="Sensitive" />
+                <Lock
+                  className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
+                  aria-label="Sensitive"
+                />
               )}
             </div>
           </div>
         </div>
         <div className="flex items-center gap-1">
-          {channel.isSensitive && (
-            <button
-              type="button"
-              onClick={onToggleSearch}
-              className="flex h-8 w-8 items-center justify-center rounded-md hover:bg-retro-blue/10"
-              aria-label={searchOpen ? 'Close search' : 'Search messages'}
-              title="Search messages"
-            >
-              {searchOpen ? (
-                <X className="h-4 w-4 text-muted-foreground" />
-              ) : (
-                <Search className="h-4 w-4 text-muted-foreground" />
-              )}
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={onToggleSearch}
+            className="flex h-8 w-8 items-center justify-center rounded-md hover:bg-retro-blue/10"
+            aria-label={searchOpen ? 'Close search' : 'Search messages'}
+            title="Search messages"
+          >
+            {searchOpen ? (
+              <X className="h-4 w-4 text-muted-foreground" />
+            ) : (
+              <Search className="h-4 w-4 text-muted-foreground" />
+            )}
+          </button>
           <button
             type="button"
             onClick={() => updateChannel.mutate({ id: channel.id, isPinned: !channel.isPinned })}
@@ -67,12 +72,21 @@ export function StashChannelHeader({
             aria-label={channel.isPinned ? 'Unpin' : 'Pin'}
             title={channel.isPinned ? 'Unpin' : 'Pin'}
           >
-            <Pin className={channel.isPinned ? 'h-4 w-4 text-retro-blue' : 'h-4 w-4 text-muted-foreground'} />
+            <Pin
+              className={
+                channel.isPinned ? 'h-4 w-4 text-retro-blue' : 'h-4 w-4 text-muted-foreground'
+              }
+            />
           </button>
           <button
             type="button"
             onClick={() => {
-              if (!window.confirm(`Delete channel "${channel.name}"? This soft-deletes all its messages.`)) return
+              if (
+                !window.confirm(
+                  `Delete channel "${channel.name}"? This soft-deletes all its messages.`
+                )
+              )
+                return
               deleteChannel.mutate(channel.id, {
                 onSuccess: () => router.push('/stash'),
               })
