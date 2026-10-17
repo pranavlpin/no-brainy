@@ -24,6 +24,11 @@ interface GoalFormProps {
     expenseTag?: string
     targetAmount?: number
     status?: GoalStatus
+    successCriteria?: string
+    baseline?: number | null
+    target?: number | null
+    unit?: string | null
+    weeklyPracticeTarget?: number | null
   }) => void
   onCancel: () => void
   isLoading?: boolean
@@ -33,23 +38,22 @@ export function GoalForm({ goal, onSubmit, onCancel, isLoading }: GoalFormProps)
   const [title, setTitle] = useState(goal?.title ?? '')
   const [description, setDescription] = useState(goal?.description ?? '')
   const [category, setCategory] = useState(goal?.category ?? '')
-  const [targetDate, setTargetDate] = useState(
-    goal?.targetDate ? goal.targetDate.slice(0, 10) : ''
-  )
-  const [startDate, setStartDate] = useState(
-    goal?.startDate ? goal.startDate.slice(0, 10) : ''
-  )
+  const [targetDate, setTargetDate] = useState(goal?.targetDate ? goal.targetDate.slice(0, 10) : '')
+  const [startDate, setStartDate] = useState(goal?.startDate ? goal.startDate.slice(0, 10) : '')
   const [status, setStatus] = useState<GoalStatus>(goal?.status ?? 'active')
   const [targetAmount, setTargetAmount] = useState(
     goal?.targetAmount ? String(goal.targetAmount) : ''
   )
-  const [trackBy, setTrackBy] = useState<'category' | 'tag'>(
-    goal?.expenseTag ? 'tag' : 'category'
-  )
-  const [expenseCategoryId, setExpenseCategoryId] = useState(
-    goal?.expenseCategoryId ?? ''
-  )
+  const [trackBy, setTrackBy] = useState<'category' | 'tag'>(goal?.expenseTag ? 'tag' : 'category')
+  const [expenseCategoryId, setExpenseCategoryId] = useState(goal?.expenseCategoryId ?? '')
   const [expenseTag, setExpenseTag] = useState(goal?.expenseTag ?? '')
+  const [successCriteria, setSuccessCriteria] = useState(goal?.successCriteria ?? '')
+  const [baseline, setBaseline] = useState(goal?.baseline == null ? '' : String(goal.baseline))
+  const [target, setTarget] = useState(goal?.target == null ? '' : String(goal.target))
+  const [unit, setUnit] = useState(goal?.unit ?? '')
+  const [weeklyTarget, setWeeklyTarget] = useState(
+    goal?.weeklyPracticeTarget == null ? '' : String(goal.weeklyPracticeTarget)
+  )
 
   const { data: expenseCategories } = useExpenseCategories()
 
@@ -63,6 +67,14 @@ export function GoalForm({ goal, onSubmit, onCancel, isLoading }: GoalFormProps)
       category: category || undefined,
       targetDate: targetDate || undefined,
       status,
+    }
+
+    data.successCriteria = successCriteria.trim()
+    data.weeklyPracticeTarget = weeklyTarget ? Number(weeklyTarget) : null
+    if (!isFinancial) {
+      data.baseline = baseline === '' ? null : Number(baseline)
+      data.target = target === '' ? null : Number(target)
+      data.unit = unit.trim() || null
     }
 
     if (isFinancial) {
@@ -103,14 +115,23 @@ export function GoalForm({ goal, onSubmit, onCancel, isLoading }: GoalFormProps)
         />
       </div>
 
+      <div className="space-y-2">
+        <Label htmlFor="goal-success">What does success look like?</Label>
+        <textarea
+          id="goal-success"
+          value={successCriteria}
+          onChange={(e) => setSuccessCriteria(e.target.value)}
+          placeholder="Something you could recognise on an ordinary Tuesday."
+          rows={2}
+          maxLength={5000}
+          className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        />
+      </div>
+
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="goal-category">Category</Label>
-          <Select
-            id="goal-category"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-          >
+          <Select id="goal-category" value={category} onChange={(e) => setCategory(e.target.value)}>
             <option value="">None</option>
             {CATEGORIES.map((c) => (
               <option key={c} value={c}>
@@ -134,6 +155,71 @@ export function GoalForm({ goal, onSubmit, onCancel, isLoading }: GoalFormProps)
             ))}
           </Select>
         </div>
+      </div>
+
+      {!isFinancial && (
+        <fieldset className="space-y-3 rounded-md border border-border/70 p-3">
+          <legend className="px-1 font-mono text-[11px] uppercase tracking-wide text-muted-foreground">
+            Measure it (optional)
+          </legend>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="space-y-1">
+              <Label htmlFor="goal-baseline" className="text-xs">
+                Starting at
+              </Label>
+              <Input
+                id="goal-baseline"
+                type="number"
+                step="any"
+                inputMode="decimal"
+                value={baseline}
+                onChange={(e) => setBaseline(e.target.value)}
+                placeholder="200"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="goal-target" className="text-xs">
+                Aiming for
+              </Label>
+              <Input
+                id="goal-target"
+                type="number"
+                step="any"
+                inputMode="decimal"
+                value={target}
+                onChange={(e) => setTarget(e.target.value)}
+                placeholder="160"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="goal-unit" className="text-xs">
+                Unit
+              </Label>
+              <Input
+                id="goal-unit"
+                maxLength={40}
+                value={unit}
+                onChange={(e) => setUnit(e.target.value)}
+                placeholder="sec/km"
+              />
+            </div>
+          </div>
+        </fieldset>
+      )}
+
+      <div className="space-y-1">
+        <Label htmlFor="goal-weekly-target">Practice days per week (optional)</Label>
+        <Input
+          id="goal-weekly-target"
+          type="number"
+          min={1}
+          max={14}
+          inputMode="numeric"
+          value={weeklyTarget}
+          onChange={(e) => setWeeklyTarget(e.target.value)}
+          placeholder="3"
+          className="w-28"
+        />
       </div>
 
       {isFinancial && (
@@ -222,7 +308,9 @@ export function GoalForm({ goal, onSubmit, onCancel, isLoading }: GoalFormProps)
                 value={expenseCategoryId}
                 onChange={setExpenseCategoryId}
                 placeholder="Select category..."
-                options={expenseCategories?.map((cat) => ({ value: cat.id, label: cat.name })) ?? []}
+                options={
+                  expenseCategories?.map((cat) => ({ value: cat.id, label: cat.name })) ?? []
+                }
                 className="border-2"
               />
             </div>

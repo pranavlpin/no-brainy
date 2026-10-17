@@ -17,6 +17,9 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Dialog } from '@/components/ui/dialog'
 import { SidebarOrderSettings } from '@/components/settings/sidebar-order'
+import { CoreBackupSection } from '@/components/settings/core-backup'
+import { PersonalSetup } from '@/components/settings/personal-setup'
+import { PageHeader } from '@/components/ui/workspace-states'
 import {
   useApiKeyStatus,
   useSaveApiKey,
@@ -284,6 +287,85 @@ function NotificationPreferencesSection() {
                   </button>
                 </div>
               ))}
+
+              <div
+                className="space-y-3 border-t border-retro-dark/10 pt-4"
+                data-testid="settings-quiet-hours"
+              >
+                <div>
+                  <p className="text-sm font-medium text-retro-dark">Quiet hours</p>
+                  <p className="text-xs text-retro-dark/60">
+                    No nudges inside this window, in your timezone. It may cross midnight.
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-end gap-3">
+                  <div className="space-y-1">
+                    <label
+                      htmlFor="quiet-start"
+                      className="font-mono text-[11px] text-retro-dark/60"
+                    >
+                      From
+                    </label>
+                    <Input
+                      id="quiet-start"
+                      type="time"
+                      className="h-8 w-28 font-mono text-sm"
+                      value={prefs?.quietHours?.start ?? ''}
+                      onChange={(e) => {
+                        const start = e.target.value
+                        const end = prefs?.quietHours?.end ?? '07:00'
+                        updatePrefs.mutate({ quietHours: start ? { start, end } : null })
+                      }}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label htmlFor="quiet-end" className="font-mono text-[11px] text-retro-dark/60">
+                      Until
+                    </label>
+                    <Input
+                      id="quiet-end"
+                      type="time"
+                      className="h-8 w-28 font-mono text-sm"
+                      value={prefs?.quietHours?.end ?? ''}
+                      onChange={(e) => {
+                        const end = e.target.value
+                        const start = prefs?.quietHours?.start ?? '22:00'
+                        updatePrefs.mutate({ quietHours: end ? { start, end } : null })
+                      }}
+                    />
+                  </div>
+                  {prefs?.quietHours && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 text-xs"
+                      onClick={() => updatePrefs.mutate({ quietHours: null })}
+                    >
+                      Clear
+                    </Button>
+                  )}
+                </div>
+                <div className="flex flex-wrap items-end gap-3">
+                  <div className="space-y-1">
+                    <label
+                      htmlFor="review-reminder-time"
+                      className="font-mono text-[11px] text-retro-dark/60"
+                    >
+                      Close-the-day reminder after
+                    </label>
+                    <Input
+                      id="review-reminder-time"
+                      type="time"
+                      className="h-8 w-28 font-mono text-sm"
+                      value={prefs?.reviewReminderTime ?? '20:00'}
+                      onChange={(e) => {
+                        if (e.target.value)
+                          updatePrefs.mutate({ reviewReminderTime: e.target.value })
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -439,12 +521,11 @@ function TimezoneSection() {
 export default function SettingsPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-8 py-8">
-      <div>
-        <h1 className="font-display text-2xl font-bold text-retro-dark">Settings</h1>
-        <p className="mt-1 text-sm text-retro-dark/60">
-          Manage your account and application preferences.
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="You"
+        title="Settings"
+        description="Your account, your defaults, and a copy of your progress."
+      />
 
       {/* AI Configuration */}
       <section>
@@ -452,6 +533,12 @@ export default function SettingsPage() {
           AI Configuration
         </h2>
         <ApiKeySection />
+      </section>
+
+      {/* Personal setup */}
+      <section id="personal-setup">
+        <h2 className="font-display mb-4 text-lg font-semibold text-retro-dark">Personal setup</h2>
+        <PersonalSetup />
       </section>
 
       {/* Day boundary */}
@@ -476,6 +563,12 @@ export default function SettingsPage() {
       <section>
         <h2 className="font-display mb-4 text-lg font-semibold text-retro-dark">Notifications</h2>
         <NotificationPreferencesSection />
+      </section>
+
+      {/* Backup */}
+      <section id="backup">
+        <h2 className="font-display mb-4 text-lg font-semibold text-retro-dark">Backup</h2>
+        <CoreBackupSection />
       </section>
     </div>
   )

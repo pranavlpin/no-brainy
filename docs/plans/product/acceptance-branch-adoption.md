@@ -68,3 +68,7 @@ Both arrive at the same spine: Today as the authenticated home, a one-line inten
 | T22 | Workspace states and typography pass; context filter                                                                         | platform | T14                |
 
 Approval of this package approves the nine linked task plans to be written and executed in this order on a stacked branch off `feature/platform-daily-loop-overhaul`, with one PR per wave or one PR at the end as the owner prefers. Push and PR creation would follow the same ruling as the first batch; merge stays the owner's call.
+
+## Outcome (2026-10-16)
+
+All nine tasks landed on `feature/product-adoption-wave-2` (base `feature/platform-daily-loop-overhaul`), one commit per task after a docs commit that registered the package. Final gates on the branch: 74 test files / 228 tests green, `pnpm typecheck` clean, `pnpm lint` at the five pre-existing warnings, `pnpm build` succeeds. Migrations added, in order: `add_task_planning_fields`, `add_day_plan_capacity`, `add_captures`, `add_focus_outcomes`, `add_projects`, `add_growth_evidence`, `add_weekly_reviews`, `add_core_import_receipts`. Each plan carries a Refinements section recording where the implementation departed from the plan; the ledgers hold the done rows. Merge order: PR #6 first, then this stacked PR.

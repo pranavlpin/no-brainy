@@ -26,3 +26,17 @@ Section-wise test plan for the `platform` module. Append new sections per task; 
 - Scope: unit + component (regression tests written first, failing).
 - Component: `GoogleAnalytics` renders no DOM for `""` or `undefined` and renders scripts for a real id.
 - Unit: `src/app/layout.tsx` contains no manual `<head>` element; `public/favicon.ico` exists and starts with the ICO header bytes `00 00 01 00`; the UI store and focus store start from server defaults even when `localStorage` holds values, and `hydrate()` loads them.
+
+## T21 — Backup, personal setup, quiet hours
+
+- Unit: the export schema omits credentials and API keys and carries a version; `planImport` rejects unknown versions, oversized payloads, and dangling references, and remaps ids additively; quiet hours suppress nudges inside the window using the user's zone.
+- Integration: `POST /api/data/import` without `confirm` writes nothing; a repeated `clientRequestId` returns the earlier receipt.
+
+## T22 — Workspace states and context
+
+- Component: `PageHeader`, `LoadingState`, `ErrorState`, `EmptyState` render their roles and actions; the top-bar context select stores the choice and the task list filters by it while keeping unclassified tasks.
+
+## T29 — Dark-mode hydration and app icon (bug fix)
+
+- Scope: unit (regression tests written first, failing).
+- Unit: the dark-mode store starts light even when `localStorage` holds `dark`, and `hydrate()` loads it and sets the `dark` class; `src/app/icon.svg` does not exist while `public/icon.svg` does and the root metadata lists it; the root layout applies the saved mode before paint.

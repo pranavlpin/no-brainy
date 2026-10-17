@@ -13,6 +13,8 @@ export const updateNoteSchema = z.object({
   tags: z.array(z.string()).optional(),
   isPinned: z.boolean().optional(),
   isPublic: z.boolean().optional(),
+  /** When present, the update is rejected with 409 if the stored row changed since. */
+  expectedUpdatedAt: z.string().datetime().optional(),
 })
 
 export const noteQuerySchema = z.object({

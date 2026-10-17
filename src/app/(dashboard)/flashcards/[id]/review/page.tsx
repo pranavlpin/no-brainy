@@ -14,7 +14,13 @@ import type { FlashcardResponse, ReviewRating, ReviewSessionResponse } from '@/l
 type ReviewState =
   | { phase: 'loading' }
   | { phase: 'error'; message: string }
-  | { phase: 'reviewing'; session: ReviewSessionResponse; cards: FlashcardResponse[]; index: number; flipped: boolean }
+  | {
+      phase: 'reviewing'
+      session: ReviewSessionResponse
+      cards: FlashcardResponse[]
+      index: number
+      flipped: boolean
+    }
   | { phase: 'done'; session: ReviewSessionResponse; counts: Record<ReviewRating, number> }
 
 export default function ReviewPage() {
@@ -27,7 +33,12 @@ export default function ReviewPage() {
 
   const [state, setState] = useState<ReviewState>({ phase: 'loading' })
   const [sessionId, setSessionId] = useState<string | null>(null)
-  const [counts, setCounts] = useState<Record<ReviewRating, number>>({ easy: 0, medium: 0, hard: 0, forgot: 0 })
+  const [counts, setCounts] = useState<Record<ReviewRating, number>>({
+    easy: 0,
+    medium: 0,
+    hard: 0,
+    forgot: 0,
+  })
 
   // We need to call completeReview with the session ID once known
   const completeReview = useCompleteReview(sessionId ?? '')
@@ -47,7 +58,13 @@ export default function ReviewPage() {
           })
         } else {
           setSessionId(data.session.id)
-          setState({ phase: 'reviewing', session: data.session, cards: data.cards, index: 0, flipped: false })
+          setState({
+            phase: 'reviewing',
+            session: data.session,
+            cards: data.cards,
+            index: 0,
+            flipped: false,
+          })
         }
       })
       .catch(() => {
@@ -85,7 +102,7 @@ export default function ReviewPage() {
       setCounts(newCounts)
 
       // Fire the rating request
-      rateCard.mutate({ cardId: card.id, rating })
+      rateCard.mutate({ cardId: card.id, rating, sessionId: session.id })
 
       const nextIndex = index + 1
       if (nextIndex >= cards.length) {
@@ -133,7 +150,7 @@ export default function ReviewPage() {
         <div className="h-1 w-full bg-secondary">
           <div
             className="h-full bg-primary transition-all duration-300"
-            style={{ width: `${((state.index) / state.cards.length) * 100}%` }}
+            style={{ width: `${(state.index / state.cards.length) * 100}%` }}
           />
         </div>
       )}
@@ -164,9 +181,7 @@ export default function ReviewPage() {
               isFlipped={state.flipped}
               onFlip={handleFlip}
             />
-            {state.flipped && (
-              <RatingButtons onRate={handleRate} disabled={rateCard.isPending} />
-            )}
+            {state.flipped && <RatingButtons onRate={handleRate} disabled={rateCard.isPending} />}
             {!state.flipped && (
               <p className="text-sm text-muted-foreground">
                 Click the card or press Space to reveal the answer
@@ -177,7 +192,9 @@ export default function ReviewPage() {
 
         {state.phase === 'done' && (
           <ReviewSummary
-            cardsReviewed={state.counts.easy + state.counts.medium + state.counts.hard + state.counts.forgot}
+            cardsReviewed={
+              state.counts.easy + state.counts.medium + state.counts.hard + state.counts.forgot
+            }
             cardsEasy={state.counts.easy}
             cardsMedium={state.counts.medium}
             cardsHard={state.counts.hard}

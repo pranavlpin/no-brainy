@@ -16,8 +16,28 @@ import type {
 } from '@/lib/types/tasks'
 
 // Extended type for list items that include subtasksCount
-interface TaskListItem extends TaskResponse {
+export interface TaskListItem extends TaskResponse {
   subtasksCount?: number
+}
+
+/** Fields the server derives or that must never be sent back from a draft. */
+const READ_ONLY_FIELDS = new Set([
+  'id',
+  'userId',
+  'createdAt',
+  'updatedAt',
+  'completedAt',
+  'subtasks',
+  'taskLinks',
+])
+
+/** Build the PUT body for a draft patch, versioned against the row the draft was taken from. */
+export function taskDraftBody(patch: Partial<TaskResponse>, version: string): UpdateTaskRequest {
+  const body: Record<string, unknown> = {}
+  for (const [key, value] of Object.entries(patch)) {
+    if (!READ_ONLY_FIELDS.has(key)) body[key] = value
+  }
+  return { ...(body as UpdateTaskRequest), expectedUpdatedAt: version }
 }
 
 /** Query-key prefixes whose cached payloads embed task objects. */
@@ -51,6 +71,12 @@ function buildQueryString(filters: TaskFilters): string {
   }
   if (filters.dueDateFrom) params.set('dueDateFrom', filters.dueDateFrom)
   if (filters.dueDateTo) params.set('dueDateTo', filters.dueDateTo)
+  if (filters.plannedDate) params.set('plannedDate', filters.plannedDate)
+  if (filters.plannedDateFrom) params.set('plannedDateFrom', filters.plannedDateFrom)
+  if (filters.plannedDateTo) params.set('plannedDateTo', filters.plannedDateTo)
+  if (filters.context) params.set('context', filters.context)
+  if (filters.page) params.set('page', String(filters.page))
+  if (filters.pageSize) params.set('pageSize', String(filters.pageSize))
   if (filters.sortBy) params.set('sortBy', filters.sortBy)
   if (filters.sortOrder) params.set('sortOrder', filters.sortOrder)
   const str = params.toString()
@@ -65,6 +91,19 @@ export function useTasks(filters: TaskFilters = {}) {
         `/api/tasks${buildQueryString(filters)}`
       ),
     select: (res) => res.data.items,
+  })
+}
+
+/** One page of tasks with its pagination metadata. */
+export function useTaskPage(filters: TaskFilters = {}) {
+  return useQuery({
+    queryKey: ['tasks', filters],
+    queryFn: () =>
+      apiClient<ApiResponse<PaginatedResponse<TaskListItem>>>(
+        `/api/tasks${buildQueryString(filters)}`
+      ),
+    select: (res) => res.data,
+    placeholderData: (previous) => previous,
   })
 }
 
@@ -86,8 +125,13 @@ export function applyTaskUpdate(task: TaskResponse, data: UpdateTaskRequest): Ta
   if (data.priority !== undefined) next.priority = data.priority
   if (data.tags !== undefined) next.tags = data.tags
   if (data.dueDate !== undefined) next.dueDate = data.dueDate
+  if (data.plannedDate !== undefined) next.plannedDate = data.plannedDate
+  if (data.estimatedMinutes !== undefined) next.estimatedMinutes = data.estimatedMinutes
+  if (data.effort !== undefined) next.effort = data.effort
+  if (data.context !== undefined) next.context = data.context
   if (data.parentTaskId !== undefined) next.parentTaskId = data.parentTaskId
   if (data.goalId !== undefined) next.goalId = data.goalId
+  if (data.projectId !== undefined) next.projectId = data.projectId
   if (data.isRecurring !== undefined) next.isRecurring = data.isRecurring
   if (data.rrule !== undefined) next.rrule = data.rrule
   if (data.quadrant !== undefined) next.quadrant = data.quadrant

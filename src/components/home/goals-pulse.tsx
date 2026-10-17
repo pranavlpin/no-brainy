@@ -50,8 +50,15 @@ export function GoalsPulse({ goals, staleCount }: { goals: HomeGoal[]; staleCoun
       ) : (
         <ul className="space-y-2.5">
           {sorted.slice(0, 5).map((g) => {
-            const pct = g.taskCount > 0 ? Math.round((g.completedTaskCount / g.taskCount) * 100) : 0
+            const measured = g.outcomePercent != null
+            const pct = measured
+              ? g.outcomePercent!
+              : g.taskCount > 0
+                ? Math.round((g.completedTaskCount / g.taskCount) * 100)
+                : 0
             const stale = g.daysSinceActivity >= STALE_DAYS
+            const target = g.weeklyPracticeTarget ?? 0
+            const practiceMet = target > 0 && g.practiceCount >= target
             return (
               <li key={g.id} data-testid={`home-goal-${g.id}`}>
                 <Link
@@ -87,8 +94,25 @@ export function GoalsPulse({ goals, staleCount }: { goals: HomeGoal[]; staleCoun
                       />
                     </div>
                     <span className="w-10 text-right font-mono text-[11px] text-retro-dark/50">
-                      {g.taskCount > 0 ? `${g.completedTaskCount}/${g.taskCount}` : '—'}
+                      {measured
+                        ? `${pct}%`
+                        : g.taskCount > 0
+                          ? `${g.completedTaskCount}/${g.taskCount}`
+                          : '—'}
                     </span>
+                    {target > 0 && (
+                      <span
+                        className={cn(
+                          'shrink-0 rounded-full px-1.5 py-0.5 font-mono text-[10px]',
+                          practiceMet
+                            ? 'bg-retro-mint/25 text-retro-dark'
+                            : 'bg-retro-dark/5 text-retro-dark/60'
+                        )}
+                        title="Practice days this week"
+                      >
+                        {g.practiceCount}/{target}
+                      </span>
+                    )}
                   </div>
                 </Link>
               </li>

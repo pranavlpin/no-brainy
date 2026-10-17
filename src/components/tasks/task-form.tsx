@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Select } from '@/components/ui/select'
 import { MarkdownEditor } from '@/components/editor/markdown-editor'
+import { TaskPlanningFields, type PlanningValues } from '@/components/tasks/task-planning-fields'
 import { cn } from '@/lib/utils'
 import { ChevronDown, ChevronRight } from 'lucide-react'
 import type { TaskPriority, TaskStatus, TaskQuadrant, CreateTaskRequest } from '@/lib/types/tasks'
@@ -56,6 +57,13 @@ export function TaskForm({
   const [isRecurring, setIsRecurring] = useState(initialData?.isRecurring ?? false)
   const [rrule, setRrule] = useState(initialData?.rrule ?? '')
   const [showDescription, setShowDescription] = useState(!!initialData?.descriptionMd)
+  const [planning, setPlanning] = useState<PlanningValues>({
+    plannedDate: initialData?.plannedDate ?? null,
+    estimatedMinutes: initialData?.estimatedMinutes ?? null,
+    effort: initialData?.effort ?? null,
+    context: initialData?.context ?? null,
+    projectId: initialData?.projectId ?? null,
+  })
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -73,6 +81,11 @@ export function TaskForm({
       tags,
       ...(descriptionMd && { descriptionMd }),
       ...(dueDate && { dueDate }),
+      ...(planning.plannedDate && { plannedDate: planning.plannedDate }),
+      ...(planning.estimatedMinutes && { estimatedMinutes: planning.estimatedMinutes }),
+      ...(planning.effort && { effort: planning.effort }),
+      ...(planning.context && { context: planning.context }),
+      ...(planning.projectId && { projectId: planning.projectId }),
       ...(quadrant && { quadrant }),
       isRecurring,
       ...(isRecurring && rrule && { rrule }),
@@ -162,6 +175,18 @@ export function TaskForm({
           onChange={(e) => setDueDate(e.target.value ? new Date(e.target.value).toISOString() : '')}
         />
       </div>
+
+      {/* Planning */}
+      <fieldset className="space-y-2 rounded-lg border border-border/70 p-3">
+        <legend className="px-1 font-mono text-[11px] uppercase tracking-wide text-muted-foreground">
+          Planning
+        </legend>
+        <TaskPlanningFields
+          idPrefix="new"
+          value={planning}
+          onChange={(patch) => setPlanning((prev) => ({ ...prev, ...patch }))}
+        />
+      </fieldset>
 
       {/* Tags */}
       <div className="space-y-1">

@@ -75,6 +75,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className} suppressHydrationWarning>
+        {/* Apply the saved colour mode before first paint; the store catches up after mount. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{var m=localStorage.getItem('nobrainy-dark-mode');var d=m==='dark'||(m!=='light'&&window.matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.classList.add(d?'dark':'light')}catch(e){}",
+          }}
+        />
         <script
           dangerouslySetInnerHTML={{
             __html: `

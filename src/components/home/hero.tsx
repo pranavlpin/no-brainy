@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Flame, Moon, Sunrise } from 'lucide-react'
+import { CalendarCheck, Flame, Moon, Sunrise } from 'lucide-react'
 import { AnimatedNumber } from '@/components/motion/animated-number'
 import { greetingFor, type DayPhase } from '@/lib/home/phase'
 import { formatDateKey } from '@/lib/dates'
@@ -14,6 +14,8 @@ interface HeroProps {
   phase: DayPhase
   streak: number
   overdueCount: number
+  /** Shown on weekends until the week's adjustment is saved. */
+  week?: { weekStart: string; adjusted: boolean; isWeekend: boolean }
 }
 
 const PHASE_COPY: Record<DayPhase, string> = {
@@ -24,7 +26,8 @@ const PHASE_COPY: Record<DayPhase, string> = {
 }
 
 /** Greeting, date, streak, and the one contextual action for this phase. */
-export function Hero({ name, hour, today, phase, streak, overdueCount }: HeroProps) {
+export function Hero({ name, hour, today, phase, streak, overdueCount, week }: HeroProps) {
+  const adjustWeek = !!week && week.isWeekend && !week.adjusted
   const firstName = name?.split(' ')[0] ?? null
   const greeting = greetingFor(hour)
 
@@ -73,6 +76,16 @@ export function Hero({ name, hour, today, phase, streak, overdueCount }: HeroPro
             />
             <AnimatedNumber value={streak} /> day streak
           </div>
+          {adjustWeek && (
+            <Link
+              href={`/reviews/weekly?week=${week.weekStart}`}
+              data-testid="home-adjust-week"
+              className="flex items-center gap-2 rounded-full border border-retro-mint/60 bg-retro-mint/15 px-3 py-1.5 font-mono text-xs font-bold text-retro-dark transition-colors hover:bg-retro-mint/30"
+            >
+              <CalendarCheck className="h-4 w-4" />
+              Adjust the week
+            </Link>
+          )}
           {phase === 'evening' ? (
             <Link
               href="/reviews/daily"

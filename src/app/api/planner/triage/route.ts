@@ -8,8 +8,9 @@ import { formatTask } from '@/lib/tasks/format'
 import type { Prisma } from '@prisma/client'
 
 /**
- * Morning triage for a leftover task: keep it today, move it to a later
- * date, or drop it (cancelled, never deleted).
+ * Morning triage for a leftover task: plan it for today, plan it for a later
+ * day, or drop it (cancelled, never deleted). Triage moves the planned day
+ * only; the deadline is a commitment and stays where it is.
  */
 export const POST = withAuth(async (req: NextRequest, user) => {
   try {
@@ -26,7 +27,7 @@ export const POST = withAuth(async (req: NextRequest, user) => {
 
     let data: Prisma.TaskUpdateInput
     if (body.action === 'keep') {
-      data = { dueDate: dateFromKey(today) }
+      data = { plannedDate: dateFromKey(today) }
     } else if (body.action === 'move') {
       if (!body.date || body.date <= today) {
         return NextResponse.json(
@@ -37,7 +38,7 @@ export const POST = withAuth(async (req: NextRequest, user) => {
           { status: 400 }
         )
       }
-      data = { dueDate: dateFromKey(body.date) }
+      data = { plannedDate: dateFromKey(body.date) }
     } else {
       data = { status: 'cancelled' }
     }

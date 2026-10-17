@@ -163,6 +163,7 @@ function DailyReviewContent() {
               notesCreated: existingReview?.notesCreated ?? 0,
               cardsReviewed: existingReview?.cardsReviewed ?? 0,
               focusMinutes: focusDay?.totalWorkMinutes ?? null,
+              sessions: focusDay?.sessions,
             }}
             initial={{
               reflectionMd: existingReview?.reflectionMd,

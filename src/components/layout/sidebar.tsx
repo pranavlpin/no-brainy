@@ -8,9 +8,13 @@ import { NAV_GROUPS, NAV_ITEMS, type NavGroupKey } from '@/lib/nav/items'
 import { useNavBadges } from '@/hooks/use-nav-badges'
 import { SidebarNavItem } from './sidebar-nav'
 
-const BADGE_FOR: Record<string, 'cardsDue' | 'overdueTasks' | 'unreadNotifications'> = {
+const BADGE_FOR: Record<
+  string,
+  'cardsDue' | 'overdueTasks' | 'unreadNotifications' | 'inboxCount'
+> = {
   '/flashcards': 'cardsDue',
   '/tasks': 'overdueTasks',
+  '/inbox': 'inboxCount',
 }
 
 export function Sidebar() {

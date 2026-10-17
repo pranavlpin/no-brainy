@@ -9,6 +9,11 @@ export interface HomeGoal {
   completedTaskCount: number
   lastActivityAt: string
   daysSinceActivity: number
+  /** Practice days this week against the goal's target; target null when not tracked. */
+  practiceCount: number
+  weeklyPracticeTarget: number | null
+  /** Measured distance to target; null when the goal is not measured. */
+  outcomePercent: number | null
 }
 
 export interface HomeData {
@@ -22,9 +27,18 @@ export interface HomeData {
   plan: {
     focusTaskIds: string[]
     focusTasks: TaskResponse[]
+    /** Planned for today, regardless of deadline. */
+    plannedTasks: TaskResponse[]
     tasksDueToday: TaskResponse[]
     intentMd: string | null
     carryForwardCount: number
+    /** Planned versus available minutes for the day; unknown estimates are counted, not zeroed. */
+    capacity: {
+      plannedMinutes: number
+      availableMinutes: number
+      unknownCount: number
+      overBy: number
+    }
   }
   review: {
     todayDone: boolean
@@ -45,6 +59,12 @@ export interface HomeData {
   goals: {
     active: HomeGoal[]
     staleCount: number
+  }
+  /** The current week and whether its adjustment has been saved. */
+  week: {
+    weekStart: string
+    adjusted: boolean
+    isWeekend: boolean
   }
   /** Consecutive days with a closed review. */
   streak: number

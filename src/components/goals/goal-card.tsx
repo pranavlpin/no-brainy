@@ -13,7 +13,10 @@ const categoryColors: Record<string, 'green' | 'blue' | 'default' | 'orange' | '
   financial: 'yellow',
 }
 
-const statusConfig: Record<GoalStatus, { label: string; variant: 'green' | 'blue' | 'yellow' | 'gray' }> = {
+const statusConfig: Record<
+  GoalStatus,
+  { label: string; variant: 'green' | 'blue' | 'yellow' | 'gray' }
+> = {
   active: { label: 'Active', variant: 'blue' },
   completed: { label: 'Completed', variant: 'green' },
   paused: { label: 'Paused', variant: 'yellow' },
@@ -47,22 +50,25 @@ export function GoalCard({ goal, onClick }: GoalCardProps) {
   const totalTasks = goal.taskCount ?? 0
   const completedTasks = goal.completedTaskCount ?? 0
   const hasTaskProgress = !isFinancial && totalTasks > 0
+  const measured = !isFinancial && goal.outcomePercent != null
   const progressPct = isFinancial
     ? (goal.financialProgress ?? 0)
-    : goal.status === 'completed'
-      ? 100
-      : hasTaskProgress
-        ? Math.round((completedTasks / totalTasks) * 100)
-        : null
+    : measured
+      ? goal.outcomePercent!
+      : goal.status === 'completed'
+        ? 100
+        : hasTaskProgress
+          ? Math.round((completedTasks / totalTasks) * 100)
+          : null
+  const practiceTarget = goal.weeklyPracticeTarget ?? 0
+  const practiceCount = goal.practiceCount ?? 0
 
   const isOverdue =
-    goal.targetDate &&
-    goal.status === 'active' &&
-    new Date(goal.targetDate) < new Date()
+    goal.targetDate && goal.status === 'active' && new Date(goal.targetDate) < new Date()
 
   const statusCfg = statusConfig[goal.status]
   const categoryVariant = goal.category
-    ? categoryColors[goal.category.toLowerCase()] ?? 'default'
+    ? (categoryColors[goal.category.toLowerCase()] ?? 'default')
     : null
 
   return (
@@ -92,14 +98,10 @@ export function GoalCard({ goal, onClick }: GoalCardProps) {
             {goal.category}
           </Badge>
           {isFinancial && goal.expenseCategoryName && (
-            <span className="text-xs text-muted-foreground">
-              {goal.expenseCategoryName}
-            </span>
+            <span className="text-xs text-muted-foreground">{goal.expenseCategoryName}</span>
           )}
           {isFinancial && goal.expenseTag && !goal.expenseCategoryName && (
-            <span className="text-xs text-muted-foreground">
-              #{goal.expenseTag}
-            </span>
+            <span className="text-xs text-muted-foreground">#{goal.expenseTag}</span>
           )}
         </div>
       )}
@@ -108,8 +110,16 @@ export function GoalCard({ goal, onClick }: GoalCardProps) {
       {progressPct !== null ? (
         <div className="mt-3">
           <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-            <span>Progress</span>
-            <span>{progressPct}%</span>
+            <span>{measured ? 'Outcome' : 'Progress'}</span>
+            <span>
+              {progressPct}%
+              {measured && goal.measurement != null && (
+                <span className="ml-1 font-mono text-[10px]">
+                  · {goal.measurement}
+                  {goal.unit ? ` ${goal.unit}` : ''}
+                </span>
+              )}
+            </span>
           </div>
           <div className="h-2 w-full rounded-full border border-retro-dark/20 bg-gray-100 dark:bg-gray-800">
             <div
@@ -122,7 +132,8 @@ export function GoalCard({ goal, onClick }: GoalCardProps) {
           )}
         </div>
       ) : (
-        goal.status === 'active' && !isFinancial && (
+        goal.status === 'active' &&
+        !isFinancial && (
           <p className="mt-3 text-xs text-muted-foreground/70">Link tasks to track progress</p>
         )
       )}
@@ -130,6 +141,17 @@ export function GoalCard({ goal, onClick }: GoalCardProps) {
       {/* Footer */}
       <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
         <div className="flex items-center gap-3">
+          {practiceTarget > 0 && (
+            <span
+              className={cn(
+                'flex items-center gap-1 font-mono',
+                practiceCount >= practiceTarget ? 'text-retro-mint' : 'text-muted-foreground'
+              )}
+              title="Practice days this week"
+            >
+              {practiceCount}/{practiceTarget} practice
+            </span>
+          )}
           {isFinancial ? (
             <span className="flex items-center gap-1">
               <IndianRupee className="h-3.5 w-3.5" />
@@ -147,7 +169,8 @@ export function GoalCard({ goal, onClick }: GoalCardProps) {
         {isFinancial && goal.startDate && goal.targetDate ? (
           <span className="flex items-center gap-1">
             <Calendar className="h-3.5 w-3.5" />
-            {new Date(goal.startDate).toLocaleDateString()} - {new Date(goal.targetDate).toLocaleDateString()}
+            {new Date(goal.startDate).toLocaleDateString()} -{' '}
+            {new Date(goal.targetDate).toLocaleDateString()}
           </span>
         ) : goal.targetDate ? (
           <span className={cn('flex items-center gap-1', isOverdue && 'text-red-500 font-medium')}>

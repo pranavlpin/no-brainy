@@ -41,7 +41,7 @@ describe('QuickCaptureModal', () => {
     const body = JSON.parse((taskCall![1] as { body: string }).body)
     expect(body).toMatchObject({
       title: 'Call bank',
-      dueDate: '2026-10-17',
+      plannedDate: '2026-10-17',
       tags: ['finance'],
       priority: 'high',
     })
@@ -52,5 +52,26 @@ describe('QuickCaptureModal', () => {
     await userEvent.type(await screen.findByTestId('capture-input'), 'note: onboarding idea{enter}')
     await waitFor(() => expect(apiClient.mock.calls.some((c) => c[0] === '/api/notes')).toBe(true))
     expect(screen.queryByTestId('capture-chip-date')).toBeNull()
+  })
+
+  it('saves raw text to the Inbox on Shift+Enter and shows the Inbox chip for the prefix', async () => {
+    const onClose = vi.fn()
+    wrap(<QuickCaptureModal open onClose={onClose} />)
+    const input = await screen.findByTestId('capture-input')
+    await userEvent.type(input, 'half an idea tomorrow #maybe')
+    await userEvent.keyboard('{Shift>}{Enter}{/Shift}')
+    await waitFor(() => expect(onClose).toHaveBeenCalled())
+    const inboxCall = apiClient.mock.calls.find((c) => c[0] === '/api/inbox')
+    expect(inboxCall).toBeTruthy()
+    const body = JSON.parse((inboxCall![1] as { body: string }).body)
+    expect(body.content).toBe('half an idea tomorrow #maybe')
+    expect(body.clientRequestId).toMatch(/^[0-9a-f-]{36}$/)
+    expect(apiClient.mock.calls.some((c) => c[0] === '/api/tasks')).toBe(false)
+  })
+
+  it('switches to the Inbox destination with the inbox prefix', async () => {
+    wrap(<QuickCaptureModal open onClose={() => {}} />)
+    await userEvent.type(await screen.findByTestId('capture-input'), 'inbox: loose thought')
+    expect(screen.getByTestId('capture-chip-kind')).toHaveTextContent(/inbox/i)
   })
 })

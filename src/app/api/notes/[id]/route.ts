@@ -24,8 +24,20 @@ type NoteWithLinks = {
   wordCount: number
   createdAt: Date
   updatedAt: Date
-  noteLinks?: { id: string; sourceId: string; targetType: string; targetId: string; createdAt: Date }[]
-  linkedFrom?: { id: string; sourceId: string; targetType: string; targetId: string; createdAt: Date }[]
+  noteLinks?: {
+    id: string
+    sourceId: string
+    targetType: string
+    targetId: string
+    createdAt: Date
+  }[]
+  linkedFrom?: {
+    id: string
+    sourceId: string
+    targetType: string
+    targetId: string
+    createdAt: Date
+  }[]
 }
 
 function formatNote(note: NoteWithLinks): NoteResponse {
@@ -116,15 +128,23 @@ export async function GET(req: NextRequest) {
       },
       include: {
         noteLinks: true,
-        linkedFrom: true,
       },
     })
 
     if (!note) return notFoundResponse()
 
+    // Links are not a relation on the target side (targets can be tasks, books,
+
+    // or decks), so notes linking here are looked up explicitly.
+
+    const linkedFrom = await prisma.noteLink.findMany({
+      where: { targetType: 'note', targetId: noteId },
+    })
+
     const response: ApiResponse<NoteResponse> = {
       success: true,
-      data: formatNote(note),
+
+      data: formatNote({ ...note, linkedFrom }),
     }
 
     return NextResponse.json(response)
@@ -160,7 +180,24 @@ export async function PUT(req: NextRequest) {
     if (!existing) return notFoundResponse()
 
     const body = await req.json()
-    const data = updateNoteSchema.parse(body)
+    const { expectedUpdatedAt, ...data } = updateNoteSchema.parse(body)
+
+    if (
+      expectedUpdatedAt !== undefined &&
+      new Date(expectedUpdatedAt).getTime() !== existing.updatedAt.getTime()
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: 'CONFLICT',
+            message: 'This note changed elsewhere. Reload before saving.',
+            details: { updatedAt: existing.updatedAt.toISOString() },
+          },
+        },
+        { status: 409 }
+      )
+    }
 
     const updateData: Record<string, unknown> = { ...data }
 

@@ -27,9 +27,11 @@ const base: HomeData = {
   plan: {
     focusTaskIds: [],
     focusTasks: [],
+    plannedTasks: [],
     tasksDueToday: [],
     intentMd: 'Ship Home',
     carryForwardCount: 2,
+    capacity: { plannedMinutes: 15, availableMinutes: 180, unknownCount: 0, overBy: 0 },
   },
   review: {
     todayDone: false,
@@ -42,6 +44,7 @@ const base: HomeData = {
     reading: [],
   },
   goals: { active: [], staleCount: 0 },
+  week: { weekStart: '2026-10-12', adjusted: false, isWeekend: false },
   streak: 3,
   overdueCount: 1,
   focusMinutesToday: null,

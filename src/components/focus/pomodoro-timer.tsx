@@ -2,13 +2,16 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Coffee, Pause, Play, RotateCcw, SkipForward } from 'lucide-react'
+import { Coffee, Flag, Pause, Play, RotateCcw, SkipForward } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { FinishDialog } from '@/components/focus/finish-dialog'
 import { useFocusStore } from '@/stores/focus-store'
 import { useEndFocusSession, useStartFocusSession } from '@/hooks/use-focus-sessions'
+import { usePersonalSettings } from '@/hooks/use-personal-settings'
 import { useToast } from '@/hooks/use-toast'
-import { WORK_SEC, formatClock, remainingSeconds } from '@/lib/focus/timer'
+import { WORK_SEC, elapsedSeconds, formatClock, remainingSeconds } from '@/lib/focus/timer'
 import { cn } from '@/lib/utils'
+import type { FinishSessionInput } from '@/lib/types/focus'
 
 interface PomodoroTimerProps {
   className?: string
@@ -36,19 +39,34 @@ function useBeep() {
   }, [])
 }
 
+const OUTCOME_TOAST = {
+  completed: 'Completed. Task checked off.',
+  progress: 'Progress logged. The task stays open.',
+  blocked: 'Blocked, noted. Nothing lost.',
+} as const
+
 /**
- * Pomodoro timer backed by the persisted focus store. Work sessions are
- * recorded on the server so the day's deep-work minutes show up on Home
- * and in the evening review.
+ * Pomodoro timer backed by the persisted focus store. A work block begins
+ * with an optional intention and ends with a result; only then does the
+ * break start. Work sessions are recorded on the server so the day's
+ * deep-work minutes and outcomes show on Home and in the evening review.
  */
 export function PomodoroTimer({ className, taskId = null, taskTitle = null }: PomodoroTimerProps) {
   const store = useFocusStore()
   const startSession = useStartFocusSession()
   const endSession = useEndFocusSession()
   const toast = useToast()
-  const beep = useBeep()
+  const chime = useBeep()
+  const { data: personal } = usePersonalSettings()
+  const soundOn = personal?.sound !== false
+  const beep = useCallback(() => {
+    if (soundOn) chime()
+  }, [soundOn, chime])
   const [now, setNow] = useState(() => Date.now())
-  const finishing = useRef(false)
+  const [intentionDraft, setIntentionDraft] = useState('')
+  const [finishOpen, setFinishOpen] = useState(false)
+  const [finishError, setFinishError] = useState<string | null>(null)
+  const rangFor = useRef<number | null>(null)
 
   useEffect(() => {
     if (store.phase !== 'running') return
@@ -57,71 +75,101 @@ export function PomodoroTimer({ className, taskId = null, taskTitle = null }: Po
   }, [store.phase])
 
   const remaining = remainingSeconds(store, now)
+  const elapsed = elapsedSeconds(store, now)
   const progress = store.plannedSec > 0 ? 1 - remaining / store.plannedSec : 0
+  const workDue = store.kind === 'work' && store.phase !== 'idle' && remaining <= 0
 
   const beginWork = useCallback(async () => {
     const started = Date.now()
-    store.start({ kind: 'work', plannedSec: WORK_SEC, taskId, taskTitle }, started)
+    const intention = intentionDraft.trim()
+    store.start({ kind: 'work', plannedSec: WORK_SEC, taskId, taskTitle, intention }, started)
+    setIntentionDraft('')
     try {
-      const session = await startSession.mutateAsync({ taskId, kind: 'work' })
+      const session = await startSession.mutateAsync({ taskId, kind: 'work', intention })
       useFocusStore.getState().setSessionId(session.id)
     } catch {
       toast.show('Timer running, but the session could not be saved', 'error')
     }
-  }, [store, startSession, taskId, taskTitle, toast])
+  }, [store, startSession, taskId, taskTitle, toast, intentionDraft])
 
   const beginBreak = useCallback(() => {
     const sec = useFocusStore.getState().nextBreakSec()
     store.start({ kind: 'break', plannedSec: sec, taskId, taskTitle }, Date.now())
   }, [store, taskId, taskTitle])
 
-  const finishCurrent = useCallback(
-    async (completed: boolean) => {
-      const s = useFocusStore.getState()
-      if (s.kind === 'work' && s.sessionId) {
-        try {
-          const ended = await endSession.mutateAsync({ id: s.sessionId, completed })
-          if (ended.durationSec >= 60) {
-            toast.show(`${Math.round(ended.durationSec / 60)} min of deep work logged`)
-          }
-        } catch {
-          /* best effort */
-        }
+  /** End the current segment without a result (reset or skip). */
+  const abandonCurrent = useCallback(async () => {
+    const s = useFocusStore.getState()
+    if (s.kind === 'work' && s.sessionId) {
+      try {
+        await endSession.mutateAsync({ id: s.sessionId, completed: false })
+      } catch {
+        /* best effort */
       }
-      if (s.kind === 'work' && completed) s.completePomodoro()
-    },
-    [endSession, toast]
-  )
+    }
+  }, [endSession])
 
-  // Auto-advance when the segment ends.
+  // A work block that reaches zero pauses and asks for the result. A break
+  // that reaches zero simply ends.
   useEffect(() => {
-    if (store.phase !== 'running' || remaining > 0 || finishing.current) return
-    finishing.current = true
+    if (store.phase !== 'running' || remaining > 0) return
+    if (rangFor.current === store.startedAt) return
+    rangFor.current = store.startedAt
     beep()
-    const wasWork = store.kind === 'work'
-    void finishCurrent(true).then(() => {
-      if (wasWork) beginBreak()
-      else useFocusStore.getState().stop()
-      finishing.current = false
-    })
-  }, [remaining, store.phase, store.kind, beep, finishCurrent, beginBreak])
+    if (store.kind === 'work') {
+      store.pause()
+      setFinishOpen(true)
+    } else {
+      useFocusStore.getState().stop()
+    }
+  }, [remaining, store, beep])
+
+  // Coming back to a finished-but-unresolved block reopens the question.
+  useEffect(() => {
+    if (workDue && store.phase === 'paused' && !finishOpen) setFinishOpen(true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workDue])
+
+  const finishWith = async (input: FinishSessionInput) => {
+    const s = useFocusStore.getState()
+    setFinishError(null)
+    if (s.sessionId) {
+      try {
+        const ended = await endSession.mutateAsync({ id: s.sessionId, ...input })
+        toast.show(OUTCOME_TOAST[input.outcome], input.outcome === 'completed' ? 'success' : 'info')
+        if (ended.nextActionTaskId) toast.show('Next action added to your tasks')
+      } catch {
+        setFinishError('Could not save the result.')
+        return
+      }
+    }
+    s.completePomodoro()
+    setFinishOpen(false)
+    beginBreak()
+  }
 
   const reset = async () => {
-    await finishCurrent(false)
+    await abandonCurrent()
+    setFinishOpen(false)
     store.stop()
   }
 
   const skip = async () => {
     const wasWork = store.kind === 'work'
-    await finishCurrent(false)
-    if (wasWork) beginBreak()
-    else store.stop()
+    if (wasWork) {
+      // Skipping a work block still asks what happened.
+      store.pause()
+      setFinishOpen(true)
+      return
+    }
+    store.stop()
   }
 
   // Keyboard: space toggles, r resets
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
+      if (finishOpen) return
       if (e.code === 'Space') {
         e.preventDefault()
         const s = useFocusStore.getState()
@@ -136,7 +184,7 @@ export function PomodoroTimer({ className, taskId = null, taskTitle = null }: Po
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [beginWork])
+  }, [beginWork, finishOpen])
 
   const size = 220
   const stroke = 8
@@ -146,11 +194,13 @@ export function PomodoroTimer({ className, taskId = null, taskTitle = null }: Po
   const label =
     store.phase === 'idle'
       ? 'Ready'
-      : store.phase === 'paused'
-        ? 'Paused'
-        : store.kind === 'break'
-          ? 'Break'
-          : 'Focus'
+      : workDue
+        ? 'Time. What happened?'
+        : store.phase === 'paused'
+          ? 'Paused'
+          : store.kind === 'break'
+            ? 'Break'
+            : 'Focus'
   const ring =
     store.kind === 'break'
       ? 'stroke-retro-mint'
@@ -187,7 +237,7 @@ export function PomodoroTimer({ className, taskId = null, taskTitle = null }: Po
           <span className="font-mono text-5xl font-bold tabular-nums text-retro-dark">
             {formatClock(remaining)}
           </span>
-          <span className="mt-1 font-mono text-[11px] uppercase tracking-[0.18em] text-retro-dark/50">
+          <span className="mt-1 px-6 text-center font-mono text-[11px] uppercase tracking-[0.18em] text-retro-dark/50">
             {label}
           </span>
           {store.pomodoroCount > 0 && (
@@ -200,49 +250,104 @@ export function PomodoroTimer({ className, taskId = null, taskTitle = null }: Po
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
-        {store.phase === 'idle' ? (
+      {store.phase === 'idle' ? (
+        <div className="flex w-full max-w-sm flex-col items-center gap-3">
+          <input
+            data-testid="focus-intention"
+            aria-label="Intention for this block"
+            value={intentionDraft}
+            onChange={(e) => setIntentionDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                void beginWork()
+              }
+            }}
+            maxLength={300}
+            placeholder="In this block I will…"
+            className="w-full border-0 border-b-2 border-retro-dark/15 bg-transparent px-1 py-1.5 text-center text-sm text-retro-dark placeholder:text-retro-dark/35 focus:border-retro-blue focus:outline-none"
+          />
           <Button onClick={() => void beginWork()} size="lg" data-testid="focus-start">
             <Play className="mr-2 h-4 w-4" />
             Start 25 min
           </Button>
-        ) : (
-          <>
-            <Button
-              onClick={() => (store.phase === 'running' ? store.pause() : store.resume())}
-              variant="outline"
-              size="lg"
-              data-testid="focus-pause"
+        </div>
+      ) : (
+        <div className="flex flex-col items-center gap-3">
+          {store.intention && store.kind === 'work' && (
+            <p
+              className="max-w-sm text-center text-sm text-retro-dark/70"
+              data-testid="focus-intention-shown"
             >
-              {store.phase === 'paused' ? (
-                <>
-                  <Play className="mr-2 h-4 w-4" /> Resume
-                </>
-              ) : (
-                <>
-                  <Pause className="mr-2 h-4 w-4" /> Pause
-                </>
-              )}
-            </Button>
-            <Button
-              onClick={() => void skip()}
-              variant="ghost"
-              size="lg"
-              title="Skip to the next segment"
-            >
-              {store.kind === 'work' ? (
-                <Coffee className="h-4 w-4" />
-              ) : (
+              {store.intention}
+            </p>
+          )}
+          <div className="flex items-center gap-2">
+            {!workDue && (
+              <Button
+                onClick={() => (store.phase === 'running' ? store.pause() : store.resume())}
+                variant="outline"
+                size="lg"
+                data-testid="focus-pause"
+              >
+                {store.phase === 'paused' ? (
+                  <>
+                    <Play className="mr-2 h-4 w-4" /> Resume
+                  </>
+                ) : (
+                  <>
+                    <Pause className="mr-2 h-4 w-4" /> Pause
+                  </>
+                )}
+              </Button>
+            )}
+            {store.kind === 'work' ? (
+              <Button
+                onClick={() => {
+                  store.pause()
+                  setFinishOpen(true)
+                }}
+                variant={workDue ? 'default' : 'ghost'}
+                size="lg"
+                data-testid="focus-finish-button"
+                title="Finish and record the result"
+              >
+                <Flag className="mr-2 h-4 w-4" />
+                Finish
+              </Button>
+            ) : (
+              <Button onClick={() => void skip()} variant="ghost" size="lg" title="End the break">
                 <SkipForward className="h-4 w-4" />
-              )}
-            </Button>
+              </Button>
+            )}
+            {store.kind === 'work' && !workDue && (
+              <Button
+                onClick={() => void skip()}
+                variant="ghost"
+                size="lg"
+                title="Take a break now"
+              >
+                <Coffee className="h-4 w-4" />
+              </Button>
+            )}
             <Button onClick={() => void reset()} variant="ghost" size="lg" title="Reset (r)">
               <RotateCcw className="h-4 w-4" />
             </Button>
-          </>
-        )}
-      </div>
+          </div>
+        </div>
+      )}
       <p className="font-mono text-[11px] text-retro-dark/40">space start/pause · r reset</p>
+
+      <FinishDialog
+        open={finishOpen}
+        taskTitle={store.taskTitle ?? taskTitle}
+        intention={store.intention}
+        elapsedSec={elapsed}
+        isSaving={endSession.isPending}
+        error={finishError}
+        onFinish={(input) => void finishWith(input)}
+        onClose={() => setFinishOpen(false)}
+      />
     </div>
   )
 }

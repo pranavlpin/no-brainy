@@ -18,6 +18,8 @@ export const config = {
   matcher: [
     '/',
     '/notes/:path*',
+    '/inbox/:path*',
+    '/projects/:path*',
     '/stash/:path*',
     '/tasks/:path*',
     '/books/:path*',

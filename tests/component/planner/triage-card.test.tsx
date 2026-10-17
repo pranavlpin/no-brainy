@@ -9,6 +9,7 @@ const task = (id: string, title: string): TaskResponse => ({
   userId: 'u1',
   parentTaskId: null,
   goalId: null,
+  projectId: null,
   title,
   descriptionMd: '',
   priority: 'medium',
@@ -20,6 +21,10 @@ const task = (id: string, title: string): TaskResponse => ({
   rrule: null,
   quadrant: null,
   orderIndex: 0,
+  plannedDate: null,
+  estimatedMinutes: null,
+  effort: null,
+  context: null,
   createdAt: '2026-10-16T00:00:00.000Z',
   updatedAt: '2026-10-16T00:00:00.000Z',
 })

@@ -159,48 +159,53 @@ export default function NotificationsPage() {
         ) : (
           <div className="divide-y">
             {notifications.map((notification) => (
-              <button
+              <div
                 key={notification.id}
-                onClick={() => handleClick(notification)}
-                className={`flex w-full items-start gap-4 px-4 py-4 text-left transition-colors hover:bg-retro-blue/5 ${
+                data-testid={`notification-row-${notification.id}`}
+                className={`flex items-start gap-2 px-4 py-4 transition-colors hover:bg-retro-blue/5 ${
                   !notification.isRead ? 'bg-retro-blue/5' : ''
                 }`}
               >
-                <div className="mt-0.5 shrink-0">{getNotificationIcon(notification.type)}</div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <p
-                      className={`text-sm ${
-                        !notification.isRead
-                          ? 'font-semibold text-retro-dark'
-                          : 'font-medium text-retro-dark/70'
-                      }`}
-                    >
-                      {notification.title}
+                <button
+                  type="button"
+                  data-testid={`notification-open-${notification.id}`}
+                  onClick={() => handleClick(notification)}
+                  className="flex min-w-0 flex-1 items-start gap-4 text-left"
+                >
+                  <div className="mt-0.5 shrink-0">{getNotificationIcon(notification.type)}</div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <p
+                        className={`text-sm ${
+                          !notification.isRead
+                            ? 'font-semibold text-retro-dark'
+                            : 'font-medium text-retro-dark/70'
+                        }`}
+                      >
+                        {notification.title}
+                      </p>
+                      {!notification.isRead && (
+                        <span className="h-2 w-2 shrink-0 rounded-full bg-retro-blue" />
+                      )}
+                    </div>
+                    <p className="mt-0.5 text-sm text-retro-dark/60">{notification.body}</p>
+                    <p className="mt-1 text-xs text-retro-dark/40">
+                      {getTimeAgo(notification.createdAt)}
                     </p>
-                    {!notification.isRead && (
-                      <span className="h-2 w-2 shrink-0 rounded-full bg-retro-blue" />
-                    )}
                   </div>
-                  <p className="mt-0.5 text-sm text-retro-dark/60">{notification.body}</p>
-                  <p className="mt-1 text-xs text-retro-dark/40">
-                    {getTimeAgo(notification.createdAt)}
-                  </p>
-                </div>
+                </button>
                 {!notification.isRead && (
                   <Button
+                    data-testid={`notification-mark-read-${notification.id}`}
                     variant="ghost"
                     size="sm"
                     className="shrink-0 text-xs text-retro-dark/40 hover:text-retro-dark/60"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      markRead.mutate(notification.id)
-                    }}
+                    onClick={() => markRead.mutate(notification.id)}
                   >
                     Mark read
                   </Button>
                 )}
-              </button>
+              </div>
             ))}
           </div>
         )}

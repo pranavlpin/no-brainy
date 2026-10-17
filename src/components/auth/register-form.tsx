@@ -87,13 +87,13 @@ export function RegisterForm() {
   return (
     <div className="w-full max-w-sm space-y-6">
       <div className="space-y-2 text-center">
-        <h1 className="font-display text-2xl font-bold tracking-tight text-retro-dark">Create an account</h1>
-        <p className="text-sm text-muted-foreground">
-          Enter your details to get started
-        </p>
+        <h1 className="font-display text-2xl font-bold tracking-tight text-retro-dark">
+          Create an account
+        </h1>
+        <p className="text-sm text-muted-foreground">Enter your details to get started</p>
       </div>
 
-      <form onSubmit={onSubmit} className="space-y-4">
+      <form method="post" onSubmit={onSubmit} className="space-y-4">
         {serverError && (
           <div className="border-2 border-red-300 bg-red-50 p-3 text-sm text-red-600">
             {serverError}
@@ -101,7 +101,10 @@ export function RegisterForm() {
         )}
 
         <div className="space-y-2">
-          <label htmlFor="name" className="font-mono text-xs uppercase tracking-wider text-retro-dark/70">
+          <label
+            htmlFor="name"
+            className="font-mono text-xs uppercase tracking-wider text-retro-dark/70"
+          >
             Name
           </label>
           <div className="relative">
@@ -115,13 +118,14 @@ export function RegisterForm() {
               disabled={isLoading}
             />
           </div>
-          {errors.name && (
-            <p className="text-xs text-red-500">{errors.name}</p>
-          )}
+          {errors.name && <p className="text-xs text-red-500">{errors.name}</p>}
         </div>
 
         <div className="space-y-2">
-          <label htmlFor="email" className="font-mono text-xs uppercase tracking-wider text-retro-dark/70">
+          <label
+            htmlFor="email"
+            className="font-mono text-xs uppercase tracking-wider text-retro-dark/70"
+          >
             Email
           </label>
           <div className="relative">
@@ -135,13 +139,14 @@ export function RegisterForm() {
               disabled={isLoading}
             />
           </div>
-          {errors.email && (
-            <p className="text-xs text-red-500">{errors.email}</p>
-          )}
+          {errors.email && <p className="text-xs text-red-500">{errors.email}</p>}
         </div>
 
         <div className="space-y-2">
-          <label htmlFor="password" className="font-mono text-xs uppercase tracking-wider text-retro-dark/70">
+          <label
+            htmlFor="password"
+            className="font-mono text-xs uppercase tracking-wider text-retro-dark/70"
+          >
             Password
           </label>
           <div className="relative">
@@ -155,9 +160,7 @@ export function RegisterForm() {
               disabled={isLoading}
             />
           </div>
-          {errors.password && (
-            <p className="text-xs text-red-500">{errors.password}</p>
-          )}
+          {errors.password && <p className="text-xs text-red-500">{errors.password}</p>}
         </div>
 
         <button

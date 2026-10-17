@@ -7,6 +7,8 @@ import {
   CheckSquare,
   FileText,
   Film,
+  FolderKanban,
+  Inbox,
   Layers,
   Lightbulb,
   PiggyBank,
@@ -48,7 +50,14 @@ export const NAV_GROUPS: NavGroupDef[] = [
 /** Single source of truth for navigable sections. */
 export const NAV_ITEMS: NavItemDef[] = [
   { href: '/', label: 'Today', icon: Sun, group: 'today', keywords: ['home', 'dashboard'] },
-  { href: '/stash', label: 'Stash', icon: Archive, group: 'capture', keywords: ['inbox', 'links'] },
+  {
+    href: '/inbox',
+    label: 'Inbox',
+    icon: Inbox,
+    group: 'capture',
+    keywords: ['captures', 'process', 'someday', 'triage'],
+  },
+  { href: '/stash', label: 'Stash', icon: Archive, group: 'capture', keywords: ['files', 'links'] },
   {
     href: '/notes',
     label: 'Notes',
@@ -64,6 +73,13 @@ export const NAV_ITEMS: NavItemDef[] = [
     icon: Calendar,
     group: 'do',
     keywords: ['plan', 'focus', 'day'],
+  },
+  {
+    href: '/projects',
+    label: 'Projects',
+    icon: FolderKanban,
+    group: 'do',
+    keywords: ['outcomes', 'next action'],
   },
   { href: '/goals', label: 'Goals', icon: Target, group: 'do' },
   {
@@ -137,6 +153,8 @@ export const GOTO_CHORDS: Record<string, string> = {
   t: '/tasks',
   p: '/planner',
   n: '/notes',
+  i: '/inbox',
+  j: '/projects',
   r: '/reviews',
   g: '/goals',
   s: '/stash',

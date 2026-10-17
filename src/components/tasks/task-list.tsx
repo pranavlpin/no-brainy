@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ListChecks } from 'lucide-react'
+import { CalendarCheck, ListChecks, Timer } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { PriorityBadge } from './priority-badge'
 import { TaskCheck } from './task-check'
@@ -12,6 +12,8 @@ import { useUpdateTask } from '@/hooks/use-tasks'
 import { usePrefersReducedMotion } from '@/components/motion/use-prefers-reduced-motion'
 import { useCoarsePointer } from '@/components/motion/use-coarse-pointer'
 import { Check } from 'lucide-react'
+import { formatEstimate } from '@/components/tasks/task-planning-fields'
+import { browserTimezone, relativeDayLabel, todayKey } from '@/lib/dates'
 import type { TaskResponse, TaskStatus } from '@/lib/types/tasks'
 
 interface TaskListItem extends TaskResponse {
@@ -55,6 +57,10 @@ export function TaskList({
   const reducedMotion = usePrefersReducedMotion()
   const coarsePointer = useCoarsePointer()
   const SWIPE_THRESHOLD = 96
+  const [today, setToday] = useState(() => todayKey(browserTimezone()))
+  useEffect(() => {
+    setToday(todayKey(browserTimezone()))
+  }, [])
 
   // Local status overrides give an instant flip even before the cache updates;
   // they are dropped as soon as the incoming prop agrees.
@@ -218,8 +224,26 @@ export function TaskList({
                 >
                   {task.title}
                 </span>
-                {task.tags.length > 0 && (
-                  <div className="mt-1 flex flex-wrap gap-1">
+                {(task.tags.length > 0 || task.plannedDate || task.estimatedMinutes) && (
+                  <div className="mt-1 flex flex-wrap items-center gap-1">
+                    {task.plannedDate && !completed && (
+                      <span
+                        className="inline-flex items-center gap-1 rounded-full bg-retro-blue/10 px-1.5 py-0 font-mono text-[11px] text-retro-blue"
+                        title="Planned day"
+                      >
+                        <CalendarCheck className="h-3 w-3" />
+                        {relativeDayLabel(task.plannedDate, today)}
+                      </span>
+                    )}
+                    {task.estimatedMinutes && !completed ? (
+                      <span
+                        className="inline-flex items-center gap-1 rounded-full bg-retro-dark/5 px-1.5 py-0 font-mono text-[11px] text-retro-dark/70"
+                        title="Estimate"
+                      >
+                        <Timer className="h-3 w-3" />
+                        {formatEstimate(task.estimatedMinutes)}
+                      </span>
+                    ) : null}
                     {task.tags.map((tag) => (
                       <Badge key={tag} variant="outline" className="px-1.5 py-0 text-xs">
                         {tag}

@@ -8,6 +8,7 @@ import { Breadcrumbs } from './breadcrumbs'
 import { UserMenu } from './user-menu'
 import { NotificationBell } from '@/components/notifications/notification-bell'
 import { FocusPill } from './focus-pill'
+import { ContextSwitch } from './context-switch'
 
 export function TopBar() {
   const { setMobileSidebarOpen } = useUIStore()
@@ -15,7 +16,12 @@ export function TopBar() {
   const setPalette = useCommandStore((s) => s.setPalette)
 
   return (
-    <header className="flex h-14 shrink-0 items-center justify-between border-b border-border/60 bg-background/70 px-4 backdrop-blur-xl lg:px-6">
+    // backdrop-blur makes the bar its own stacking context, so it needs an explicit
+    // layer above page content or its dropdowns paint underneath later sections.
+    <header
+      data-testid="top-bar"
+      className="relative z-30 flex h-14 shrink-0 items-center justify-between border-b border-border/60 bg-background/70 px-4 backdrop-blur-xl lg:px-6"
+    >
       <div className="flex items-center gap-3">
         <button
           onClick={() => setMobileSidebarOpen(true)}
@@ -27,6 +33,7 @@ export function TopBar() {
       </div>
       <div className="flex items-center gap-2">
         <FocusPill />
+        <ContextSwitch className="hidden md:flex" />
         <button
           type="button"
           onClick={() => setPalette(true)}

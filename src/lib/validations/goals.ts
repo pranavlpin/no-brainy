@@ -10,6 +10,12 @@ export const createGoalSchema = z.object({
   expenseTag: z.string().nullable().optional(),
   targetAmount: z.number().positive().nullable().optional(),
   status: z.enum(['active', 'completed', 'paused', 'abandoned']).default('active'),
+  /** What success looks like, in the user's words. */
+  successCriteria: z.string().max(5000).default(''),
+  baseline: z.number().finite().nullable().optional(),
+  target: z.number().finite().nullable().optional(),
+  unit: z.string().trim().max(40).nullable().optional(),
+  weeklyPracticeTarget: z.number().int().min(1).max(14).nullable().optional(),
 })
 
 export const updateGoalSchema = createGoalSchema.partial()

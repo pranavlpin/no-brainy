@@ -39,10 +39,10 @@ export async function getAuthUser(): Promise<AuthUser | null> {
  * Wrapper for protected API routes.
  * Returns 401 if the user is not authenticated.
  */
-export function withAuth(
-  handler: (req: NextRequest, user: AuthUser) => Promise<NextResponse>
+export function withAuth<Ctx = unknown>(
+  handler: (req: NextRequest, user: AuthUser, ctx?: Ctx) => Promise<NextResponse>
 ) {
-  return async (req: NextRequest) => {
+  return async (req: NextRequest, ctx?: Ctx) => {
     const user = await getAuthUser()
     if (!user) {
       return NextResponse.json(
@@ -56,6 +56,6 @@ export function withAuth(
         { status: 401 }
       )
     }
-    return handler(req, user)
+    return handler(req, user, ctx)
   }
 }

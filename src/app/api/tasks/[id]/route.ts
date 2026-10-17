@@ -2,94 +2,27 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withAuth } from '@/lib/auth/middleware'
 import { updateTaskSchema } from '@/lib/validations/tasks'
+import { formatTask as formatTaskRow } from '@/lib/tasks/format'
+import { priorityRank } from '@/lib/tasks/priority'
+import { dateFromKey } from '@/lib/dates'
 import { ZodError } from 'zod'
 import type { AuthUser } from '@/lib/types/auth'
+import type { Task } from '@prisma/client'
 
-function formatTask(task: {
-  id: string
-  userId: string
-  parentTaskId: string | null
-  goalId: string | null
-  title: string
-  descriptionMd: string
-  priority: string
-  status: string
-  tags: string[]
-  dueDate: Date | null
-  completedAt: Date | null
-  isRecurring: boolean
-  rrule: string | null
-  quadrant: string | null
-  orderIndex: number
-  createdAt: Date
-  updatedAt: Date
-  subtasks?: Array<{
-    id: string
-    userId: string
-    parentTaskId: string | null
-    goalId: string | null
-    title: string
-    descriptionMd: string
-    priority: string
-    status: string
-    tags: string[]
-    dueDate: Date | null
-    completedAt: Date | null
-    isRecurring: boolean
-    rrule: string | null
-    quadrant: string | null
-    orderIndex: number
-    createdAt: Date
-    updatedAt: Date
-  }>
-  taskLinks?: Array<{ taskId: string; linkedType: string; linkedId: string }>
-}) {
+function formatTask(
+  task: Task & {
+    subtasks?: Task[]
+    taskLinks?: Array<{ taskId: string; linkedType: string; linkedId: string }>
+  }
+) {
   return {
-    id: task.id,
-    userId: task.userId,
-    parentTaskId: task.parentTaskId,
-    goalId: task.goalId,
-    title: task.title,
-    descriptionMd: task.descriptionMd,
-    priority: task.priority,
-    status: task.status,
-    tags: task.tags,
-    dueDate: task.dueDate?.toISOString() ?? null,
-    completedAt: task.completedAt?.toISOString() ?? null,
-    isRecurring: task.isRecurring,
-    rrule: task.rrule,
-    quadrant: task.quadrant,
-    orderIndex: task.orderIndex,
-    createdAt: task.createdAt.toISOString(),
-    updatedAt: task.updatedAt.toISOString(),
-    subtasks: task.subtasks?.map((s) => ({
-      id: s.id,
-      userId: s.userId,
-      parentTaskId: s.parentTaskId,
-      goalId: s.goalId,
-      title: s.title,
-      descriptionMd: s.descriptionMd,
-      priority: s.priority,
-      status: s.status,
-      tags: s.tags,
-      dueDate: s.dueDate?.toISOString() ?? null,
-      completedAt: s.completedAt?.toISOString() ?? null,
-      isRecurring: s.isRecurring,
-      rrule: s.rrule,
-      quadrant: s.quadrant,
-      orderIndex: s.orderIndex,
-      createdAt: s.createdAt.toISOString(),
-      updatedAt: s.updatedAt.toISOString(),
-    })),
+    ...formatTaskRow(task),
+    subtasks: task.subtasks?.map((s) => formatTaskRow(s)),
     taskLinks: task.taskLinks,
   }
 }
 
-async function handleGet(
-  req: NextRequest,
-  user: AuthUser,
-  id: string
-): Promise<NextResponse> {
+async function handleGet(req: NextRequest, user: AuthUser, id: string): Promise<NextResponse> {
   const task = await prisma.task.findFirst({
     where: { id, userId: user.id },
     include: {
@@ -111,11 +44,7 @@ async function handleGet(
   return NextResponse.json({ success: true, data: formatTask(task) })
 }
 
-async function handlePut(
-  req: NextRequest,
-  user: AuthUser,
-  id: string
-): Promise<NextResponse> {
+async function handlePut(req: NextRequest, user: AuthUser, id: string): Promise<NextResponse> {
   const existing = await prisma.task.findFirst({
     where: { id, userId: user.id },
   })
@@ -133,6 +62,24 @@ async function handlePut(
   const body = await req.json()
   const data = updateTaskSchema.parse(body)
 
+  // Optimistic concurrency: a stale client must not overwrite a newer row.
+  if (
+    data.expectedUpdatedAt !== undefined &&
+    new Date(data.expectedUpdatedAt).getTime() !== existing.updatedAt.getTime()
+  ) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: {
+          code: 'CONFLICT',
+          message: 'This task changed elsewhere. Reload before saving.',
+          details: { updatedAt: existing.updatedAt.toISOString() },
+        },
+      },
+      { status: 409 }
+    )
+  }
+
   // Handle completedAt based on status changes
   let completedAt: Date | null | undefined = undefined
   if (data.status !== undefined) {
@@ -148,12 +95,22 @@ async function handlePut(
     data: {
       ...(data.title !== undefined && { title: data.title }),
       ...(data.descriptionMd !== undefined && { descriptionMd: data.descriptionMd }),
-      ...(data.priority !== undefined && { priority: data.priority }),
+      ...(data.priority !== undefined && {
+        priority: data.priority,
+        priorityRank: priorityRank(data.priority),
+      }),
       ...(data.status !== undefined && { status: data.status }),
       ...(data.tags !== undefined && { tags: data.tags }),
       ...(data.dueDate !== undefined && { dueDate: data.dueDate ? new Date(data.dueDate) : null }),
+      ...(data.plannedDate !== undefined && {
+        plannedDate: data.plannedDate ? dateFromKey(data.plannedDate) : null,
+      }),
+      ...(data.estimatedMinutes !== undefined && { estimatedMinutes: data.estimatedMinutes }),
+      ...(data.effort !== undefined && { effort: data.effort }),
+      ...(data.context !== undefined && { context: data.context }),
       ...(data.parentTaskId !== undefined && { parentTaskId: data.parentTaskId ?? null }),
       ...(data.goalId !== undefined && { goalId: data.goalId ?? null }),
+      ...(data.projectId !== undefined && { projectId: data.projectId ?? null }),
       ...(data.quadrant !== undefined && { quadrant: data.quadrant ?? null }),
       ...(data.isRecurring !== undefined && { isRecurring: data.isRecurring }),
       ...(data.rrule !== undefined && { rrule: data.rrule ?? null }),
@@ -168,11 +125,7 @@ async function handlePut(
   return NextResponse.json({ success: true, data: formatTask(task) })
 }
 
-async function handleDelete(
-  req: NextRequest,
-  user: AuthUser,
-  id: string
-): Promise<NextResponse> {
+async function handleDelete(req: NextRequest, user: AuthUser, id: string): Promise<NextResponse> {
   const existing = await prisma.task.findFirst({
     where: { id, userId: user.id },
   })
@@ -210,7 +163,10 @@ export const GET = withAuth(async (req: NextRequest, user) => {
       )
     }
     return NextResponse.json(
-      { success: false, error: { code: 'INTERNAL_ERROR', message: 'An unexpected error occurred' } },
+      {
+        success: false,
+        error: { code: 'INTERNAL_ERROR', message: 'An unexpected error occurred' },
+      },
       { status: 500 }
     )
   }
@@ -234,7 +190,10 @@ export const PUT = withAuth(async (req: NextRequest, user) => {
       )
     }
     return NextResponse.json(
-      { success: false, error: { code: 'INTERNAL_ERROR', message: 'An unexpected error occurred' } },
+      {
+        success: false,
+        error: { code: 'INTERNAL_ERROR', message: 'An unexpected error occurred' },
+      },
       { status: 500 }
     )
   }
@@ -246,7 +205,10 @@ export const DELETE = withAuth(async (req: NextRequest, user) => {
     return handleDelete(req, user, id)
   } catch (error) {
     return NextResponse.json(
-      { success: false, error: { code: 'INTERNAL_ERROR', message: 'An unexpected error occurred' } },
+      {
+        success: false,
+        error: { code: 'INTERNAL_ERROR', message: 'An unexpected error occurred' },
+      },
       { status: 500 }
     )
   }

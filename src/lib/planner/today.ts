@@ -2,6 +2,7 @@ import type { DayPlan, Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { addDays, dateFromKey, dayBoundsUtc } from '@/lib/dates'
 import { formatTask } from '@/lib/tasks/format'
+import { personalSettings } from '@/lib/settings/personal'
 import type { AuthUser } from '@/lib/types/auth'
 import type { PlannerGoal, TimeBlock } from '@/lib/types/planner'
 import type { TaskResponse } from '@/lib/types/tasks'
@@ -16,15 +17,32 @@ export interface TodayPayload {
   timeBlocks: TimeBlock[]
   aiBriefMd: string | null
   intentMd: string | null
+  availableMinutes: number
+  bufferMinutes: number
+  workStart: string | null
+  workEnd: string | null
   createdAt: string
   focusTasks: TaskResponse[]
+  /** Tasks whose planned day is today, regardless of deadline. */
+  plannedTasks: TaskResponse[]
+  /** Tasks whose deadline is today. */
   tasksDueToday: TaskResponse[]
+  /** Open tasks planned for or due on earlier days, plus yesterday's unfinished focus. */
   carryForward: TaskResponse[]
   goals: PlannerGoal[]
 }
 
-/** Find today's plan or create it, seeding the intent from last night's review. */
-export async function getOrCreatePlan(user: Pick<AuthUser, 'id'>, key: string): Promise<DayPlan> {
+const DEFAULT_AVAILABLE_MINUTES = 180
+const DEFAULT_BUFFER_MINUTES = 15
+
+/**
+ * Find today's plan or create it, seeding the intent from last night's review
+ * and the capacity from the user's personal defaults.
+ */
+export async function getOrCreatePlan(
+  user: Pick<AuthUser, 'id'> & Partial<Pick<AuthUser, 'timezone' | 'preferences'>>,
+  key: string
+): Promise<DayPlan> {
   const planDate = dateFromKey(key)
   const existing = await prisma.dayPlan.findUnique({
     where: { userId_planDate: { userId: user.id, planDate } },
@@ -35,14 +53,25 @@ export async function getOrCreatePlan(user: Pick<AuthUser, 'id'>, key: string): 
     select: { tomorrowIntent: true },
   })
   const intentMd = yesterdayReview?.tomorrowIntent?.trim() || null
+  const defaults = personalSettings(user.timezone ?? 'UTC', user.preferences)
   return prisma.dayPlan.create({
-    data: { userId: user.id, planDate, focusTaskIds: [], timeBlocks: [], intentMd },
+    data: {
+      userId: user.id,
+      planDate,
+      focusTaskIds: [],
+      timeBlocks: [],
+      intentMd,
+      availableMinutes: defaults.availableMinutes,
+      bufferMinutes: defaults.bufferMinutes,
+      workStart: defaults.workStart,
+      workEnd: defaults.workEnd,
+    },
   })
 }
 
 /**
- * Assemble the full Today payload: the plan, focus tasks, tasks due today,
- * yesterday's leftovers for triage, and active goals for chips.
+ * Assemble the full Today payload: the plan, focus tasks, tasks planned for
+ * today, deadlines today, leftovers for triage, and active goals for chips.
  */
 export async function buildTodayPayload(
   user: Pick<AuthUser, 'id'>,
@@ -52,14 +81,26 @@ export async function buildTodayPayload(
   const { start: today, end: nextDay } = dayBoundsUtc(key)
   const yesterday = dateFromKey(addDays(key, -1))
 
-  const tasksDueToday = await prisma.task.findMany({
-    where: { userId: user.id, dueDate: { gte: today, lt: nextDay } },
-    orderBy: { orderIndex: 'asc' },
+  // One query for the day: planned for today or due today.
+  const dayTasks = await prisma.task.findMany({
+    where: {
+      userId: user.id,
+      OR: [{ plannedDate: { gte: today, lt: nextDay } }, { dueDate: { gte: today, lt: nextDay } }],
+    },
+    orderBy: [{ priorityRank: 'asc' }, { orderIndex: 'asc' }],
   })
+  const isToday = (d: Date | null | undefined) => !!d && d >= today && d < nextDay
+  const plannedTasks = dayTasks.filter((t) => isToday(t.plannedDate))
+  const tasksDueToday = dayTasks.filter((t) => isToday(t.dueDate))
 
+  // Leftovers: open tasks planned for an earlier day, or due yesterday.
   const leftoversDue = await prisma.task.findMany({
-    where: { userId: user.id, dueDate: { gte: yesterday, lt: today }, status: OPEN_STATUSES },
-    orderBy: { orderIndex: 'asc' },
+    where: {
+      userId: user.id,
+      status: OPEN_STATUSES,
+      OR: [{ plannedDate: { lt: today } }, { dueDate: { gte: yesterday, lt: today } }],
+    },
+    orderBy: [{ plannedDate: 'asc' }, { orderIndex: 'asc' }],
   })
 
   const yesterdayPlan = await prisma.dayPlan.findUnique({
@@ -99,8 +140,13 @@ export async function buildTodayPayload(
     timeBlocks: dayPlan.timeBlocks as unknown as TimeBlock[],
     aiBriefMd: dayPlan.aiBriefMd,
     intentMd: dayPlan.intentMd ?? null,
+    availableMinutes: dayPlan.availableMinutes ?? DEFAULT_AVAILABLE_MINUTES,
+    bufferMinutes: dayPlan.bufferMinutes ?? DEFAULT_BUFFER_MINUTES,
+    workStart: dayPlan.workStart ?? null,
+    workEnd: dayPlan.workEnd ?? null,
     createdAt: dayPlan.createdAt.toISOString(),
     focusTasks: focusTasks.map(formatTask),
+    plannedTasks: plannedTasks.map(formatTask),
     tasksDueToday: tasksDueToday.map(formatTask),
     carryForward: carryForward.map(formatTask),
     goals,

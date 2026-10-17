@@ -25,7 +25,7 @@ describe('BottomNav', () => {
     expect(screen.getByTestId('bottom-nav-/')).toBeInTheDocument()
     expect(screen.getByTestId('bottom-nav-/tasks')).toHaveAttribute('aria-current', 'page')
     expect(screen.getByTestId('bottom-nav-/')).not.toHaveAttribute('aria-current')
-    expect(screen.getByTestId('bottom-nav-/stash')).toBeInTheDocument()
+    expect(screen.getByTestId('bottom-nav-/inbox')).toBeInTheDocument()
     expect(screen.getByTestId('capture-fab')).toBeInTheDocument()
     expect(screen.getByTestId('bottom-nav-menu')).toBeInTheDocument()
   })

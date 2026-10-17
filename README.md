@@ -63,17 +63,37 @@ Full expense tracking with 23+ preset categories (Shopping, Food, EMI, Travel, e
 - **Indian Rupee formatting** — ₹1,23,456 number system
 - **Filters & sorting** — by date range, category, tags, amount, name
 
+### Inbox
+
+One place for raw thoughts and links. Capture with Shift+Enter or the `inbox:` prefix, then process each capture into a task, note, bookmark, or someday item. Processing is transactional and idempotent; undo removes what it created. Views: To process, Someday, Processed, Archived.
+
+### Tasks
+
+Tasks carry a **planned day** (when you will do it) separately from the **deadline**, plus an estimate, effort (light / steady / deep), context (work / personal), and an optional project. The list defaults to active tasks and pages by 20; the task detail and note editor save through a draft queue with an honest save state (Saved, Unsaved, Saving, Could not save with Retry, Changed elsewhere with Keep mine / Use current).
+
 ### Daily Planner
 
-Morning triage of yesterday's leftovers (keep / move / drop), top 3 focus tasks with goal chips, the day's intent carried in from last night's review, tasks due today, AI plan suggestions, and progress.
+Morning triage of carried-over tasks (plan today / pick a day / drop) that moves the planned day and leaves deadlines alone; top 3 focus tasks with goal and project chips; the day's intent carried in from last night's review; a capacity card (available minutes, buffer, working window) that counts each task once, keeps unknown estimates visible, and offers "Make a smaller day"; time blocks with overlap warnings; Planned for today and Deadlines today sections; AI plan suggestions.
+
+### Focus
+
+Pomodoro timer with an optional intention per block. At zero the timer asks what happened: Completed (checks the task off), Made progress, or Blocked, with a note and a next action that becomes an undated task on the same goal. Sessions and outcomes appear in the evening review and count as practice toward goals.
+
+### Projects
+
+An outcome with one explicit next action, its tasks, and supporting notes, optionally serving a goal. Add-action is idempotent; a finished next action clears itself. Tasks can join a project from the task form, the detail page, or the Inbox.
 
 ### Reviews
 
-Guided close-the-day flow: auto-gathered stats (including deep-work minutes), three reflection prompts, mood, and one intent for tomorrow that seeds the next day's plan. Weekly summary with streak.
+Guided close-the-day flow: auto-gathered stats (including deep-work sessions with their outcomes), three reflection prompts, mood, and one intent for tomorrow that seeds the next day's plan. A **weekly adjustment** keyed by Monday: Stop / Keep / Try, up to three next-week outcomes, and next week's first action planned onto Monday. Weekly summary with streak.
 
-### Goals
+### Goals and growth
 
-Goal creation with categories (fitness, learning, work, personal), target dates, and status tracking. Goals link to tasks — progress tracked as completed tasks / total tasks. Auto-completion when all linked tasks are done.
+Goals describe what success looks like, can be measured (baseline, target, unit) with the outcome kept separate from task completion, and set a weekly practice target. Dated **evidence** (reflection, practice, rest, skip) with optional sources (notes, books, projects, focus sessions), idempotent and versioned. A book's application note can become a sourced experiment task. Home shows outcome and practice per goal.
+
+### Backup, personal setup, quiet hours
+
+Versioned JSON export of the core workspace (no credentials, no owner ids) and a preview-then-confirm additive import with fresh ids and receipts. Personal defaults (capacity, buffer, working window, default context, chime) seed new day plans. Reminder quiet hours and a close-the-day reminder time are honoured by the nudge scheduler. A Work / Personal / Everything switch in the top bar narrows tasks, projects, and Today without hiding unclassified tasks.
 
 ### Bookmarks
 

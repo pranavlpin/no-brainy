@@ -84,7 +84,10 @@ export function NotificationPanel({ onClose }: NotificationPanelProps) {
   }
 
   return (
-    <div className="absolute right-0 top-full z-50 mt-1 w-80 rounded-lg border bg-white shadow-lg sm:w-96">
+    <div
+      data-testid="notification-panel"
+      className="absolute right-0 top-full z-50 mt-1 w-80 rounded-lg border bg-white shadow-lg sm:w-96"
+    >
       {/* Header */}
       <div className="flex items-center justify-between border-b px-4 py-3">
         <h3 className="font-semibold text-gray-900">Notifications</h3>

@@ -3,7 +3,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api-client'
 import type { ApiResponse } from '@/lib/types/api'
-import type { FocusDayResponse, FocusKind, FocusSessionResponse } from '@/lib/types/focus'
+import type {
+  FinishSessionInput,
+  FocusDayResponse,
+  FocusKind,
+  FocusSessionResponse,
+} from '@/lib/types/focus'
 
 export const FOCUS_KEY = ['focus-sessions'] as const
 
@@ -20,7 +25,7 @@ export function useFocusSessions(date?: string) {
 
 export function useStartFocusSession() {
   return useMutation({
-    mutationFn: (body: { taskId?: string | null; kind: FocusKind }) =>
+    mutationFn: (body: { taskId?: string | null; kind: FocusKind; intention?: string }) =>
       apiClient<ApiResponse<FocusSessionResponse>>('/api/focus-sessions', {
         method: 'POST',
         body: JSON.stringify(body),
@@ -31,14 +36,23 @@ export function useStartFocusSession() {
 export function useEndFocusSession() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, completed }: { id: string; completed: boolean }) =>
+    mutationFn: ({
+      id,
+      ...body
+    }: { id: string; completed?: boolean } & Partial<FinishSessionInput>) =>
       apiClient<ApiResponse<FocusSessionResponse>>(`/api/focus-sessions/${id}`, {
         method: 'PATCH',
-        body: JSON.stringify({ completed }),
+        body: JSON.stringify(body),
       }).then((r) => r.data),
-    onSettled: () => {
+    onSettled: (_data, _error, vars) => {
       queryClient.invalidateQueries({ queryKey: [...FOCUS_KEY] })
       queryClient.invalidateQueries({ queryKey: ['home'] })
+      if (vars.outcome) {
+        // A result may complete the task or create a next action.
+        queryClient.invalidateQueries({ queryKey: ['tasks'] })
+        queryClient.invalidateQueries({ queryKey: ['planner'] })
+        queryClient.invalidateQueries({ queryKey: ['goals'] })
+      }
     },
   })
 }

@@ -5,3 +5,9 @@
 - Scope: unit + component.
 - Unit: `parseCapture` handles "Call bank tomorrow #finance !high", "note: idea about onboarding", "Gym on friday @Fitness goal", "Pay rent 2026-11-01", "Draft spec in 3 days", weekday rollover across week boundaries, and leaves plain titles untouched; priorities `!1..!4` map urgent→low.
 - Component: `CommandPalette` opens with `mod+k`, filters nav items, runs an action on Enter; `QuickCaptureModal` shows `capture-chip-date` when a date is parsed and submits a task with `dueDate`; typing `c` inside an input does not open capture.
+
+## T16 — Inbox
+
+- Unit: `parseCapture` recognizes the `inbox:` prefix; process input schema requires a URL for bookmarks.
+- Integration: `POST /api/inbox` with a repeated `clientRequestId` returns the same capture; `POST /api/inbox/[id]/process` creates the destination and marks processed in one transaction and is idempotent; `PATCH` state changes are restricted to owned captures.
+- Component: `CaptureProcessor` pre-fills the title and submits the chosen kind; the quick-capture modal saves to Inbox on Shift+Enter and shows the Inbox chip.

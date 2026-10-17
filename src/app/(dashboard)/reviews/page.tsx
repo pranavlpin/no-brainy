@@ -2,14 +2,21 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Moon, Calendar, BarChart3 } from 'lucide-react'
+import { Moon, Calendar, BarChart3, CalendarCheck, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ReviewCard } from '@/components/reviews/review-card'
 import { WeeklySummary } from '@/components/reviews/weekly-summary'
-import { useDailyReviews, useDailyReview, useWeeklySummary } from '@/hooks/use-reviews'
+import { PageHeader } from '@/components/ui/workspace-states'
+import {
+  useDailyReviews,
+  useDailyReview,
+  useWeeklySummary,
+  useWeeklyReview,
+} from '@/hooks/use-reviews'
 import { cn } from '@/lib/utils'
 import { useUserToday } from '@/hooks/use-user-today'
+import { weekStartFor } from '@/lib/reviews/weeks'
 
 type Tab = 'daily' | 'weekly'
 
@@ -22,27 +29,25 @@ export default function ReviewsPage() {
   const { data: todayReview, isLoading: todayLoading } = useDailyReview(today)
   const { data: reviewsData, isLoading: reviewsLoading } = useDailyReviews()
   const { data: weeklyData, isLoading: weeklyLoading } = useWeeklySummary()
+  const thisWeek = weekStartFor(today)
+  const { data: weeklyReview } = useWeeklyReview(activeTab === 'weekly' ? thisWeek : undefined)
 
   const reviews = reviewsData ?? []
 
   return (
     <div className="mx-auto max-w-4xl space-y-6 p-4 md:p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-display text-2xl font-bold text-retro-dark">Reviews</h1>
-          <div className="mt-1 h-1 w-12 rounded-full bg-retro-blue" />
-          <p className="text-sm text-muted-foreground mt-1">
-            Reflect on your progress and track your journey
-          </p>
-        </div>
+      <PageHeader
+        eyebrow="Reflect"
+        title="Reviews"
+        description="Close each day, adjust each week. Numbers first, no judgement."
+      >
         {!todayLoading && !todayReview && (
           <Button onClick={() => router.push('/reviews/daily')} data-testid="reviews-close-day">
             <Moon className="mr-2 h-4 w-4" />
             Close the day
           </Button>
         )}
-      </div>
+      </PageHeader>
 
       {/* Tabs */}
       <div className="surface-glass flex gap-1 rounded-xl p-1">
@@ -131,7 +136,31 @@ export default function ReviewsPage() {
 
       {/* Weekly Tab */}
       {activeTab === 'weekly' && (
-        <div>
+        <div className="space-y-5">
+          <button
+            type="button"
+            onClick={() => router.push('/reviews/weekly')}
+            data-testid="reviews-adjust-week"
+            className={cn(
+              'surface-glass hover-lift flex w-full items-center gap-3 rounded-2xl px-5 py-4 text-left',
+              weeklyReview?.closedAt ? 'border-retro-mint/40' : 'border-retro-yellow/50'
+            )}
+          >
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-retro-yellow/30">
+              <CalendarCheck className="h-4 w-4 text-retro-dark" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block font-mono text-[11px] uppercase tracking-[0.14em] text-retro-dark/50">
+                Weekly adjustment
+              </span>
+              <span className="block text-sm font-medium text-retro-dark">
+                {weeklyReview?.closedAt
+                  ? 'This week is adjusted. Revisit or look back.'
+                  : 'Stop, keep, try. Then choose next week’s first action.'}
+              </span>
+            </span>
+            <ArrowRight className="h-4 w-4 shrink-0 text-retro-dark/40" />
+          </button>
           {weeklyLoading ? (
             <div className="space-y-3">
               <Skeleton className="h-8 w-48 mx-auto" />

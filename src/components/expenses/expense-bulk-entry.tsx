@@ -20,9 +20,9 @@ interface BulkRow {
   notes: string
 }
 
-function createEmptyRow(defaultDate: string, defaultCategoryId: string): BulkRow {
+function createEmptyRow(id: string, defaultDate: string, defaultCategoryId: string): BulkRow {
   return {
-    id: Math.random().toString(36).slice(2),
+    id,
     date: defaultDate,
     name: '',
     amount: '',
@@ -39,22 +39,26 @@ export function ExpenseBulkEntry(): React.ReactElement {
   const today = new Date().toISOString().split('T')[0]
   const defaultCategoryId = categories?.[0]?.id ?? ''
 
-  const [rows, setRows] = useState<BulkRow[]>([
-    createEmptyRow(today, defaultCategoryId),
+  // Row ids come from a per-instance counter so server and client render the
+  // same markup; a random id here caused a hydration attribute mismatch.
+  const rowSeq = useRef(0)
+  const nextRowId = (): string => `row-${++rowSeq.current}`
+  const [rows, setRows] = useState<BulkRow[]>(() => [
+    createEmptyRow(nextRowId(), today, defaultCategoryId),
   ])
   const [savedCount, setSavedCount] = useState<number | null>(null)
   const tableRef = useRef<HTMLDivElement>(null)
 
   const updateRow = useCallback((id: string, field: keyof BulkRow, value: string): void => {
     setRows((prev) => {
-      const updated = prev.map((r) => r.id === id ? { ...r, [field]: value } : r)
+      const updated = prev.map((r) => (r.id === id ? { ...r, [field]: value } : r))
 
       // Auto-add new row if editing the last row and it has content
       const lastRow = updated[updated.length - 1]
       if (lastRow.id === id && (field === 'name' || field === 'amount') && value) {
         const needsNewRow = lastRow.name || lastRow.amount
         if (needsNewRow) {
-          updated.push(createEmptyRow(lastRow.date, lastRow.categoryId))
+          updated.push(createEmptyRow(nextRowId(), lastRow.date, lastRow.categoryId))
         }
       }
 
@@ -67,13 +71,15 @@ export function ExpenseBulkEntry(): React.ReactElement {
     setRows((prev) => {
       const filtered = prev.filter((r) => r.id !== id)
       if (filtered.length === 0) {
-        return [createEmptyRow(today, defaultCategoryId)]
+        return [createEmptyRow(nextRowId(), today, defaultCategoryId)]
       }
       return filtered
     })
   }
 
-  const validRows = rows.filter((r) => r.name.trim() && r.amount && parseFloat(r.amount) !== 0 && r.categoryId)
+  const validRows = rows.filter(
+    (r) => r.name.trim() && r.amount && parseFloat(r.amount) !== 0 && r.categoryId
+  )
   const totalAmount = validRows.reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0)
 
   const handleSave = (): void => {
@@ -84,17 +90,25 @@ export function ExpenseBulkEntry(): React.ReactElement {
       name: r.name.trim(),
       amount: parseFloat(r.amount),
       categoryId: r.categoryId,
-      tags: r.tags ? r.tags.split(',').map((t) => t.trim()).filter(Boolean) : [],
+      tags: r.tags
+        ? r.tags
+            .split(',')
+            .map((t) => t.trim())
+            .filter(Boolean)
+        : [],
       notes: r.notes.trim() || undefined,
     }))
 
-    bulkCreate.mutate({ expenses }, {
-      onSuccess: (res) => {
-        setSavedCount(res.data.created)
-        // Reset to single empty row
-        setRows([createEmptyRow(today, defaultCategoryId)])
-      },
-    })
+    bulkCreate.mutate(
+      { expenses },
+      {
+        onSuccess: (res) => {
+          setSavedCount(res.data.created)
+          // Reset to single empty row
+          setRows([createEmptyRow(nextRowId(), today, defaultCategoryId)])
+        },
+      }
+    )
   }
 
   const handleKeyDown = (e: React.KeyboardEvent, rowId: string, field: keyof BulkRow): void => {
@@ -119,7 +133,11 @@ export function ExpenseBulkEntry(): React.ReactElement {
         <div className="text-sm text-muted-foreground">
           {validRows.length} valid row{validRows.length !== 1 ? 's' : ''}
           {validRows.length > 0 && (
-            <span> &middot; Total: <span className="font-semibold text-foreground">{formatINR(totalAmount)}</span></span>
+            <span>
+              {' '}
+              &middot; Total:{' '}
+              <span className="font-semibold text-foreground">{formatINR(totalAmount)}</span>
+            </span>
           )}
         </div>
         <div className="flex items-center gap-2">
@@ -134,7 +152,9 @@ export function ExpenseBulkEntry(): React.ReactElement {
             className="flex items-center gap-2 border-2 border-retro-dark bg-retro-blue px-3 py-1.5 font-mono text-xs font-bold text-white shadow-hard hover-shadow-grow disabled:opacity-50"
           >
             <Save className="h-3.5 w-3.5" />
-            {bulkCreate.isPending ? 'Saving...' : `Save ${validRows.length} Expense${validRows.length !== 1 ? 's' : ''}`}
+            {bulkCreate.isPending
+              ? 'Saving...'
+              : `Save ${validRows.length} Expense${validRows.length !== 1 ? 's' : ''}`}
           </button>
         </div>
       </div>
@@ -144,19 +164,34 @@ export function ExpenseBulkEntry(): React.ReactElement {
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-retro-blue/10 text-left">
-              <th className="px-2 py-2.5 font-mono text-xs uppercase tracking-wider text-retro-dark/60 w-8">#</th>
-              <th className="px-2 py-2.5 font-mono text-xs uppercase tracking-wider text-retro-dark/60 w-32">Date</th>
-              <th className="px-2 py-2.5 font-mono text-xs uppercase tracking-wider text-retro-dark/60 min-w-[180px]">Name</th>
-              <th className="px-2 py-2.5 font-mono text-xs uppercase tracking-wider text-retro-dark/60 w-28">Amount (₹)</th>
-              <th className="px-2 py-2.5 font-mono text-xs uppercase tracking-wider text-retro-dark/60 w-40">Category</th>
-              <th className="px-2 py-2.5 font-mono text-xs uppercase tracking-wider text-retro-dark/60 w-32">Tags</th>
-              <th className="px-2 py-2.5 font-mono text-xs uppercase tracking-wider text-retro-dark/60 w-36">Notes</th>
+              <th className="px-2 py-2.5 font-mono text-xs uppercase tracking-wider text-retro-dark/60 w-8">
+                #
+              </th>
+              <th className="px-2 py-2.5 font-mono text-xs uppercase tracking-wider text-retro-dark/60 w-32">
+                Date
+              </th>
+              <th className="px-2 py-2.5 font-mono text-xs uppercase tracking-wider text-retro-dark/60 min-w-[180px]">
+                Name
+              </th>
+              <th className="px-2 py-2.5 font-mono text-xs uppercase tracking-wider text-retro-dark/60 w-28">
+                Amount (₹)
+              </th>
+              <th className="px-2 py-2.5 font-mono text-xs uppercase tracking-wider text-retro-dark/60 w-40">
+                Category
+              </th>
+              <th className="px-2 py-2.5 font-mono text-xs uppercase tracking-wider text-retro-dark/60 w-32">
+                Tags
+              </th>
+              <th className="px-2 py-2.5 font-mono text-xs uppercase tracking-wider text-retro-dark/60 w-36">
+                Notes
+              </th>
               <th className="px-2 py-2.5 w-10"></th>
             </tr>
           </thead>
           <tbody>
             {rows.map((row, idx) => {
-              const isValid = row.name.trim() && row.amount && parseFloat(row.amount) !== 0 && row.categoryId
+              const isValid =
+                row.name.trim() && row.amount && parseFloat(row.amount) !== 0 && row.categoryId
               const isEmpty = !row.name && !row.amount
               return (
                 <tr
@@ -209,7 +244,9 @@ export function ExpenseBulkEntry(): React.ReactElement {
                     >
                       <option value="">--</option>
                       {categories?.map((cat) => (
-                        <option key={cat.id} value={cat.id}>{cat.name}</option>
+                        <option key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </option>
                       ))}
                     </Select>
                   </td>
@@ -255,7 +292,9 @@ export function ExpenseBulkEntry(): React.ReactElement {
 
       {/* Add row hint */}
       <p className="text-xs text-muted-foreground">
-        Start typing in the last row to add more. Press <kbd className="rounded bg-muted px-1 py-0.5 text-[10px] font-mono">Enter</kbd> to move down.
+        Start typing in the last row to add more. Press{' '}
+        <kbd className="rounded bg-muted px-1 py-0.5 text-[10px] font-mono">Enter</kbd> to move
+        down.
       </p>
     </div>
   )

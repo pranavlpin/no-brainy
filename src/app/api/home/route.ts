@@ -13,6 +13,10 @@ import {
 import { dayPhase } from '@/lib/home/phase'
 import { computeReviewStreak } from '@/lib/home/streak'
 import { buildTodayPayload, getOrCreatePlan } from '@/lib/planner/today'
+import { planCapacity } from '@/lib/planner/capacity'
+import { outcomePercent } from '@/lib/growth/progress'
+import { practiceCountsForGoals } from '@/lib/goals/serialize'
+import { weekStartFor } from '@/lib/reviews/weeks'
 import { localDayBounds } from '@/lib/dates'
 import type { HomeData, HomeGoal } from '@/lib/types/home'
 
@@ -33,6 +37,27 @@ export const GET = withAuth(async (_req: NextRequest, user) => {
 
     const dayPlan = await getOrCreatePlan(user, key)
     const plan = await buildTodayPayload(user, key, dayPlan)
+
+    // Capacity over everything that counts toward today, each task once.
+    const dayTaskMap = new Map(
+      [...plan.focusTasks, ...plan.plannedTasks, ...plan.tasksDueToday]
+        .filter((t) => t.status !== 'completed' && t.status !== 'cancelled')
+        .map((t) => [t.id, t])
+    )
+    const load = planCapacity({
+      tasks: [...dayTaskMap.values()],
+      blocks: plan.timeBlocks.filter((b) => !b.isCompleted),
+      availableMinutes: plan.availableMinutes,
+      bufferMinutes: plan.bufferMinutes,
+      workStart: plan.workStart,
+      workEnd: plan.workEnd,
+    })
+    const capacity = {
+      plannedMinutes: load.plannedMinutes,
+      availableMinutes: load.availableMinutes,
+      unknownCount: load.unknownTaskIds.length,
+      overBy: load.overBy,
+    }
 
     const localDay = localDayBounds(key, tz)
     const [todayReview, recentReviews, overdueCount, goals, dueByDeck, readingBooks, focusAgg] =
@@ -61,7 +86,16 @@ export const GET = withAuth(async (_req: NextRequest, user) => {
             category: true,
             status: true,
             updatedAt: true,
+            baseline: true,
+            target: true,
+            weeklyPracticeTarget: true,
             tasks: { select: { status: true, completedAt: true, updatedAt: true } },
+            evidence: {
+              where: { measurement: { not: null } },
+              orderBy: [{ observedAt: 'desc' }, { createdAt: 'desc' }],
+              take: 1,
+              select: { measurement: true },
+            },
           },
           orderBy: { updatedAt: 'desc' },
         }),
@@ -112,6 +146,19 @@ export const GET = withAuth(async (_req: NextRequest, user) => {
       key
     )
 
+    const weekStart = weekStartFor(key)
+    const weekly = await prisma.weeklyReview.findUnique({
+      where: { userId_weekStart: { userId: user.id, weekStart: dateFromKey(weekStart) } },
+      select: { closedAt: true },
+    })
+    const dow = dateFromKey(key).getUTCDay()
+
+    const practice = await practiceCountsForGoals(
+      user.id,
+      goals.map((g) => g.id),
+      tz,
+      now
+    )
     const active: HomeGoal[] = goals.map((g) => {
       let last = g.updatedAt.getTime()
       for (const t of g.tasks) {
@@ -126,6 +173,9 @@ export const GET = withAuth(async (_req: NextRequest, user) => {
         completedTaskCount: g.tasks.filter((t) => t.status === 'completed').length,
         lastActivityAt: new Date(last).toISOString(),
         daysSinceActivity: Math.max(0, Math.floor((now.getTime() - last) / DAY_MS)),
+        practiceCount: practice.get(g.id) ?? 0,
+        weeklyPracticeTarget: g.weeklyPracticeTarget ?? null,
+        outcomePercent: outcomePercent(g, g.evidence?.[0]?.measurement ?? null),
       }
     })
     const staleCount = active.filter((g) => g.daysSinceActivity >= STALE_DAYS).length
@@ -143,9 +193,11 @@ export const GET = withAuth(async (_req: NextRequest, user) => {
       plan: {
         focusTaskIds: plan.focusTaskIds,
         focusTasks: plan.focusTasks,
+        plannedTasks: plan.plannedTasks,
         tasksDueToday: plan.tasksDueToday,
         intentMd: plan.intentMd,
         carryForwardCount: plan.carryForward.length,
+        capacity,
       },
       review: {
         todayDone: reviewDone,
@@ -156,6 +208,7 @@ export const GET = withAuth(async (_req: NextRequest, user) => {
       },
       learn: { cardsDue, decksDue, reading: readingBooks },
       goals: { active, staleCount },
+      week: { weekStart, adjusted: !!weekly?.closedAt, isWeekend: dow === 0 || dow === 6 },
       streak,
       overdueCount,
       focusMinutesToday: Math.round((focusAgg._sum.durationSec ?? 0) / 60),

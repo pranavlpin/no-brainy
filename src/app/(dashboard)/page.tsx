@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button'
 import { StaggerBlock, StaggerGroup } from '@/components/motion'
 import { Hero } from '@/components/home/hero'
 import { FocusCard } from '@/components/home/focus-card'
+import { useUIStore } from '@/stores/ui-store'
+import { filterByContext } from '@/lib/tasks/context'
 import { LearnCard } from '@/components/home/learn-card'
 import { GoalsPulse } from '@/components/home/goals-pulse'
 import { CaptureInline } from '@/components/home/capture-inline'
@@ -31,6 +33,7 @@ function HomeSkeleton() {
 }
 
 export default function TodayPage() {
+  const context = useUIStore((s) => s.context)
   const { data, isLoading, isError } = useHome()
   const updatePlan = useUpdatePlan()
 
@@ -61,6 +64,7 @@ export default function TodayPage() {
           phase={data.phase}
           streak={data.streak}
           overdueCount={data.overdueCount}
+          week={data.week}
         />
       </StaggerBlock>
 
@@ -118,10 +122,12 @@ export default function TodayPage() {
       <div className="grid gap-4 lg:grid-cols-3">
         <StaggerBlock className="lg:col-span-2">
           <FocusCard
-            focusTasks={data.plan.focusTasks}
-            dueToday={data.plan.tasksDueToday}
+            focusTasks={filterByContext(data.plan.focusTasks, context)}
+            plannedToday={filterByContext(data.plan.plannedTasks, context)}
+            dueToday={filterByContext(data.plan.tasksDueToday, context)}
             goals={data.goals.active}
             carryForwardCount={data.plan.carryForwardCount}
+            capacity={data.plan.capacity}
           />
         </StaggerBlock>
         <StaggerBlock>

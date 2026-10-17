@@ -44,7 +44,127 @@ model User {
   stashChannels     StashChannel[]
   stashMessages     StashMessage[]
   focusSessions     FocusSession[]
+  captures          Capture[]
+  projects          Project[]
+  growthEvidence    GrowthEvidence[]
+  weeklyReviews     WeeklyReview[]
+  importReceipts    CoreImportReceipt[]
   @@map("users")
+}
+
+/// A raw thought or link waiting to be processed into a task, note, bookmark, or someday item.
+model Capture {
+  id              String    @id @default(cuid())
+  userId          String
+  /// Client-generated id so a retried request never creates a duplicate.
+  clientRequestId String
+  content         String    @db.Text
+  sourceUrl       String?
+  /// inbox | processed | someday | archived
+  state           String    @default("inbox")
+  /// task | note | bookmark
+  destinationType String?
+  destinationId   String?
+  processedAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([userId, clientRequestId])
+  @@index([userId, state, createdAt])
+  @@map("captures")
+}
+
+/// An outcome with one explicit next action; the layer between goals and tasks.
+model Project {
+  id           String   @id @default(cuid())
+  userId       String
+  title        String
+  outcome      String   @default("") @db.Text
+  /// work | personal
+  context      String   @default("personal")
+  /// active | paused | completed | archived
+  status       String   @default("active")
+  goalId       String?
+  nextActionId String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user       User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  goal       Goal? @relation(fields: [goalId], references: [id], onDelete: SetNull)
+  tasks      Task[] @relation("ProjectTasks")
+  nextAction Task? @relation("ProjectNextAction", fields: [nextActionId], references: [id], onDelete: SetNull)
+  notes      ProjectNote[]
+  @@index([userId, status])
+  @@map("projects")
+}
+
+model ProjectNote {
+  projectId String
+  noteId    String
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  note    Note    @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  @@id([projectId, noteId])
+  @@map("project_notes")
+}
+
+/// A dated observation that a goal is moving: a reflection, a practice day, a rest, or a skip.
+model GrowthEvidence {
+  id              String   @id @default(cuid())
+  userId          String
+  goalId          String
+  clientRequestId String
+  observedAt      DateTime @db.Date
+  summary         String   @db.Text
+  measurement     Float?
+  /// reflection | practice | rest | skip
+  kind            String   @default("reflection")
+  /// note | book | project | session
+  sourceType      String?
+  sourceId        String?
+  /// Snapshot so the evidence stays readable if the source goes away.
+  sourceTitle     String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  goal Goal @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  @@unique([userId, clientRequestId])
+  @@index([goalId, observedAt])
+  @@index([userId, observedAt])
+  @@map("growth_evidence")
+}
+
+/// One adjustment per week, keyed by its Monday: Stop / Keep / Try, next-week outcomes, first action.
+model WeeklyReview {
+  id           String    @id @default(cuid())
+  userId       String
+  weekStart    DateTime  @db.Date
+  stopDoing    String    @default("") @db.Text
+  keepDoing    String    @default("") @db.Text
+  startTrying  String    @default("") @db.Text
+  reflectionMd String    @default("") @db.Text
+  /// Up to three { id, text } lines for next week.
+  outcomes     Json      @default("[]")
+  nextTaskId   String?
+  closedAt     DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  user     User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  nextTask Task? @relation("NextWeekAction", fields: [nextTaskId], references: [id], onDelete: SetNull)
+  @@unique([userId, weekStart])
+  @@map("weekly_reviews")
+}
+
+/// A confirmed core import; the same request id or the same file never imports twice.
+model CoreImportReceipt {
+  id              String   @id @default(cuid())
+  userId          String
+  clientRequestId String
+  digest          String
+  result          Json
+  createdAt       DateTime @default(now())
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([userId, clientRequestId])
+  @@unique([userId, digest])
+  @@map("core_import_receipts")
 }
 
 model UserSession {
@@ -73,7 +193,7 @@ model Note {
   updatedAt   DateTime  @updatedAt
   user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   noteLinks   NoteLink[] @relation("SourceNote")
-  linkedFrom  NoteLink[] @relation("TargetNote")
+  projectNotes ProjectNote[]
   @@index([userId, isDeleted])
   @@index([userId, isPinned])
   @@index([tags], type: Gin)
@@ -86,8 +206,7 @@ model NoteLink {
   targetType String
   targetId   String
   createdAt  DateTime @default(now())
-  sourceNote Note  @relation("SourceNote", fields: [sourceId], references: [id], onDelete: Cascade)
-  targetNote Note? @relation("TargetNote", fields: [targetId], references: [id], onDelete: Cascade)
+  sourceNote Note @relation("SourceNote", fields: [sourceId], references: [id], onDelete: Cascade)
   @@unique([sourceId, targetType, targetId])
   @@map("note_links")
 }
@@ -121,6 +240,7 @@ model Task {
   userId        String
   parentTaskId  String?
   goalId        String?
+  projectId     String?
   title         String
   descriptionMd String    @default("") @db.Text
   priority      String    @default("medium")
@@ -132,18 +252,29 @@ model Task {
   rrule         String?
   quadrant      String?
   orderIndex    Float     @default(0)
+  plannedDate      DateTime? @db.Date
+  estimatedMinutes Int?
+  effort           String?
+  context          String?
+  priorityRank     Int       @default(2)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   parentTask Task?   @relation("Subtasks", fields: [parentTaskId], references: [id], onDelete: Cascade)
   subtasks   Task[]  @relation("Subtasks")
   goal       Goal?   @relation(fields: [goalId], references: [id], onDelete: SetNull)
+  project    Project? @relation("ProjectTasks", fields: [projectId], references: [id], onDelete: SetNull)
+  nextActionFor Project[] @relation("ProjectNextAction")
+  nextWeekFor   WeeklyReview[] @relation("NextWeekAction")
   taskLinks  TaskLink[]
   focusSessions FocusSession[]
   @@index([userId, status])
+  @@index([userId, projectId])
   @@index([userId, dueDate])
   @@index([userId, quadrant])
   @@index([parentTaskId])
+  @@index([userId, plannedDate])
+  @@index([userId, priorityRank])
   @@map("tasks")
 }
 
@@ -156,6 +287,13 @@ model FocusSession {
   endedAt     DateTime?
   durationSec Int       @default(0)
   completed   Boolean   @default(false)
+  /// What this block was for, in the user's words.
+  intention        String  @default("")
+  /// completed | progress | blocked; null while the session is open.
+  outcome          String?
+  reflection       String  @default("") @db.Text
+  nextAction       String?
+  nextActionTaskId String?
   createdAt   DateTime  @default(now())
   user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
   task Task? @relation(fields: [taskId], references: [id], onDelete: SetNull)
@@ -180,6 +318,13 @@ model DayPlan {
   timeBlocks   Json     @default("[]")
   aiBriefMd    String?  @db.Text
   intentMd     String?  @db.Text
+  /// Minutes you can realistically give to planned work today.
+  availableMinutes Int     @default(180)
+  /// Slack reserved for the unexpected; counted as planned.
+  bufferMinutes    Int     @default(15)
+  /// Optional working window as local HH:mm labels.
+  workStart        String?
+  workEnd          String?
   createdAt    DateTime @default(now())
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   @@unique([userId, planDate])
@@ -276,10 +421,20 @@ model Goal {
   expenseTag        String?
   targetAmount      Decimal?  @db.Decimal(12, 2)
   status            String    @default("active")
+  /// What success looks like, in the user's words.
+  successCriteria      String  @default("") @db.Text
+  /// Optional measurement: where it started, where it should land, in what unit.
+  baseline             Float?
+  target               Float?
+  unit                 String?
+  /// Practice days per week the goal asks for; null means not tracked.
+  weeklyPracticeTarget Int?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
   user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   tasks           Task[]
+  projects        Project[]
+  evidence        GrowthEvidence[]
   expenseCategory ExpenseCategory? @relation(fields: [expenseCategoryId], references: [id], onDelete: SetNull)
   @@index([userId, status])
   @@map("goals")

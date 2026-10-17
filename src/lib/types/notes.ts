@@ -38,6 +38,8 @@ export interface UpdateNoteRequest {
   isPinned?: boolean
   isPublic?: boolean
   isDeleted?: boolean
+  /** Optimistic concurrency: reject with 409 if the server row changed since. */
+  expectedUpdatedAt?: string
 }
 
 export interface NoteFilters {

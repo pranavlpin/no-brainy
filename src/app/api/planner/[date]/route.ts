@@ -1,49 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withAuth } from '@/lib/auth/middleware'
+import { personalSettings } from '@/lib/settings/personal'
 import { dateParamSchema } from '@/lib/validations/planner'
 import type { TimeBlock } from '@/lib/types/planner'
-import type { TaskResponse } from '@/lib/types/tasks'
-
-function formatTask(task: {
-  id: string
-  userId: string
-  parentTaskId: string | null
-  goalId: string | null
-  title: string
-  descriptionMd: string
-  priority: string
-  status: string
-  tags: string[]
-  dueDate: Date | null
-  completedAt: Date | null
-  isRecurring: boolean
-  rrule: string | null
-  quadrant: string | null
-  orderIndex: number
-  createdAt: Date
-  updatedAt: Date
-}): TaskResponse {
-  return {
-    id: task.id,
-    userId: task.userId,
-    parentTaskId: task.parentTaskId,
-    goalId: task.goalId,
-    title: task.title,
-    descriptionMd: task.descriptionMd,
-    priority: task.priority as TaskResponse['priority'],
-    status: task.status as TaskResponse['status'],
-    tags: task.tags,
-    dueDate: task.dueDate?.toISOString() ?? null,
-    completedAt: task.completedAt?.toISOString() ?? null,
-    isRecurring: task.isRecurring,
-    rrule: task.rrule,
-    quadrant: task.quadrant as TaskResponse['quadrant'],
-    orderIndex: task.orderIndex,
-    createdAt: task.createdAt.toISOString(),
-    updatedAt: task.updatedAt.toISOString(),
-  }
-}
+import { formatTask } from '@/lib/tasks/format'
 
 export const GET = withAuth(async (req: NextRequest, user) => {
   try {
@@ -86,6 +47,8 @@ export const GET = withAuth(async (req: NextRequest, user) => {
     })
 
     if (!dayPlan) {
+      // A day without a plan yet shows the same defaults today would be created with.
+      const defaults = personalSettings(user.timezone ?? 'UTC', user.preferences)
       return NextResponse.json({
         success: true,
         data: {
@@ -96,6 +59,10 @@ export const GET = withAuth(async (req: NextRequest, user) => {
           timeBlocks: [],
           aiBriefMd: null,
           intentMd: null,
+          availableMinutes: defaults.availableMinutes,
+          bufferMinutes: defaults.bufferMinutes,
+          workStart: defaults.workStart,
+          workEnd: defaults.workEnd,
           createdAt: null,
           focusTasks: [],
           tasksDueOnDate: tasksDueOnDate.map(formatTask),
@@ -124,6 +91,10 @@ export const GET = withAuth(async (req: NextRequest, user) => {
         timeBlocks: dayPlan.timeBlocks as unknown as TimeBlock[],
         aiBriefMd: dayPlan.aiBriefMd,
         intentMd: dayPlan.intentMd ?? null,
+        availableMinutes: dayPlan.availableMinutes,
+        bufferMinutes: dayPlan.bufferMinutes,
+        workStart: dayPlan.workStart ?? null,
+        workEnd: dayPlan.workEnd ?? null,
         createdAt: dayPlan.createdAt.toISOString(),
         focusTasks: focusTasks.map(formatTask),
         tasksDueOnDate: tasksDueOnDate.map(formatTask),
