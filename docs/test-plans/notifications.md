@@ -5,3 +5,8 @@
 - Scope: unit + integration.
 - Unit: `generateForUser` creates `review_reminder` only after 20:00 local with no review, `morning_brief` only before 10:00 local with an empty plan, and never duplicates within a day (mocked Prisma).
 - Integration: `POST /api/cron/daily` returns 401 without the bearer secret, 503 when `CRON_SECRET` is unset, and per-user counts when authorized; notification preferences schema rejects `habitReminders`.
+
+## T30 — List item markup (bug fix)
+
+- Scope: component (regression test written first, failing).
+- Component: the notifications page renders no `<button>` inside another `<button>`; clicking a row marks it read and navigates; clicking "Mark read" marks it read without navigating.

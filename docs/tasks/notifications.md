@@ -5,3 +5,4 @@ Append-only ledger for the `notifications` module. See `CLAUDE.md` §2 and §2a.
 | ID | Task | Date | Branch | Plan | Status |
 |---|---|---|---|---|---|
 | T12 | Scheduled nudges endpoint and habit cleanup | 2026-10-16 | feature/platform-daily-loop-overhaul | [plan](../plans/notifications/cron-nudges.md) | planned |
+| T30 | Bug fix: notification list item nests a button inside a button | 2026-10-17 | feature/product-adoption-wave-2 | [plan](../plans/notifications/list-item-markup.md) | fixed — root cause: the row button wrapped the Mark read button. Row is a container with two sibling buttons; 91 files / 254 tests green |
