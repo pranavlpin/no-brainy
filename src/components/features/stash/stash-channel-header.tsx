@@ -107,7 +107,7 @@ export function StashChannelHeader({
           </Link>
         </div>
       </header>
-      {channel.isSensitive && searchOpen && (
+      {searchOpen && (
         <div className="flex items-center gap-2 border-t border-border/50 px-3 py-2">
           <Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
           <input

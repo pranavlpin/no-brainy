@@ -35,4 +35,18 @@ describe('StashChannelHeader', () => {
     )
     expect(screen.getByRole('button', { name: 'Search messages' })).toBeInTheDocument()
   })
+
+  it('shows the search box once search is open, sensitive or not', () => {
+    render(
+      <StashChannelHeader
+        channel={channel as never}
+        searchQuery=""
+        onSearchQueryChange={vi.fn()}
+        searchOpen
+        onToggleSearch={vi.fn()}
+      />
+    )
+    expect(screen.getByPlaceholderText(/Search in this channel/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Close search' })).toBeInTheDocument()
+  })
 })

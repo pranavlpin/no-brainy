@@ -12,12 +12,12 @@ Open a normal stash channel: the header offers Pin and Delete but no search. The
 
 ## Scope and affected files
 
-- `src/components/features/stash/stash-channel-header.tsx`: render the search toggle for every channel.
+- `src/components/features/stash/stash-channel-header.tsx`: render the search toggle and, once open, the search box for every channel (both carried the sensitive-only guard).
 - Tests: `tests/component/stash/channel-header.test.tsx`.
 
 ## Fix approach
 
-Remove the guard around the search button only.
+Remove the sensitive-only guard around the search button and the search box; the lock icon keeps it.
 
 ## Test-id strategy and accessibility
 
