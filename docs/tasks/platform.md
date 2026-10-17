@@ -29,6 +29,10 @@ The owner approved the review and adoption package in `docs/plans/product/accept
 
 After the browser end-to-end sweep (report in gitignored `evidences/e2e/full/REPORT.md`) listed thirteen defects, the owner instructed in conversation: "push the current changes and fix all in same branch." Ruling recorded: every defect in that list is a pre-approved bug-fix task (T24–T32), planned, registered, tested first, and committed as one commit per task on the integration branch `feature/product-adoption-wave-2`. Push is authorized; merge stays the owner's call. Defects outside that list return to the strict per-task approval flow.
 
+### 2026-10-17 — Merge and deploy
+
+The owner instructed in conversation: "Cann you merge this in main and deploy it on GCP. DO we need to install any thing new, I think GCP CLI we might have to. You can install and deploy." Ruling recorded: PR #6 and PR #7 were merged into `main` on the owner's instruction without a separate code review; installing the Google Cloud CLI on the owner's machine is authorized; T34 (building the deploy images with Cloud Build) is pre-approved, may be merged, and the production redeploy with migrations is authorized.
+
 ## Tasks
 
 | ID  | Task                                                                     | Date       | Branch                               | Plan                                                     | Status                                                                                                                                                                                                                                                             |
@@ -40,6 +44,7 @@ After the browser end-to-end sweep (report in gitignored `evidences/e2e/full/REP
 | T21 | Core backup export / import, personal setup defaults, reminder quiet hours | 2026-10-16 | feature/product-adoption-wave-2 | [plan](../plans/platform/backup-setup-quiet-hours.md) | done — 71 files / 224 tests green; migration add_core_import_receipts; versioned export, preview, additive import with receipts; personal defaults seed new plans; quiet hours and reminder time honoured by nudges |
 | T22 | Workspace states, typography pass, Work / Personal context filter | 2026-10-16 | feature/product-adoption-wave-2 | [plan](../plans/platform/workspace-states-and-context.md) | done — 74 files / 228 tests green; PageHeader / Loading / Error / Empty primitives with eyebrow and display title; Work / Personal context switch persisted and applied to tasks, projects, Today |
 | T29 | Bug fix: dark mode hydrates after mount; one app icon | 2026-10-17 | feature/product-adoption-wave-2 | [plan](../plans/platform/dark-mode-hydration-and-app-icon.md) | fixed — root cause: the dark-mode store read localStorage at module init, and public/icon.svg duplicated the metadata route. Store hydrates after mount behind a pre-paint script; metadata route removed; 91 files / 254 tests green |
+| T34 | Deploy images built by Cloud Build when Docker is absent; pin pnpm 9 in the image | 2026-10-17 | feature/platform-cloud-build-deploy | [plan](../plans/platform/cloud-build-deploy.md) | done — cloudbuild.yaml builds app and migrator images; deploy.sh falls back to Cloud Build without Docker and keeps production at one warm instance; Dockerfile pins pnpm 9; 93 files / 260 tests green |
 
 ## Backlog (registered, not yet planned)
 

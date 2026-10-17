@@ -43,6 +43,7 @@ if [ "$ENVIRONMENT" = "production" ]; then
   URL_SECRET="nobrainy-nextauth-url-prod"
   MEMORY="1Gi"
   CPU="2"
+  MIN_INSTANCES="1"
   MAX_INSTANCES="10"
 else
   DB_SECRET="nobrainy-database-url"
@@ -50,6 +51,7 @@ else
   URL_SECRET="nobrainy-nextauth-url"
   MEMORY="512Mi"
   CPU="1"
+  MIN_INSTANCES="0"
   MAX_INSTANCES="5"
 fi
 
@@ -61,29 +63,35 @@ echo "Tag:      $TAG"
 echo ""
 
 # ----------------------------------------------------------
-# Step 1: Build Docker images
+# Steps 1-3: Build and push images (locally with Docker, or in Cloud Build)
 # ----------------------------------------------------------
-echo "[1/5] Building app image..."
-docker build --platform=linux/amd64 \
-  --build-arg NEXT_PUBLIC_GA_ID="${NEXT_PUBLIC_GA_ID:-}" \
-  -t "$IMAGE" \
-  -t "$IMAGE_LATEST" \
-  .
+if command -v docker > /dev/null 2>&1; then
+  echo "[1/5] Building app image..."
+  docker build --platform=linux/amd64 \
+    --build-arg NEXT_PUBLIC_GA_ID="${NEXT_PUBLIC_GA_ID:-}" \
+    -t "$IMAGE" \
+    -t "$IMAGE_LATEST" \
+    .
 
-echo "[2/5] Building migrator image..."
-docker build --platform=linux/amd64 --target=migrator \
-  -t "$MIGRATOR_IMAGE" \
-  -t "$MIGRATOR_LATEST" \
-  .
+  echo "[2/5] Building migrator image..."
+  docker build --platform=linux/amd64 --target=migrator \
+    -t "$MIGRATOR_IMAGE" \
+    -t "$MIGRATOR_LATEST" \
+    .
 
-# ----------------------------------------------------------
-# Step 3: Push to Artifact Registry
-# ----------------------------------------------------------
-echo "[3/5] Pushing to Artifact Registry..."
-docker push "$IMAGE"
-docker push "$IMAGE_LATEST"
-docker push "$MIGRATOR_IMAGE"
-docker push "$MIGRATOR_LATEST"
+  echo "[3/5] Pushing to Artifact Registry..."
+  docker push "$IMAGE"
+  docker push "$IMAGE_LATEST"
+  docker push "$MIGRATOR_IMAGE"
+  docker push "$MIGRATOR_LATEST"
+else
+  echo "[1-3/5] No local Docker; building and pushing both images in Cloud Build..."
+  gcloud builds submit \
+    --project="$PROJECT_ID" \
+    --config=cloudbuild.yaml \
+    --substitutions="_TAG=${TAG},_ENVIRONMENT=${ENVIRONMENT},_REGION=${REGION},_NEXT_PUBLIC_GA_ID=${NEXT_PUBLIC_GA_ID:-}" \
+    .
+fi
 
 # ----------------------------------------------------------
 # Step 3: Deploy to Cloud Run
@@ -97,7 +105,7 @@ gcloud run deploy "$SERVICE_NAME" \
   --port=3000 \
   --memory="$MEMORY" \
   --cpu="$CPU" \
-  --min-instances=0 \
+  --min-instances="$MIN_INSTANCES" \
   --max-instances="$MAX_INSTANCES" \
   --set-env-vars="NODE_ENV=production,OMDB_API_KEY=${OMDB_API_KEY:-},GCS_BUCKET_NAME=${GCS_BUCKET_NAME:-${PROJECT_ID}-stash},GCS_PROJECT_ID=${GCS_PROJECT_ID:-${PROJECT_ID}}" \
   --set-secrets="DATABASE_URL=${DB_SECRET}:latest,NEXTAUTH_SECRET=${AUTH_SECRET}:latest,NEXTAUTH_URL=${URL_SECRET}:latest,GOOGLE_CLIENT_ID=nobrainy-google-client-id:latest,GOOGLE_CLIENT_SECRET=nobrainy-google-client-secret:latest" \

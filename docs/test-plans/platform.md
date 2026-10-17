@@ -40,3 +40,8 @@ Section-wise test plan for the `platform` module. Append new sections per task; 
 
 - Scope: unit (regression tests written first, failing).
 - Unit: the dark-mode store starts light even when `localStorage` holds `dark`, and `hydrate()` loads it and sets the `dark` class; `src/app/icon.svg` does not exist while `public/icon.svg` does and the root metadata lists it; the root layout applies the saved mode before paint.
+
+## T34 — Cloud Build deploy images (deployment config)
+
+- Scope: unit (regression tests written first, failing).
+- Unit: `cloudbuild.yaml` builds the app image and the `migrator` target and pushes both tags; `.gcloudignore` includes `.gitignore` and excludes `evidences/`; the Dockerfile pins pnpm 9; `scripts/deploy.sh` falls back to `gcloud builds submit` when Docker is missing.
