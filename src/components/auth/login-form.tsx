@@ -1,16 +1,18 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { signIn } from 'next-auth/react'
 import { Mail, Lock, Loader2 } from 'lucide-react'
 import { loginSchema, type LoginInput } from '@/lib/validations/auth'
 import { Input } from '@/components/ui/input'
 import { GoogleButton } from '@/components/auth/google-button'
+import { safeCallbackPath } from '@/lib/auth/callback-url'
 
 export function LoginForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<Partial<Record<keyof LoginInput, string>>>({})
   const [serverError, setServerError] = useState('')
@@ -52,7 +54,7 @@ export function LoginForm() {
         return
       }
 
-      router.push('/')
+      router.push(safeCallbackPath(searchParams.get('callbackUrl'), window.location.origin))
     } catch {
       setServerError('An unexpected error occurred')
     } finally {
@@ -63,13 +65,13 @@ export function LoginForm() {
   return (
     <div className="w-full max-w-sm space-y-6">
       <div className="space-y-2 text-center">
-        <h1 className="font-display text-2xl font-bold tracking-tight text-retro-dark">Welcome back</h1>
-        <p className="text-sm text-muted-foreground">
-          Sign in to your account to continue
-        </p>
+        <h1 className="font-display text-2xl font-bold tracking-tight text-retro-dark">
+          Welcome back
+        </h1>
+        <p className="text-sm text-muted-foreground">Sign in to your account to continue</p>
       </div>
 
-      <form onSubmit={onSubmit} className="space-y-4">
+      <form method="post" onSubmit={onSubmit} className="space-y-4">
         {serverError && (
           <div className="border-2 border-red-300 bg-red-50 p-3 text-sm text-red-600">
             {serverError}
@@ -77,7 +79,10 @@ export function LoginForm() {
         )}
 
         <div className="space-y-2">
-          <label htmlFor="email" className="font-mono text-xs uppercase tracking-wider text-retro-dark/70">
+          <label
+            htmlFor="email"
+            className="font-mono text-xs uppercase tracking-wider text-retro-dark/70"
+          >
             Email
           </label>
           <div className="relative">
@@ -91,13 +96,14 @@ export function LoginForm() {
               disabled={isLoading}
             />
           </div>
-          {errors.email && (
-            <p className="text-xs text-red-500">{errors.email}</p>
-          )}
+          {errors.email && <p className="text-xs text-red-500">{errors.email}</p>}
         </div>
 
         <div className="space-y-2">
-          <label htmlFor="password" className="font-mono text-xs uppercase tracking-wider text-retro-dark/70">
+          <label
+            htmlFor="password"
+            className="font-mono text-xs uppercase tracking-wider text-retro-dark/70"
+          >
             Password
           </label>
           <div className="relative">
@@ -111,9 +117,7 @@ export function LoginForm() {
               disabled={isLoading}
             />
           </div>
-          {errors.password && (
-            <p className="text-xs text-red-500">{errors.password}</p>
-          )}
+          {errors.password && <p className="text-xs text-red-500">{errors.password}</p>}
         </div>
 
         <button

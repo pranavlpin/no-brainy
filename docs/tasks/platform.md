@@ -25,6 +25,10 @@ While testing the batch the owner reported browser console errors ("These errors
 
 The owner approved the review and adoption package in `docs/plans/product/acceptance-branch-adoption.md` with the conversation message "Go". That approves tasks T14–T22 (Tier 1 and Tier 2) to be planned, registered, tested, and implemented in dependency order on the stacked branch `feature/product-adoption-wave-2` (base: `feature/platform-daily-loop-overhaul`). Dependency changes, if any, are pre-approved and land in their own commits. Push and a stacked PR are authorized at the end of the batch; merge stays the owner's call. Ideas and pure logic ported from `test/product-final-acceptance` are credited in each plan.
 
+### 2026-10-17 — End-to-end sweep defects
+
+After the browser end-to-end sweep (report in gitignored `evidences/e2e/full/REPORT.md`) listed thirteen defects, the owner instructed in conversation: "push the current changes and fix all in same branch." Ruling recorded: every defect in that list is a pre-approved bug-fix task (T24–T32), planned, registered, tested first, and committed as one commit per task on the integration branch `feature/product-adoption-wave-2`. Push is authorized; merge stays the owner's call. Defects outside that list return to the strict per-task approval flow.
+
 ## Tasks
 
 | ID  | Task                                                                     | Date       | Branch                               | Plan                                                     | Status                                                                                                                                                                                                                                                             |
@@ -35,6 +39,7 @@ The owner approved the review and adoption package in `docs/plans/product/accept
 | T13 | Bug fix: head hydration failure, missing favicon, client-state hydration | 2026-10-16 | feature/platform-daily-loop-overhaul | [plan](../plans/platform/hydration-head-and-favicon.md)  | fixed — root cause: an empty GA id rendered a stray text node inside the manual head, so every page failed hydration; GA moved to a null-safe component in body, favicon.ico added, localStorage-backed stores now hydrate after mount; 43 files / 141 tests green |
 | T21 | Core backup export / import, personal setup defaults, reminder quiet hours | 2026-10-16 | feature/product-adoption-wave-2 | [plan](../plans/platform/backup-setup-quiet-hours.md) | done — 71 files / 224 tests green; migration add_core_import_receipts; versioned export, preview, additive import with receipts; personal defaults seed new plans; quiet hours and reminder time honoured by nudges |
 | T22 | Workspace states, typography pass, Work / Personal context filter | 2026-10-16 | feature/product-adoption-wave-2 | [plan](../plans/platform/workspace-states-and-context.md) | done — 74 files / 228 tests green; PageHeader / Loading / Error / Empty primitives with eyebrow and display title; Work / Personal context switch persisted and applied to tasks, projects, Today |
+| T29 | Bug fix: dark mode hydrates after mount; one app icon | 2026-10-17 | feature/product-adoption-wave-2 | [plan](../plans/platform/dark-mode-hydration-and-app-icon.md) | fixed — root cause: the dark-mode store read localStorage at module init, and public/icon.svg duplicated the metadata route. Store hydrates after mount behind a pre-paint script; metadata route removed; 91 files / 254 tests green |
 
 ## Backlog (registered, not yet planned)
 
