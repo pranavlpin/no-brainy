@@ -15,6 +15,7 @@ import { KeyIdeasEditor } from '@/components/books/key-ideas-editor'
 import { QuotesEditor, type BookQuote } from '@/components/books/quotes-editor'
 import { MarkdownEditor } from '@/components/editor/markdown-editor'
 import { useBook, useUpdateBook, useDeleteBook } from '@/hooks/use-books'
+import { useDebouncedDrafts } from '@/hooks/use-debounced-drafts'
 import { FlashcardGenerator } from '@/components/ai/flashcard-generator'
 import { BookExperiment } from '@/components/growth/book-experiment'
 import { DistillPreview } from '@/components/ai/distill-preview'
@@ -102,6 +103,13 @@ export default function BookDetailPage() {
     },
     [id, updateBook]
   )
+  // Free-text fields save debounced from a local draft, so the server echo of
+  // one save can never overwrite what is being typed for the next.
+  const text = useDebouncedDrafts<{
+    summaryMd: string
+    learningsMd: string
+    applicationMd: string
+  }>(save)
 
   if (isLoading) {
     return (
@@ -295,8 +303,8 @@ export default function BookDetailPage() {
         <div className="min-h-[300px]">
           {activeTab === 'summary' && (
             <MarkdownEditor
-              value={book.summaryMd}
-              onChange={(summaryMd) => save({ summaryMd })}
+              value={text.drafts.summaryMd ?? book.summaryMd ?? ''}
+              onChange={(summaryMd) => text.change('summaryMd', summaryMd)}
               placeholder="Write a summary of the book..."
               minHeight="300px"
             />
@@ -312,8 +320,8 @@ export default function BookDetailPage() {
 
           {activeTab === 'learnings' && (
             <MarkdownEditor
-              value={book.learningsMd}
-              onChange={(learningsMd) => save({ learningsMd })}
+              value={text.drafts.learningsMd ?? book.learningsMd ?? ''}
+              onChange={(learningsMd) => text.change('learningsMd', learningsMd)}
               placeholder="What did you learn from this book?"
               minHeight="300px"
             />
@@ -322,15 +330,15 @@ export default function BookDetailPage() {
           {activeTab === 'application' && (
             <div className="space-y-4">
               <MarkdownEditor
-                value={book.applicationMd}
-                onChange={(applicationMd) => save({ applicationMd })}
+                value={text.drafts.applicationMd ?? book.applicationMd ?? ''}
+                onChange={(applicationMd) => text.change('applicationMd', applicationMd)}
                 placeholder="How will you apply what you learned?"
                 minHeight="300px"
               />
               <BookExperiment
                 bookId={book.id}
                 title={book.title}
-                application={book.applicationMd}
+                application={text.drafts.applicationMd ?? book.applicationMd ?? ''}
               />
             </div>
           )}
