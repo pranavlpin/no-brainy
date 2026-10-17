@@ -1,208 +1,238 @@
 'use client'
 
-import { useState, useRef, useEffect, useCallback } from 'react'
-import { cn } from '@/lib/utils'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { CalendarDays, CheckSquare, FileText, Flag, Hash, Target, Zap } from 'lucide-react'
+import { Dialog } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { useCreateNote } from '@/hooks/use-notes'
 import { useCreateTask } from '@/hooks/use-tasks'
+import { useGoals } from '@/hooks/use-goals'
 import { useToast } from '@/hooks/use-toast'
-import type { TaskPriority } from '@/lib/types/tasks'
-
-type CaptureType = 'note' | 'task'
-
-const priorities: { value: TaskPriority; label: string }[] = [
-  { value: 'low', label: 'Low' },
-  { value: 'medium', label: 'Medium' },
-  { value: 'high', label: 'High' },
-  { value: 'urgent', label: 'Urgent' },
-]
+import { useUserToday } from '@/hooks/use-user-today'
+import { parseCapture, type CaptureKind } from '@/lib/capture/parse'
+import { cn } from '@/lib/utils'
 
 interface QuickCaptureModalProps {
   open: boolean
   onClose: () => void
+  initialKind?: CaptureKind
+  seed?: string
 }
 
-export function QuickCaptureModal({ open, onClose }: QuickCaptureModalProps) {
-  const [type, setType] = useState<CaptureType>('note')
-  const [content, setContent] = useState('')
-  const [priority, setPriority] = useState<TaskPriority>('medium')
-  const [dueDate, setDueDate] = useState('')
+const PRIORITY_LABEL = { urgent: 'Urgent', high: 'High', medium: 'Medium', low: 'Low' } as const
+
+function Chip({
+  icon: Icon,
+  tone,
+  children,
+  ...rest
+}: {
+  icon: typeof Hash
+  tone: 'blue' | 'pink' | 'mint' | 'yellow' | 'orange'
+  children: React.ReactNode
+  'data-testid'?: string
+}) {
+  const tones = {
+    blue: 'bg-retro-blue/10 text-retro-blue border-retro-blue/30',
+    pink: 'bg-retro-pink/10 text-retro-pink border-retro-pink/30',
+    mint: 'bg-retro-mint/15 text-retro-dark border-retro-mint/40',
+    yellow: 'bg-retro-yellow/25 text-retro-dark border-retro-yellow/60',
+    orange: 'bg-retro-orange/15 text-retro-dark border-retro-orange/40',
+  }
+  return (
+    <motion.span
+      layout
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.8 }}
+      transition={{ type: 'spring', stiffness: 520, damping: 30 }}
+      data-testid={rest['data-testid']}
+      className={cn(
+        'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-mono text-[11px] font-semibold',
+        tones[tone]
+      )}
+    >
+      <Icon className="h-3 w-3" />
+      {children}
+    </motion.span>
+  )
+}
+
+/**
+ * Natural-language capture. Type one line; dates, #tags, !priority and
+ * @goal become chips as you go. Enter saves, Tab flips task/note.
+ */
+export function QuickCaptureModal({
+  open,
+  onClose,
+  initialKind = 'task',
+  seed = '',
+}: QuickCaptureModalProps) {
+  const [text, setText] = useState(seed)
+  const [kindOverride, setKindOverride] = useState<CaptureKind | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
-
-  const createNote = useCreateNote()
+  const { today } = useUserToday()
+  const { data: goals } = useGoals({ status: 'active' })
   const createTask = useCreateTask()
+  const createNote = useCreateNote()
   const toast = useToast()
-
-  const reset = useCallback(() => {
-    setContent('')
-    setType('note')
-    setPriority('medium')
-    setDueDate('')
-  }, [])
-
-  const handleClose = useCallback(() => {
-    reset()
-    onClose()
-  }, [onClose, reset])
 
   useEffect(() => {
     if (open) {
-      // Small delay to allow the modal to render before focusing
-      const timer = setTimeout(() => inputRef.current?.focus(), 50)
-      return () => clearTimeout(timer)
+      setText(seed)
+      setKindOverride(initialKind === 'note' ? 'note' : null)
+      const t = setTimeout(() => inputRef.current?.focus(), 60)
+      return () => clearTimeout(t)
     }
-  }, [open])
+  }, [open, seed, initialKind])
 
-  useEffect(() => {
-    if (!open) return
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.preventDefault()
-        handleClose()
-      }
-    }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  }, [open, handleClose])
+  const parsed = useMemo(
+    () =>
+      parseCapture(text, {
+        today,
+        goals: (goals ?? []).map((g) => ({ id: g.id, title: g.title })),
+      }),
+    [text, today, goals]
+  )
+  const kind: CaptureKind = kindOverride ?? parsed.kind
+  const isSubmitting = createTask.isPending || createNote.isPending
+  const canSubmit = parsed.title.length > 0 && !isSubmitting
 
-  const handleSubmit = useCallback(async () => {
-    const trimmed = content.trim()
-    if (!trimmed) return
-
+  const submit = async () => {
+    if (!canSubmit) return
     try {
-      if (type === 'note') {
-        await createNote.mutateAsync({ title: trimmed })
-        toast.show('Note created!')
+      if (kind === 'note') {
+        await createNote.mutateAsync({ title: parsed.title })
+        toast.show('Note captured')
       } else {
         await createTask.mutateAsync({
-          title: trimmed,
-          priority,
-          dueDate: dueDate || undefined,
+          title: parsed.title,
+          dueDate: parsed.dueDate,
+          tags: parsed.tags,
+          priority: parsed.priority,
+          goalId: parsed.goalId,
         })
-        toast.show('Task created!')
+        toast.show(
+          parsed.dueLabel ? `Task added for ${parsed.dueLabel.toLowerCase()}` : 'Task added'
+        )
       }
-      handleClose()
+      setText('')
+      onClose()
     } catch {
-      toast.show('Failed to create. Please try again.', 'error')
+      toast.show('Could not save. Try again.', 'error')
     }
-  }, [content, type, priority, dueDate, createNote, createTask, toast, handleClose])
-
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault()
-        handleSubmit()
-      }
-    },
-    [handleSubmit]
-  )
-
-  if (!open) return null
-
-  const isSubmitting = createNote.isPending || createTask.isPending
+  }
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-start justify-center pt-[20vh]">
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/50 animate-in fade-in duration-150"
-        onClick={handleClose}
-      />
+    <Dialog open={open} onClose={onClose} title="Capture" size="lg" hideClose>
+      <div className="-mt-2">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setKindOverride(kind === 'task' ? 'note' : 'task')}
+            data-testid="capture-chip-kind"
+            aria-label={`Capturing a ${kind}; press to switch`}
+            className={cn(
+              'flex h-8 shrink-0 items-center gap-1.5 rounded-full border px-3 font-mono text-xs font-bold transition-colors',
+              kind === 'task'
+                ? 'border-retro-blue/40 bg-retro-blue/10 text-retro-blue'
+                : 'border-retro-mint/50 bg-retro-mint/15 text-retro-dark'
+            )}
+          >
+            {kind === 'task' ? (
+              <CheckSquare className="h-3.5 w-3.5" />
+            ) : (
+              <FileText className="h-3.5 w-3.5" />
+            )}
+            {kind === 'task' ? 'Task' : 'Note'}
+          </button>
+          <input
+            ref={inputRef}
+            data-testid="capture-input"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault()
+                void submit()
+              } else if (e.key === 'Tab') {
+                e.preventDefault()
+                setKindOverride(kind === 'task' ? 'note' : 'task')
+              }
+            }}
+            placeholder={
+              kind === 'task'
+                ? 'Call bank tomorrow #finance !high @Goal'
+                : 'A thought worth keeping…'
+            }
+            disabled={isSubmitting}
+            className="h-11 w-full border-0 border-b-2 border-retro-dark/15 bg-transparent text-lg font-medium text-retro-dark placeholder:text-retro-dark/30 focus:border-retro-blue focus:outline-none"
+          />
+        </div>
 
-      {/* Modal */}
-      <div className="relative z-[61] w-full max-w-lg rounded-xl bg-white p-6 shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-200">
-        {/* Input */}
-        <input
-          ref={inputRef}
-          type="text"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Quick capture... (note or task)"
-          className="w-full border-0 bg-transparent text-lg font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-0"
-          disabled={isSubmitting}
-        />
-
-        <div className="mt-4 flex flex-col gap-4">
-          {/* Type toggle */}
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-500">Type:</span>
-            <div className="flex rounded-lg bg-gray-100 p-0.5">
-              <button
-                type="button"
-                onClick={() => setType('note')}
-                className={cn(
-                  'rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
-                  type === 'note'
-                    ? 'bg-blue-600 text-white shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                )}
+        <div className="mt-3 flex min-h-[28px] flex-wrap items-center gap-1.5">
+          <AnimatePresence initial={false}>
+            {kind === 'task' && parsed.dueLabel && (
+              <Chip key="date" icon={CalendarDays} tone="blue" data-testid="capture-chip-date">
+                {parsed.dueLabel}
+              </Chip>
+            )}
+            {kind === 'task' && parsed.priority && (
+              <Chip key="priority" icon={Flag} tone="pink" data-testid="capture-chip-priority">
+                {PRIORITY_LABEL[parsed.priority]}
+              </Chip>
+            )}
+            {kind === 'task' && parsed.goalTitle && (
+              <Chip key="goal" icon={Target} tone="mint" data-testid="capture-chip-goal">
+                {parsed.goalTitle}
+              </Chip>
+            )}
+            {kind === 'task' && parsed.goalQuery && !parsed.goalTitle && (
+              <Chip
+                key="goal-miss"
+                icon={Target}
+                tone="orange"
+                data-testid="capture-chip-goal-miss"
               >
-                Note
-              </button>
-              <button
-                type="button"
-                onClick={() => setType('task')}
-                className={cn(
-                  'rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
-                  type === 'task'
-                    ? 'bg-green-600 text-white shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                )}
+                no goal “{parsed.goalQuery}”
+              </Chip>
+            )}
+            {parsed.tags.map((t) => (
+              <Chip
+                key={`tag-${t}`}
+                icon={Hash}
+                tone="yellow"
+                data-testid={`capture-chip-tag-${t}`}
               >
-                Task
-              </button>
-            </div>
-          </div>
-
-          {/* Task-specific fields */}
-          {type === 'task' && (
-            <div className="flex flex-wrap items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-150">
-              {/* Priority */}
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-500">Priority:</span>
-                <select
-                  value={priority}
-                  onChange={(e) => setPriority(e.target.value as TaskPriority)}
-                  className="rounded-md border border-gray-200 bg-white px-2 py-1 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  {priorities.map((p) => (
-                    <option key={p.value} value={p.value}>
-                      {p.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Due date */}
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-500">Due:</span>
-                <input
-                  type="date"
-                  value={dueDate}
-                  onChange={(e) => setDueDate(e.target.value)}
-                  className="rounded-md border border-gray-200 bg-white px-2 py-1 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
+                {t}
+              </Chip>
+            ))}
+          </AnimatePresence>
+          {text.trim().length === 0 && (
+            <span className="font-mono text-[11px] text-retro-dark/40">
+              dates · #tags · !priority · @goal · “note:” prefix
+            </span>
           )}
+        </div>
 
-          {/* Footer */}
-          <div className="flex items-center justify-between border-t border-gray-100 pt-3">
-            <p className="text-xs text-gray-400">
-              Press <kbd className="rounded border border-gray-200 bg-gray-50 px-1 py-0.5 text-[10px] font-mono">Enter</kbd> to submit,{' '}
-              <kbd className="rounded border border-gray-200 bg-gray-50 px-1 py-0.5 text-[10px] font-mono">Esc</kbd> to close
-            </p>
-            <Button
-              size="sm"
-              onClick={handleSubmit}
-              disabled={!content.trim() || isSubmitting}
-            >
-              {isSubmitting ? 'Creating...' : 'Create'}
-            </Button>
-          </div>
+        <div className="mt-4 flex items-center justify-between border-t border-border/60 pt-3">
+          <p className="font-mono text-[11px] text-retro-dark/40">
+            <kbd className="rounded border border-retro-dark/15 px-1">Enter</kbd> save ·{' '}
+            <kbd className="rounded border border-retro-dark/15 px-1">Tab</kbd> task/note ·{' '}
+            <kbd className="rounded border border-retro-dark/15 px-1">Esc</kbd> close
+          </p>
+          <Button
+            size="sm"
+            onClick={() => void submit()}
+            disabled={!canSubmit}
+            data-testid="capture-submit"
+          >
+            <Zap className="mr-1.5 h-3.5 w-3.5" />
+            {isSubmitting ? 'Saving…' : kind === 'task' ? 'Add task' : 'Save note'}
+          </Button>
         </div>
       </div>
-    </div>
+    </Dialog>
   )
 }

@@ -1,38 +1,36 @@
-"use client"
+'use client'
 
-import { useState, useEffect, useCallback } from "react"
-import { Calendar, ListTodo, TrendingUp, Sparkles, Loader2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
-import { FocusTasks } from "@/components/planner/focus-tasks"
-import { TaskSchedule } from "@/components/planner/task-schedule"
-import { CarryForwardBanner } from "@/components/planner/carry-forward-banner"
-import { AISuggestPanel } from "@/components/planner/ai-suggest-panel"
-import { useTodayPlan, useUpdatePlan, useCarryForward } from "@/hooks/use-planner"
-import { useUpdateTask } from "@/hooks/use-tasks"
-import { usePlannerAISuggest } from "@/hooks/use-planner-ai"
-import { useAI } from "@/hooks/use-ai"
-import type { TaskResponse } from "@/lib/types/tasks"
-import type { DailyPlanSuggestion } from "@/lib/ai/types"
+import { useCallback, useState } from 'react'
+import { CalendarDays, ListTodo, Loader2, Sparkles } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
+import { FocusTasks } from '@/components/planner/focus-tasks'
+import { TaskSchedule } from '@/components/planner/task-schedule'
+import { TriageCard } from '@/components/planner/triage-card'
+import { IntentCard } from '@/components/planner/intent-card'
+import { AISuggestPanel } from '@/components/planner/ai-suggest-panel'
+import { StaggerBlock, StaggerGroup, AnimatedNumber } from '@/components/motion'
+import { useTodayPlan, useTriageTask, useUpdatePlan } from '@/hooks/use-planner'
+import { useCreateTask, useUpdateTask } from '@/hooks/use-tasks'
+import { usePlannerAISuggest } from '@/hooks/use-planner-ai'
+import { useAI } from '@/hooks/use-ai'
+import { useToast } from '@/hooks/use-toast'
+import { formatDateKey } from '@/lib/dates'
+import type { TaskResponse } from '@/lib/types/tasks'
+import type { DailyPlanSuggestion } from '@/lib/ai/types'
 
-function ProgressBar({
-  completed,
-  total,
-}: {
-  completed: number
-  total: number
-}) {
+function ProgressBar({ completed, total }: { completed: number; total: number }) {
   const pct = total > 0 ? Math.round((completed / total) * 100) : 0
   return (
-    <div className="flex items-center gap-3">
-      <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+    <div className="flex items-center gap-3" data-testid="planner-progress">
+      <div className="h-2 flex-1 overflow-hidden rounded-full bg-retro-dark/10">
         <div
-          className="h-full rounded-full bg-primary transition-all duration-500"
+          className="h-full rounded-full bg-gradient-to-r from-retro-blue to-retro-mint transition-[width] duration-500 ease-smooth"
           style={{ width: `${pct}%` }}
         />
       </div>
-      <span className="text-sm font-medium text-muted-foreground">
-        {completed}/{total} done
+      <span className="font-mono text-xs font-medium text-retro-dark/60">
+        <AnimatedNumber value={completed} /> / {total} done
       </span>
     </div>
   )
@@ -42,22 +40,15 @@ export default function PlannerPage() {
   const { data: plan, isLoading } = useTodayPlan()
   const updatePlan = useUpdatePlan()
   const updateTask = useUpdateTask()
-  const carryForward = useCarryForward()
+  const createTask = useCreateTask()
+  const triage = useTriageTask()
   const aiSuggest = usePlannerAISuggest()
   const { isEnabled: aiEnabled } = useAI()
+  const toast = useToast()
   const [suggestion, setSuggestion] = useState<DailyPlanSuggestion | null>(null)
 
-  useEffect(() => {
-    carryForward.mutate()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
   const handleAISuggest = useCallback(() => {
-    aiSuggest.mutate(undefined, {
-      onSuccess: (res) => {
-        setSuggestion(res.data)
-      },
-    })
+    aiSuggest.mutate(undefined, { onSuccess: (res) => setSuggestion(res.data) })
   }, [aiSuggest])
 
   const handleAcceptSuggestion = useCallback(
@@ -69,153 +60,165 @@ export default function PlannerPage() {
   )
 
   const handleUpdateFocus = useCallback(
-    (focusTaskIds: string[]) => {
-      updatePlan.mutate({ focusTaskIds })
-    },
+    (focusTaskIds: string[]) => updatePlan.mutate({ focusTaskIds }),
     [updatePlan]
   )
 
   const handleToggleComplete = useCallback(
     (taskId: string, completed: boolean) => {
-      updateTask.mutate({
-        id: taskId,
-        data: { status: completed ? "completed" : "pending" },
-      })
+      updateTask.mutate({ id: taskId, data: { status: completed ? 'completed' : 'pending' } })
     },
     [updateTask]
   )
 
-  if (isLoading) {
+  const handleSaveIntent = useCallback(
+    (intent: string) => {
+      updatePlan.mutate({ intentMd: intent || null })
+    },
+    [updatePlan]
+  )
+
+  const handleMakeIntentTask = useCallback(
+    (intent: string) => {
+      if (!plan) return
+      const today = plan.planDate.slice(0, 10)
+      createTask.mutate(
+        { title: intent, priority: 'high', dueDate: today, tags: ['intent'] },
+        {
+          onSuccess: (res) => {
+            const nextIds = [res.data.id, ...plan.focusTaskIds].slice(0, 3)
+            updatePlan.mutate({ focusTaskIds: nextIds })
+            toast.show('Intent is now your first focus task')
+          },
+          onError: () => toast.show('Could not create the task', 'error'),
+        }
+      )
+    },
+    [plan, createTask, updatePlan, toast]
+  )
+
+  if (isLoading || !plan) {
     return (
-      <div className="mx-auto max-w-3xl space-y-6 p-6">
+      <div className="mx-auto max-w-3xl space-y-6">
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-4 w-64" />
-        <div className="space-y-3">
-          <Skeleton className="h-20 w-full" />
-          <Skeleton className="h-20 w-full" />
-          <Skeleton className="h-20 w-full" />
-        </div>
-        <Skeleton className="h-32 w-full" />
+        <Skeleton className="h-28 w-full rounded-2xl" />
+        <Skeleton className="h-56 w-full rounded-2xl" />
+        <Skeleton className="h-32 w-full rounded-2xl" />
       </div>
     )
   }
 
-  if (!plan) return null
-
-  const today = new Date()
-  const dateLabel = today.toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-    year: "numeric",
+  const todayKeyStr = plan.planDate.slice(0, 10)
+  const dateLabel = formatDateKey(todayKeyStr, {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
   })
 
-  // Combine all tasks for progress calculation
+  const seen = new Set<string>()
   const allDayTasks: TaskResponse[] = []
-  const seenIds = new Set<string>()
   for (const task of [...plan.focusTasks, ...plan.tasksDueToday]) {
-    if (!seenIds.has(task.id)) {
-      seenIds.add(task.id)
+    if (!seen.has(task.id)) {
+      seen.add(task.id)
       allDayTasks.push(task)
     }
   }
-
-  const completedCount = allDayTasks.filter(
-    (t) => t.status === "completed"
-  ).length
-  const totalCount = allDayTasks.length
-
-  // Tasks for task schedule that are not already focus tasks
-  const scheduleTasks = plan.tasksDueToday.filter(
-    (t) => !plan.focusTaskIds.includes(t.id)
-  )
-
-  const carryForwardSuggestions = carryForward.data?.data?.suggestions ?? []
+  const completedCount = allDayTasks.filter((t) => t.status === 'completed').length
+  const scheduleTasks = plan.tasksDueToday.filter((t) => !plan.focusTaskIds.includes(t.id))
+  const intentIsTask = !!plan.intentMd && allDayTasks.some((t) => t.title === plan.intentMd)
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8 p-6">
-      {/* Header */}
-      <div>
-        <div className="flex items-center gap-2">
-          <Calendar className="h-5 w-5 text-primary" />
-          <h1 className="font-display text-2xl font-bold text-retro-dark">Today</h1>
-        </div>
-        <p className="mt-1 text-sm text-muted-foreground">{dateLabel}</p>
-      </div>
-
-      {/* Progress */}
-      {totalCount > 0 && (
-        <div className="rounded-lg border bg-card p-4">
-          <div className="mb-2 flex items-center gap-2">
-            <TrendingUp className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium">Daily Progress</span>
+    <StaggerGroup className="mx-auto max-w-3xl space-y-5">
+      <StaggerBlock>
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <CalendarDays className="h-5 w-5 text-retro-blue" />
+              <h1 className="font-display text-2xl font-bold text-retro-dark">Plan the day</h1>
+            </div>
+            <p className="mt-1 font-mono text-sm text-retro-dark/60">{dateLabel}</p>
           </div>
-          <ProgressBar completed={completedCount} total={totalCount} />
+          {aiEnabled && !suggestion && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleAISuggest}
+              disabled={aiSuggest.isPending}
+            >
+              {aiSuggest.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Thinking…
+                </>
+              ) : (
+                <>
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  AI suggest
+                </>
+              )}
+            </Button>
+          )}
         </div>
+      </StaggerBlock>
+
+      {allDayTasks.length > 0 && (
+        <StaggerBlock className="surface-glass rounded-2xl px-5 py-4">
+          <ProgressBar completed={completedCount} total={allDayTasks.length} />
+        </StaggerBlock>
       )}
 
-      {/* Carry Forward Banner */}
-      <CarryForwardBanner
-        suggestions={carryForwardSuggestions}
-        currentFocusIds={plan.focusTaskIds}
-        onAddToFocus={handleUpdateFocus}
-      />
-
-      {/* AI Suggest */}
-      {aiEnabled && !suggestion && (
-        <div className="flex justify-end">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleAISuggest}
-            disabled={aiSuggest.isPending}
-          >
-            {aiSuggest.isPending ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Suggesting...
-              </>
-            ) : (
-              <>
-                <Sparkles className="mr-2 h-4 w-4" />
-                AI Suggest
-              </>
-            )}
-          </Button>
-        </div>
-      )}
-
-      {suggestion && plan && (
-        <AISuggestPanel
-          suggestion={suggestion}
-          allTasks={[...plan.focusTasks, ...plan.tasksDueToday, ...carryForwardSuggestions]}
-          onAccept={handleAcceptSuggestion}
-          onDismiss={() => setSuggestion(null)}
+      <StaggerBlock>
+        <IntentCard
+          intent={plan.intentMd}
+          sourceLabel={plan.intentMd ? 'Carried in from last night' : undefined}
+          onSave={handleSaveIntent}
+          onMakeTask={handleMakeIntentTask}
+          taskCreated={intentIsTask}
         />
-      )}
+      </StaggerBlock>
 
-      {/* Focus Tasks */}
-      <FocusTasks
-        focusTasks={plan.focusTasks}
-        focusTaskIds={plan.focusTaskIds}
-        allTasks={[...plan.tasksDueToday, ...carryForwardSuggestions]}
-        onUpdate={handleUpdateFocus}
-        onToggleComplete={handleToggleComplete}
-      />
+      <StaggerBlock>
+        <TriageCard
+          tasks={plan.carryForward}
+          today={todayKeyStr}
+          onTriage={(decision) => triage.mutate(decision)}
+        />
+      </StaggerBlock>
 
-      {/* Tasks Due Today */}
-      {scheduleTasks.length > 0 && (
-        <div>
-          <div className="mb-4 flex items-center gap-2">
-            <ListTodo className="h-5 w-5 text-primary" />
-            <h2 className="font-display text-lg font-semibold">Tasks Due Today</h2>
-          </div>
-          <TaskSchedule
-            tasks={scheduleTasks}
-            onToggleComplete={handleToggleComplete}
+      {suggestion && (
+        <StaggerBlock>
+          <AISuggestPanel
+            suggestion={suggestion}
+            allTasks={[...plan.focusTasks, ...plan.tasksDueToday, ...plan.carryForward]}
+            onAccept={handleAcceptSuggestion}
+            onDismiss={() => setSuggestion(null)}
           />
-        </div>
+        </StaggerBlock>
       )}
-    </div>
+
+      <StaggerBlock>
+        <FocusTasks
+          focusTasks={plan.focusTasks}
+          focusTaskIds={plan.focusTaskIds}
+          allTasks={[...plan.tasksDueToday, ...plan.carryForward]}
+          goals={plan.goals}
+          onUpdate={handleUpdateFocus}
+          onToggleComplete={handleToggleComplete}
+        />
+      </StaggerBlock>
+
+      <StaggerBlock>
+        <div className="mb-3 flex items-center gap-2 px-1">
+          <ListTodo className="h-4 w-4 text-retro-blue" />
+          <h2 className="font-display text-base font-semibold text-retro-dark">Also due today</h2>
+        </div>
+        <TaskSchedule
+          tasks={scheduleTasks}
+          goals={plan.goals}
+          onToggleComplete={handleToggleComplete}
+        />
+      </StaggerBlock>
+    </StaggerGroup>
   )
 }

@@ -2,13 +2,14 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, Calendar, BarChart3 } from 'lucide-react'
+import { Moon, Calendar, BarChart3 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ReviewCard } from '@/components/reviews/review-card'
 import { WeeklySummary } from '@/components/reviews/weekly-summary'
 import { useDailyReviews, useDailyReview, useWeeklySummary } from '@/hooks/use-reviews'
 import { cn } from '@/lib/utils'
+import { useUserToday } from '@/hooks/use-user-today'
 
 type Tab = 'daily' | 'weekly'
 
@@ -16,8 +17,7 @@ export default function ReviewsPage() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<Tab>('daily')
 
-  // Today's date in YYYY-MM-DD
-  const today = new Date().toISOString().split('T')[0]
+  const { today } = useUserToday()
 
   const { data: todayReview, isLoading: todayLoading } = useDailyReview(today)
   const { data: reviewsData, isLoading: reviewsLoading } = useDailyReviews()
@@ -37,15 +37,15 @@ export default function ReviewsPage() {
           </p>
         </div>
         {!todayLoading && !todayReview && (
-          <Button onClick={() => router.push('/reviews/daily')}>
-            <Plus className="mr-2 h-4 w-4" />
-            Start Today&apos;s Review
+          <Button onClick={() => router.push('/reviews/daily')} data-testid="reviews-close-day">
+            <Moon className="mr-2 h-4 w-4" />
+            Close the day
           </Button>
         )}
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 border-2 border-retro-dark/15 bg-white p-1">
+      <div className="surface-glass flex gap-1 rounded-xl p-1">
         <button
           type="button"
           onClick={() => setActiveTab('daily')}
@@ -85,10 +85,7 @@ export default function ReviewsPage() {
               <p className="mb-2 text-xs font-medium font-mono uppercase tracking-wider text-muted-foreground">
                 Today
               </p>
-              <ReviewCard
-                review={todayReview}
-                onClick={() => router.push('/reviews/daily')}
-              />
+              <ReviewCard review={todayReview} onClick={() => router.push('/reviews/daily')} />
             </div>
           ) : null}
 
@@ -102,19 +99,13 @@ export default function ReviewsPage() {
           ) : reviews.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border py-12">
               <Calendar className="mb-3 h-10 w-10 text-muted-foreground/50" />
-              <p className="font-mono text-sm text-muted-foreground">
-                No reviews yet.
-              </p>
+              <p className="font-mono text-sm text-muted-foreground">No reviews yet.</p>
               <p className="mt-1 text-xs text-muted-foreground/70">
                 Nightly reviews help you reflect on progress and build momentum.
               </p>
-              <Button
-                size="sm"
-                className="mt-4"
-                onClick={() => router.push('/reviews/daily')}
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Start Your First Review
+              <Button size="sm" className="mt-4" onClick={() => router.push('/reviews/daily')}>
+                <Moon className="mr-2 h-4 w-4" />
+                Close your first day
               </Button>
             </div>
           ) : (
@@ -126,7 +117,11 @@ export default function ReviewsPage() {
                 {reviews
                   .filter((r) => r.reviewDate !== today)
                   .map((review) => (
-                    <ReviewCard key={review.id} review={review} />
+                    <ReviewCard
+                      key={review.id}
+                      review={review}
+                      onClick={() => router.push(`/reviews/daily?date=${review.reviewDate}`)}
+                    />
                   ))}
               </div>
             </div>
@@ -152,9 +147,7 @@ export default function ReviewsPage() {
           ) : (
             <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border py-12">
               <BarChart3 className="mb-3 h-10 w-10 text-muted-foreground/50" />
-              <p className="text-sm text-muted-foreground">
-                No weekly data available yet.
-              </p>
+              <p className="text-sm text-muted-foreground">No weekly data available yet.</p>
             </div>
           )}
         </div>

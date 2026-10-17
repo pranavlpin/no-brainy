@@ -1,12 +1,13 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import { Plus } from "lucide-react"
-import { cn } from "@/lib/utils"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { useCreateTask, useUpdateTask } from "@/hooks/use-tasks"
-import type { TaskResponse } from "@/lib/types/tasks"
+import { useState } from 'react'
+import { Plus } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { TaskCheck } from './task-check'
+import { useCreateTask, useUpdateTask } from '@/hooks/use-tasks'
+import type { TaskResponse } from '@/lib/types/tasks'
 
 interface SubtaskListProps {
   parentTaskId: string
@@ -14,7 +15,7 @@ interface SubtaskListProps {
 }
 
 export function SubtaskList({ parentTaskId, subtasks }: SubtaskListProps) {
-  const [newTitle, setNewTitle] = useState("")
+  const [newTitle, setNewTitle] = useState('')
   const [isAdding, setIsAdding] = useState(false)
   const createTask = useCreateTask()
   const updateTask = useUpdateTask()
@@ -25,7 +26,7 @@ export function SubtaskList({ parentTaskId, subtasks }: SubtaskListProps) {
       { title: newTitle.trim(), parentTaskId },
       {
         onSuccess: () => {
-          setNewTitle("")
+          setNewTitle('')
           setIsAdding(false)
         },
       }
@@ -33,7 +34,7 @@ export function SubtaskList({ parentTaskId, subtasks }: SubtaskListProps) {
   }
 
   const handleToggle = (subtask: TaskResponse) => {
-    const newStatus = subtask.status === "completed" ? "pending" : "completed"
+    const newStatus = subtask.status === 'completed' ? 'pending' : 'completed'
     updateTask.mutate({ id: subtask.id, data: { status: newStatus } })
   }
 
@@ -43,17 +44,17 @@ export function SubtaskList({ parentTaskId, subtasks }: SubtaskListProps) {
       <ul className="space-y-1">
         {subtasks.map((subtask) => (
           <li key={subtask.id} className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={subtask.status === "completed"}
+            <TaskCheck
+              checked={subtask.status === 'completed'}
               onChange={() => handleToggle(subtask)}
-              className="h-4 w-4 rounded border-gray-300"
+              label={subtask.title}
+              size="sm"
+              data-testid={`subtask-toggle-${subtask.id}`}
             />
             <span
               className={cn(
-                "text-sm",
-                subtask.status === "completed" &&
-                  "line-through text-muted-foreground"
+                'text-sm',
+                subtask.status === 'completed' && 'line-through text-muted-foreground'
               )}
             >
               {subtask.title}
@@ -70,10 +71,10 @@ export function SubtaskList({ parentTaskId, subtasks }: SubtaskListProps) {
             placeholder="Subtask title..."
             className="h-8 text-sm"
             onKeyDown={(e) => {
-              if (e.key === "Enter") handleAdd()
-              if (e.key === "Escape") {
+              if (e.key === 'Enter') handleAdd()
+              if (e.key === 'Escape') {
                 setIsAdding(false)
-                setNewTitle("")
+                setNewTitle('')
               }
             }}
             autoFocus
@@ -86,7 +87,7 @@ export function SubtaskList({ parentTaskId, subtasks }: SubtaskListProps) {
             variant="ghost"
             onClick={() => {
               setIsAdding(false)
-              setNewTitle("")
+              setNewTitle('')
             }}
           >
             Cancel

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withAuth } from '@/lib/auth/middleware'
 import type { TaskResponse } from '@/lib/types/tasks'
+import { addDays, dateFromKey, keyFromDbDate, todayKey, userTimezone } from '@/lib/dates'
 
 function formatTask(task: {
   id: string
@@ -45,10 +46,9 @@ function formatTask(task: {
 
 export const POST = withAuth(async (_req: NextRequest, user) => {
   try {
-    const now = new Date()
-    const today = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()))
-    const yesterday = new Date(today)
-    yesterday.setDate(yesterday.getDate() - 1)
+    const todayStr = todayKey(userTimezone(user))
+    const today = dateFromKey(todayStr)
+    const yesterday = dateFromKey(addDays(todayStr, -1))
 
     // Find yesterday's plan
     const yesterdayPlan = await prisma.dayPlan.findUnique({

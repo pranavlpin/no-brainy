@@ -1,15 +1,9 @@
 'use client'
 
 import { useState } from 'react'
+import { useSetBreadcrumbTitle } from '@/stores/breadcrumb-store'
 import { useParams, useRouter } from 'next/navigation'
-import {
-  ArrowLeft,
-  Play,
-  Trash2,
-  Pencil,
-  Check,
-  X,
-} from 'lucide-react'
+import { ArrowLeft, Play, Trash2, Pencil, Check, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -26,7 +20,10 @@ import {
 } from '@/hooks/use-flashcards'
 import type { FlashcardState, CreateFlashcardRequest } from '@/lib/types/flashcards'
 
-const STATE_BADGE: Record<FlashcardState, { variant: 'blue' | 'yellow' | 'default' | 'green' | 'orange'; label: string }> = {
+const STATE_BADGE: Record<
+  FlashcardState,
+  { variant: 'blue' | 'yellow' | 'default' | 'green' | 'orange'; label: string }
+> = {
   new: { variant: 'blue', label: 'New' },
   learning: { variant: 'yellow', label: 'Learning' },
   review: { variant: 'default', label: 'Review' },
@@ -40,6 +37,8 @@ export default function DeckDetailPage() {
   const deckId = params.id as string
 
   const { data: deck, isLoading: deckLoading } = useDeck(deckId)
+
+  useSetBreadcrumbTitle(deck?.name ?? null)
   const { data: cardsData, isLoading: cardsLoading } = useDeckCards(deckId)
   const updateDeck = useUpdateDeck()
   const deleteDeck = useDeleteDeck()
@@ -281,7 +280,11 @@ export default function DeckDetailPage() {
                       <p className="text-sm font-medium truncate">{card.frontMd}</p>
                     </div>
                     <Badge variant="secondary" className="shrink-0 text-[10px]">
-                      {card.cardType === 'basic' ? 'Q&A' : card.cardType === 'cloze' ? 'Cloze' : 'Reverse'}
+                      {card.cardType === 'basic'
+                        ? 'Q&A'
+                        : card.cardType === 'cloze'
+                          ? 'Cloze'
+                          : 'Reverse'}
                     </Badge>
                     <Badge variant={sb.variant} className="shrink-0 text-[10px]">
                       {sb.label}
@@ -316,10 +319,7 @@ export default function DeckDetailPage() {
 
       {/* Delete deck button */}
       <div className="border-t border-border pt-6">
-        <Button
-          variant="destructive"
-          onClick={() => setShowDeleteDialog(true)}
-        >
+        <Button variant="destructive" onClick={() => setShowDeleteDialog(true)}>
           <Trash2 className="mr-2 h-4 w-4" />
           Delete Deck
         </Button>

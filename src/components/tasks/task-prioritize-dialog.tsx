@@ -24,9 +24,7 @@ export function TaskPrioritizeDialog({ result, onClose }: TaskPrioritizeDialogPr
   const [accepted, setAccepted] = useState<Set<string>>(new Set())
   const updateTask = useUpdateTask()
 
-  const pendingSuggestions = result.suggestions.filter(
-    (s) => !accepted.has(s.taskId)
-  )
+  const pendingSuggestions = result.suggestions.filter((s) => !accepted.has(s.taskId))
 
   const handleAccept = useCallback(
     (suggestion: PrioritySuggestion) => {
@@ -84,11 +82,7 @@ export function TaskPrioritizeDialog({ result, onClose }: TaskPrioritizeDialogPr
             {/* Actions bar */}
             {pendingSuggestions.length > 0 && (
               <div className="flex justify-end mb-4">
-                <Button
-                  size="sm"
-                  onClick={handleAcceptAll}
-                  disabled={updateTask.isPending}
-                >
+                <Button size="sm" onClick={handleAcceptAll} disabled={updateTask.isPending}>
                   <Check className="h-4 w-4 mr-1" />
                   Accept All ({pendingSuggestions.length})
                 </Button>
@@ -110,9 +104,7 @@ export function TaskPrioritizeDialog({ result, onClose }: TaskPrioritizeDialogPr
                       <p className="text-sm font-medium truncate">
                         {suggestion.taskTitle ?? suggestion.taskId}
                       </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {suggestion.reason}
-                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">{suggestion.reason}</p>
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0">

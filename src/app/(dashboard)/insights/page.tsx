@@ -10,6 +10,7 @@ import { AIActionButton } from '@/components/ai/ai-action-button'
 import { InsightCard } from '@/components/insights/insight-card'
 import { useInsights, useGenerateInsights, useDismissInsight } from '@/hooks/use-insights'
 import type { LucideIcon } from 'lucide-react'
+import { addDays, browserTimezone, todayKey } from '@/lib/dates'
 
 const MODULES: { key: string; label: string; icon: LucideIcon }[] = [
   { key: 'expenses', label: 'Expenses', icon: Wallet },
@@ -46,8 +47,9 @@ export default function InsightsPage(): React.ReactElement {
   )
 
   // Default date range: last 30 days
-  const defaultFrom = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-  const defaultTo = new Date().toISOString().split('T')[0]
+  const localToday = todayKey(browserTimezone())
+  const defaultFrom = addDays(localToday, -30)
+  const defaultTo = localToday
   const [dateFrom, setDateFrom] = useState(defaultFrom)
   const [dateTo, setDateTo] = useState(defaultTo)
 
@@ -212,8 +214,8 @@ export default function InsightsPage(): React.ReactElement {
                   <button
                     key={preset.label}
                     onClick={() => {
-                      setDateFrom(new Date(Date.now() - preset.days * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
-                      setDateTo(new Date().toISOString().split('T')[0])
+                      setDateFrom(addDays(localToday, -preset.days))
+                      setDateTo(localToday)
                     }}
                     className="font-mono text-[10px] px-2 py-1 border border-retro-dark/20 text-retro-dark/60 hover:bg-retro-blue/5 hover:border-retro-blue/30 transition-colors"
                   >

@@ -4,6 +4,7 @@ import { withAI } from '@/lib/ai/middleware'
 import { callAI } from '@/lib/ai/call-ai'
 import { taskPrioritizePrompt } from '@/lib/ai/prompts/task-prioritize'
 import type { TaskPrioritizationResult } from '@/lib/ai/types'
+import { todayKey, userTimezone } from '@/lib/dates'
 
 export const POST = withAI(async (_req: NextRequest, ctx) => {
   try {
@@ -46,7 +47,7 @@ export const POST = withAI(async (_req: NextRequest, ctx) => {
       dueDate: t.dueDate?.toISOString().split('T')[0] ?? null,
     }))
 
-    const today = new Date().toISOString().split('T')[0]
+    const today = todayKey(userTimezone(ctx.user))
 
     const result = await callAI<TaskPrioritizationResult>({
       apiKey: ctx.apiKey,

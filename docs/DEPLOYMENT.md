@@ -398,3 +398,24 @@ Cloud Run connects to Cloud SQL via the Cloud SQL Auth Proxy (built into Cloud R
 
 **Cold start latency:**
 Production uses `--cpu-boost` to allocate extra CPU during startup. If latency is still a concern, increase `--min-instances` to keep more warm instances.
+
+## Scheduled Nudges
+
+`POST /api/cron/daily` generates the day's notifications for every user (due and overdue tasks, cards due, a morning brief while the plan is empty, and an evening review reminder). It is idempotent per local day, so it is safe to call several times.
+
+1. Set `CRON_SECRET` in Secret Manager and expose it to the Cloud Run service.
+2. Create two Cloud Scheduler jobs that POST to the endpoint with the header `Authorization: Bearer <CRON_SECRET>`:
+
+```bash
+gcloud scheduler jobs create http nobrainy-morning \
+  --schedule="0 7 * * *" --time-zone="Asia/Kolkata" \
+  --uri="https://<your-domain>/api/cron/daily" --http-method=POST \
+  --headers="Authorization=Bearer ${CRON_SECRET}"
+
+gcloud scheduler jobs create http nobrainy-evening \
+  --schedule="30 20 * * *" --time-zone="Asia/Kolkata" \
+  --uri="https://<your-domain>/api/cron/daily" --http-method=POST \
+  --headers="Authorization=Bearer ${CRON_SECRET}"
+```
+
+Without `CRON_SECRET` the endpoint answers `503`, and with a wrong token `401`.

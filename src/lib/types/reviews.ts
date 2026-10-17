@@ -9,6 +9,8 @@ export interface DailyReviewResponse {
   reflectionMd: string
   aiSummaryMd: string | null
   mood: string | null
+  /** The one thing for tomorrow, handed into the next day's plan. */
+  tomorrowIntent: string | null
   createdAt: string
 }
 
@@ -20,6 +22,7 @@ export interface CreateReviewRequest {
   cardsReviewed?: number
   reflectionMd?: string
   mood?: string
+  tomorrowIntent?: string
 }
 
 export interface UpdateReviewRequest {
@@ -30,6 +33,7 @@ export interface UpdateReviewRequest {
   reflectionMd?: string
   aiSummaryMd?: string | null
   mood?: string | null
+  tomorrowIntent?: string | null
 }
 
 export interface WeeklySummaryResponse {

@@ -5,6 +5,8 @@ import { updateReviewSchema } from '@/lib/validations/reviews'
 import { ZodError } from 'zod'
 import type { DailyReviewResponse } from '@/lib/types/reviews'
 import type { ApiResponse } from '@/lib/types/api'
+import { dateFromKey, localDayBounds, userTimezone } from '@/lib/dates'
+import { handoffIntentToNextDay } from '@/lib/reviews/handoff'
 
 function formatReview(review: {
   id: string
@@ -17,6 +19,7 @@ function formatReview(review: {
   reflectionMd: string
   aiSummaryMd: string | null
   mood: string | null
+  tomorrowIntent?: string | null
   createdAt: Date
 }): DailyReviewResponse {
   return {
@@ -30,6 +33,7 @@ function formatReview(review: {
     reflectionMd: review.reflectionMd,
     aiSummaryMd: review.aiSummaryMd,
     mood: review.mood,
+    tomorrowIntent: review.tomorrowIntent ?? null,
     createdAt: review.createdAt.toISOString(),
   }
 }
@@ -76,7 +80,7 @@ export async function GET(req: NextRequest) {
       )
     }
 
-    const reviewDate = new Date(dateStr + 'T00:00:00.000Z')
+    const reviewDate = dateFromKey(dateStr)
 
     const review = await prisma.dailyReview.findUnique({
       where: {
@@ -90,38 +94,36 @@ export async function GET(req: NextRequest) {
     if (!review) return notFoundResponse()
 
     // Recalculate stats live so they reflect current task state
-    const dayStart = new Date(dateStr + 'T00:00:00.000Z')
-    const dayEnd = new Date(dateStr + 'T23:59:59.999Z')
+    const { start: dayStart, end: dayEnd } = localDayBounds(dateStr, userTimezone(user))
 
-    const [tasksCompleted, tasksMissed, notesCreated, reviewSessions] =
-      await Promise.all([
-        prisma.task.count({
-          where: {
-            userId: user.id,
-            completedAt: { gte: dayStart, lte: dayEnd },
-          },
-        }),
-        prisma.task.count({
-          where: {
-            userId: user.id,
-            dueDate: reviewDate,
-            status: { not: 'completed' },
-          },
-        }),
-        prisma.note.count({
-          where: {
-            userId: user.id,
-            createdAt: { gte: dayStart, lte: dayEnd },
-          },
-        }),
-        prisma.reviewSession.aggregate({
-          where: {
-            userId: user.id,
-            startedAt: { gte: dayStart, lte: dayEnd },
-          },
-          _sum: { cardsReviewed: true },
-        }),
-      ])
+    const [tasksCompleted, tasksMissed, notesCreated, reviewSessions] = await Promise.all([
+      prisma.task.count({
+        where: {
+          userId: user.id,
+          completedAt: { gte: dayStart, lt: dayEnd },
+        },
+      }),
+      prisma.task.count({
+        where: {
+          userId: user.id,
+          dueDate: reviewDate,
+          status: { not: 'completed' },
+        },
+      }),
+      prisma.note.count({
+        where: {
+          userId: user.id,
+          createdAt: { gte: dayStart, lt: dayEnd },
+        },
+      }),
+      prisma.reviewSession.aggregate({
+        where: {
+          userId: user.id,
+          startedAt: { gte: dayStart, lt: dayEnd },
+        },
+        _sum: { cardsReviewed: true },
+      }),
+    ])
 
     const cardsReviewed = reviewSessions._sum.cardsReviewed ?? 0
 
@@ -177,7 +179,7 @@ export async function PUT(req: NextRequest) {
       )
     }
 
-    const reviewDate = new Date(dateStr + 'T00:00:00.000Z')
+    const reviewDate = dateFromKey(dateStr)
 
     const existing = await prisma.dailyReview.findUnique({
       where: {
@@ -197,6 +199,15 @@ export async function PUT(req: NextRequest) {
       where: { id: existing.id },
       data,
     })
+
+    if (typeof data.tomorrowIntent === 'string' && data.tomorrowIntent.trim()) {
+      await handoffIntentToNextDay({
+        userId: user.id,
+        reviewDateKey: dateStr,
+        intent: data.tomorrowIntent,
+        previousIntent: existing.tomorrowIntent ?? null,
+      })
+    }
 
     const response: ApiResponse<DailyReviewResponse> = {
       success: true,

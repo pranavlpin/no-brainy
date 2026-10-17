@@ -25,23 +25,23 @@ export function MoodSelector({ value, onChange, disabled }: MoodSelectorProps) {
           key={mood.value}
           type="button"
           disabled={disabled}
+          data-testid={`mood-${mood.value}`}
+          aria-pressed={value === mood.value}
           onClick={() => onChange(mood.value)}
           className={cn(
-            'flex flex-col items-center gap-1 rounded-xl border-2 px-5 py-3 transition-all',
-            'hover:border-primary/50 hover:bg-primary/5',
+            'flex flex-col items-center gap-1 rounded-2xl border-2 px-5 py-3 transition-all duration-200 ease-smooth',
+            'hover:-translate-y-0.5 hover:border-retro-blue/50 hover:bg-retro-blue/5',
             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
             'disabled:pointer-events-none disabled:opacity-50',
             value === mood.value
-              ? 'border-primary bg-primary/10 shadow-sm'
-              : 'border-border bg-background'
+              ? 'scale-105 border-retro-blue bg-retro-blue/10 shadow-glass'
+              : 'border-border bg-background/60'
           )}
         >
           <span className="text-3xl" role="img" aria-label={mood.label}>
             {mood.emoji}
           </span>
-          <span className="text-xs font-medium text-muted-foreground">
-            {mood.label}
-          </span>
+          <span className="text-xs font-medium text-muted-foreground">{mood.label}</span>
         </button>
       ))}
     </div>

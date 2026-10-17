@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useSetBreadcrumbTitle } from '@/stores/breadcrumb-store'
 import { useParams, useRouter } from 'next/navigation'
 import { ArrowLeft, Calendar, Trash2, CheckCircle2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -19,7 +20,10 @@ const categoryColors: Record<string, 'green' | 'blue' | 'default' | 'orange'> = 
   personal: 'orange',
 }
 
-const statusConfig: Record<GoalStatus, { label: string; variant: 'green' | 'blue' | 'yellow' | 'gray' }> = {
+const statusConfig: Record<
+  GoalStatus,
+  { label: string; variant: 'green' | 'blue' | 'yellow' | 'gray' }
+> = {
   active: { label: 'Active', variant: 'blue' },
   completed: { label: 'Completed', variant: 'green' },
   paused: { label: 'Paused', variant: 'yellow' },
@@ -41,6 +45,8 @@ export default function GoalDetailPage() {
   const [showDelete, setShowDelete] = useState(false)
 
   const { data: goal, isLoading } = useGoal(id)
+
+  useSetBreadcrumbTitle(goal?.title ?? null)
   const updateGoal = useUpdateGoal()
   const deleteGoal = useDeleteGoal()
 
@@ -71,12 +77,10 @@ export default function GoalDetailPage() {
   const progressPct = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
 
   const isOverdue =
-    goal.targetDate &&
-    goal.status === 'active' &&
-    new Date(goal.targetDate) < new Date()
+    goal.targetDate && goal.status === 'active' && new Date(goal.targetDate) < new Date()
 
   const catVariant = goal.category
-    ? categoryColors[goal.category.toLowerCase()] ?? 'default'
+    ? (categoryColors[goal.category.toLowerCase()] ?? 'default')
     : null
 
   function handleStatusChange(newStatus: GoalStatus) {
@@ -95,15 +99,13 @@ export default function GoalDetailPage() {
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-2">
           <h1 className="text-2xl font-bold">{goal.title}</h1>
-          {goal.description && (
-            <p className="text-muted-foreground">{goal.description}</p>
-          )}
+          {goal.description && <p className="text-muted-foreground">{goal.description}</p>}
           <div className="flex items-center gap-2 flex-wrap">
-            {catVariant && goal.category && (
-              <Badge variant={catVariant}>{goal.category}</Badge>
-            )}
+            {catVariant && goal.category && <Badge variant={catVariant}>{goal.category}</Badge>}
             {goal.targetDate && (
-              <span className={`flex items-center gap-1 text-sm ${isOverdue ? 'text-red-500 font-medium' : 'text-muted-foreground'}`}>
+              <span
+                className={`flex items-center gap-1 text-sm ${isOverdue ? 'text-red-500 font-medium' : 'text-muted-foreground'}`}
+              >
                 <Calendar className="h-4 w-4" />
                 {isOverdue ? 'Overdue - ' : ''}
                 {new Date(goal.targetDate).toLocaleDateString()}
@@ -116,11 +118,7 @@ export default function GoalDetailPage() {
           <Button variant="outline" size="sm" onClick={() => setShowEdit(true)}>
             Edit
           </Button>
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={() => setShowDelete(true)}
-          >
+          <Button variant="destructive" size="sm" onClick={() => setShowDelete(true)}>
             <Trash2 className="h-4 w-4" />
           </Button>
         </div>
@@ -177,20 +175,12 @@ export default function GoalDetailPage() {
         )}
       </div>
 
-
       {/* Edit Dialog */}
-      <Dialog
-        open={showEdit}
-        onClose={() => setShowEdit(false)}
-        title="Edit Goal"
-      >
+      <Dialog open={showEdit} onClose={() => setShowEdit(false)} title="Edit Goal">
         <GoalForm
           goal={goal}
           onSubmit={(data) => {
-            updateGoal.mutate(
-              { id: goal.id, data },
-              { onSuccess: () => setShowEdit(false) }
-            )
+            updateGoal.mutate({ id: goal.id, data }, { onSuccess: () => setShowEdit(false) })
           }}
           onCancel={() => setShowEdit(false)}
           isLoading={updateGoal.isPending}

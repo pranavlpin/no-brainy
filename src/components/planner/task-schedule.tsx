@@ -1,71 +1,76 @@
-"use client"
+'use client'
 
-import { CheckCircle2, Circle, Clock } from "lucide-react"
-import { PriorityBadge } from "@/components/tasks/priority-badge"
-import { cn } from "@/lib/utils"
-import type { TaskResponse } from "@/lib/types/tasks"
+import { AnimatePresence, motion } from 'framer-motion'
+import { Clock } from 'lucide-react'
+import { PriorityBadge } from '@/components/tasks/priority-badge'
+import { TaskCheck } from '@/components/tasks/task-check'
+import { GoalChip } from './focus-tasks'
+import { cn } from '@/lib/utils'
+import type { TaskResponse } from '@/lib/types/tasks'
+import type { PlannerGoal } from '@/lib/types/planner'
 
 interface TaskScheduleProps {
   tasks: TaskResponse[]
+  goals?: PlannerGoal[]
   onToggleComplete: (taskId: string, completed: boolean) => void
 }
 
-export function TaskSchedule({ tasks, onToggleComplete }: TaskScheduleProps) {
+export function TaskSchedule({ tasks, goals = [], onToggleComplete }: TaskScheduleProps) {
+  const goalsById = new Map(goals.map((g) => [g.id, g]))
+
   if (tasks.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed p-6 text-center">
+      <div className="surface-outline rounded-2xl p-6 text-center">
         <Clock className="mx-auto h-8 w-8 text-muted-foreground/50" />
-        <p className="mt-2 text-sm text-muted-foreground">
-          No tasks due today
-        </p>
+        <p className="mt-2 text-sm text-muted-foreground">Nothing else due today</p>
       </div>
     )
   }
 
   return (
-    <div className="space-y-2">
-      {tasks.map((task) => {
-        const isCompleted = task.status === "completed"
-        return (
-          <div
-            key={task.id}
-            className={cn(
-              "flex items-center gap-3 rounded-md border px-4 py-3 transition-colors",
-              isCompleted
-                ? "border-green-200/50 bg-green-50/30 dark:border-green-900/20 dark:bg-green-950/10"
-                : "border-border"
-            )}
-          >
-            <button
-              onClick={() => onToggleComplete(task.id, !isCompleted)}
-              className="shrink-0"
-            >
-              {isCompleted ? (
-                <CheckCircle2 className="h-4 w-4 text-green-600" />
-              ) : (
-                <Circle className="h-4 w-4 text-muted-foreground hover:text-primary" />
-              )}
-            </button>
-            <span
+    <ul
+      className="surface-glass divide-y divide-border/60 overflow-hidden rounded-2xl"
+      data-testid="due-today-list"
+    >
+      <AnimatePresence initial={false}>
+        {tasks.map((task) => {
+          const isCompleted = task.status === 'completed'
+          const goal = task.goalId ? goalsById.get(task.goalId) : undefined
+          return (
+            <motion.li
+              key={task.id}
+              layout
+              data-testid={`due-row-${task.id}`}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
+              transition={{ duration: 0.22, ease: [0.2, 0.8, 0.2, 1] }}
               className={cn(
-                "flex-1 text-sm",
-                isCompleted && "text-muted-foreground line-through"
+                'flex items-center gap-3 px-4 py-3 transition-colors',
+                isCompleted && 'bg-retro-mint/5'
               )}
             >
-              {task.title}
-            </span>
-            <PriorityBadge priority={task.priority} />
-            {task.dueDate && (
-              <span className="text-xs text-muted-foreground">
-                {new Date(task.dueDate).toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
+              <TaskCheck
+                checked={isCompleted}
+                onChange={(next) => onToggleComplete(task.id, next)}
+                label={task.title}
+                size="sm"
+                data-testid={`due-toggle-${task.id}`}
+              />
+              <span
+                className={cn(
+                  'min-w-0 flex-1 truncate text-sm text-retro-dark',
+                  isCompleted && 'text-muted-foreground line-through decoration-retro-mint/70'
+                )}
+              >
+                {task.title}
               </span>
-            )}
-          </div>
-        )
-      })}
-    </div>
+              {goal && <GoalChip goal={goal} />}
+              <PriorityBadge priority={task.priority} />
+            </motion.li>
+          )
+        })}
+      </AnimatePresence>
+    </ul>
   )
 }

@@ -5,11 +5,7 @@ import { callAI } from '@/lib/ai/call-ai'
 import { handleAIError } from '@/lib/ai/error-handler'
 import { dailyPlanSuggestPrompt } from '@/lib/ai/prompts'
 import type { DailyPlanSuggestion } from '@/lib/ai/types'
-
-function getTodayDate(): Date {
-  const now = new Date()
-  return new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()))
-}
+import { dateFromKey, todayKey, userTimezone } from '@/lib/dates'
 
 export const POST = withAI(async (_req: NextRequest, { user, apiKey }) => {
   try {
@@ -37,7 +33,7 @@ export const POST = withAI(async (_req: NextRequest, { user, apiKey }) => {
     }
 
     // Fetch today's plan to know what's already planned
-    const today = getTodayDate()
+    const today = dateFromKey(todayKey(userTimezone(user)))
     const existingPlan = await prisma.dayPlan.findUnique({
       where: {
         userId_planDate: {

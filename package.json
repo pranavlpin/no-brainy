@@ -17,7 +17,11 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write",
+    "format:check": "prettier --check .",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.20.1",
@@ -29,14 +33,18 @@
     "@codemirror/view": "^6.36.5",
     "@google-cloud/storage": "^7.19.0",
     "@prisma/client": "^5.22.0",
+    "@radix-ui/react-dialog": "1",
+    "@radix-ui/react-tooltip": "1",
     "@tailwindcss/typography": "^0.5.19",
     "@tanstack/react-query": "^5.62.0",
     "bcryptjs": "^2.4.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "cmdk": "1",
     "d3-drag": "^3.0.0",
     "d3-force": "^3.0.0",
     "d3-zoom": "^3.0.0",
+    "framer-motion": "11",
     "lucide-react": "^0.468.0",
     "mermaid": "^11.15.0",
     "next": "15.5.18",
@@ -51,6 +59,7 @@
     "rehype-sanitize": "^6.0.0",
     "remark-gfm": "^4.0.0",
     "tailwind-merge": "^2.6.0",
+    "tailwindcss-animate": "1",
     "web-push": "^3.6.7",
     "zod": "^3.24.1",
     "zustand": "^5.0.2"
@@ -75,6 +84,10 @@
     "seed": "tsx prisma/seed.ts"
   },
   "devDependencies": {
+    "@testing-library/dom": "10",
+    "@testing-library/jest-dom": "6",
+    "@testing-library/react": "16",
+    "@testing-library/user-event": "14",
     "@types/bcryptjs": "^2.4.6",
     "@types/d3-drag": "^3.0.7",
     "@types/d3-force": "^3.0.10",
@@ -89,6 +102,7 @@
     "eslint-config-next": "^14.2.35",
     "jsdom": "^25.0.1",
     "postcss": "^8.5.10",
+    "prettier": "3",
     "prisma": "^5.22.0",
     "tailwindcss": "^3.4.17",
     "tsx": "^4.21.0",

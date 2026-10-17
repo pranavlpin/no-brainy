@@ -37,13 +37,19 @@ export const createCategorySchema = z.object({
   name: z.string().min(1, 'Name is required').max(100),
   slug: z.string().max(100).optional(),
   icon: z.string().max(50).default('tag'),
-  color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Invalid hex color').default('#6B7280'),
+  color: z
+    .string()
+    .regex(/^#[0-9A-Fa-f]{6}$/, 'Invalid hex color')
+    .default('#6B7280'),
 })
 
 export const updateCategorySchema = z.object({
   name: z.string().min(1).max(100).optional(),
   icon: z.string().max(50).optional(),
-  color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Invalid hex color').optional(),
+  color: z
+    .string()
+    .regex(/^#[0-9A-Fa-f]{6}$/, 'Invalid hex color')
+    .optional(),
   sortOrder: z.number().int().optional(),
 })
 
@@ -52,6 +58,12 @@ export const bulkExpenseSchema = z.object({
 })
 
 export const summaryQuerySchema = z.object({
-  startMonth: z.string().regex(/^\d{4}-\d{2}$/, 'Format: YYYY-MM').optional(),
-  endMonth: z.string().regex(/^\d{4}-\d{2}$/, 'Format: YYYY-MM').optional(),
+  startMonth: z
+    .string()
+    .regex(/^\d{4}-\d{2}$/, 'Format: YYYY-MM')
+    .optional(),
+  endMonth: z
+    .string()
+    .regex(/^\d{4}-\d{2}$/, 'Format: YYYY-MM')
+    .optional(),
 })

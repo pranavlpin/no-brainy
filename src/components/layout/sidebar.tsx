@@ -1,115 +1,76 @@
 'use client'
 
-import {
-  FileText,
-  CheckSquare,
-  BookOpen,
-  Layers,
-  Calendar,
-  BarChart3,
-  Target,
-  Search,
-  TrendingUp,
-  Sparkles,
-  Lightbulb,
-  Wallet,
-  PiggyBank,
-  Bookmark,
-  Film,
-  Archive,
-  PanelLeftClose,
-  PanelLeftOpen,
-  X,
-} from 'lucide-react'
+import { ChevronDown, PanelLeftClose, PanelLeftOpen, X } from 'lucide-react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { useUIStore } from '@/stores/ui-store'
-import { SidebarNavItem, type NavItem } from './sidebar-nav'
+import { NAV_GROUPS, NAV_ITEMS, type NavGroupKey } from '@/lib/nav/items'
+import { useNavBadges } from '@/hooks/use-nav-badges'
+import { SidebarNavItem } from './sidebar-nav'
 
-const NAV_ITEMS_MAP: Record<string, NavItem> = {
-  '/notes': { label: 'Notes', href: '/notes', icon: FileText },
-  '/stash': { label: 'Stash', href: '/stash', icon: Archive },
-  '/tasks': { label: 'Tasks', href: '/tasks', icon: CheckSquare },
-  '/books': { label: 'Books', href: '/books', icon: BookOpen },
-  '/flashcards': { label: 'Flashcards', href: '/flashcards', icon: Layers },
-  '/planner': { label: 'Daily Planner', href: '/planner', icon: Calendar },
-  '/reviews': { label: 'Nightly Reviews', href: '/reviews', icon: BarChart3 },
-  '/goals': { label: 'Goals', href: '/goals', icon: Target },
-  '/search': { label: 'Search', href: '/search', icon: Search },
-  '/analytics': { label: 'Analytics', href: '/analytics', icon: TrendingUp },
-  '/expenses': { label: 'Expenses', href: '/expenses', icon: Wallet },
-  '/budgets': { label: 'Budgets', href: '/budgets', icon: PiggyBank },
-  '/bookmarks': { label: 'Bookmarks', href: '/bookmarks', icon: Bookmark },
-  '/watchlist': { label: 'Watchlist', href: '/watchlist', icon: Film },
-  '/insights': { label: 'Insights', href: '/insights', icon: Lightbulb },
-  '/ai': { label: 'AI Coach', href: '/ai', icon: Sparkles },
+const BADGE_FOR: Record<string, 'cardsDue' | 'overdueTasks' | 'unreadNotifications'> = {
+  '/flashcards': 'cardsDue',
+  '/tasks': 'overdueTasks',
 }
-
-const NAV_GROUPS: Record<string, string> = {
-  '/notes': 'core',
-  '/stash': 'core',
-  '/tasks': 'core',
-  '/planner': 'core',
-  '/reviews': 'core',
-  '/expenses': 'finance',
-  '/budgets': 'finance',
-  '/books': 'learning',
-  '/flashcards': 'learning',
-  '/goals': 'goals',
-  '/search': 'tools',
-  '/analytics': 'tools',
-  '/insights': 'tools',
-  '/ai': 'tools',
-  '/bookmarks': 'media',
-  '/watchlist': 'media',
-}
-
-export { NAV_ITEMS_MAP, NAV_GROUPS }
 
 export function Sidebar() {
-  const { sidebarCollapsed, toggleSidebar, mobileSidebarOpen, setMobileSidebarOpen, navOrder, hiddenNavItems } =
-    useUIStore()
+  const {
+    sidebarCollapsed,
+    toggleSidebar,
+    mobileSidebarOpen,
+    setMobileSidebarOpen,
+    hiddenNavItems,
+    collapsedGroups,
+    toggleGroup,
+  } = useUIStore()
+  const { data: badges } = useNavBadges()
 
-  const navItems = navOrder
-    .filter((href) => !hiddenNavItems.includes(href))
-    .map((href) => NAV_ITEMS_MAP[href])
-    .filter(Boolean) as NavItem[]
+  const visibleItems = NAV_ITEMS.filter((item) => !hiddenNavItems.includes(item.href))
+  const groups = NAV_GROUPS.map((g) => ({
+    ...g,
+    items: visibleItems.filter((i) => i.group === g.key),
+  })).filter((g) => g.items.length > 0)
+
+  const badgeFor = (href: string): number | undefined => {
+    const key = BADGE_FOR[href]
+    return key && badges ? badges[key] : undefined
+  }
 
   return (
     <>
-      {/* Mobile backdrop */}
       {mobileSidebarOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+          className="fixed inset-0 z-40 bg-retro-dark/50 backdrop-blur-sm animate-in fade-in duration-150 lg:hidden"
           onClick={() => setMobileSidebarOpen(false)}
         />
       )}
 
-      {/* Sidebar */}
       <aside
+        data-testid="sidebar"
         className={cn(
-          'fixed inset-y-0 left-0 z-50 flex flex-col bg-sidebar-bg transition-all duration-300',
+          'fixed inset-y-0 left-0 z-50 flex flex-col border-r border-white/10 bg-sidebar-bg/90 backdrop-blur-xl transition-all duration-300 ease-smooth',
           sidebarCollapsed ? 'w-16' : 'w-64',
-          // Mobile: hidden by default, shown when open
           mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full',
           'lg:translate-x-0'
         )}
       >
-        {/* Header */}
         <div className="flex h-14 items-center justify-between border-b border-white/10 px-4">
           {!sidebarCollapsed && (
-            <span className="text-lg font-bold text-sidebar-fg">NoBrainy</span>
+            <span className="font-display text-lg font-bold tracking-tight text-sidebar-fg">
+              NoBrainy<span className="text-retro-pink">.</span>
+            </span>
           )}
-          {/* Mobile close button */}
           <button
             onClick={() => setMobileSidebarOpen(false)}
             className="text-sidebar-fg/60 hover:text-sidebar-fg lg:hidden"
+            aria-label="Close menu"
           >
             <X className="h-5 w-5" />
           </button>
-          {/* Desktop collapse toggle */}
           <button
             onClick={toggleSidebar}
             className="hidden text-sidebar-fg/60 hover:text-sidebar-fg lg:block"
+            aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
             {sidebarCollapsed ? (
               <PanelLeftOpen className="h-5 w-5" />
@@ -119,24 +80,63 @@ export function Sidebar() {
           </button>
         </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto px-2 py-4">
-          {navItems.map((item, index) => {
-            const prevItem = index > 0 ? navItems[index - 1] : null
-            const currentGroup = NAV_GROUPS[item.href] ?? ''
-            const prevGroup = prevItem ? (NAV_GROUPS[prevItem.href] ?? '') : currentGroup
-            const showDivider = index > 0 && currentGroup !== prevGroup
-
+        <nav className="flex-1 overflow-y-auto px-2 py-3" aria-label="Primary">
+          {groups.map((group, index) => {
+            const isToday = group.key === 'today'
+            const collapsed = collapsedGroups.includes(group.key as NavGroupKey)
             return (
-              <div key={item.href}>
-                {showDivider && (
-                  <div className="my-1 border-t border-white/10" />
-                )}
-                <SidebarNavItem item={item} />
+              <div key={group.key} className={cn(index > 0 && 'mt-2')}>
+                {sidebarCollapsed
+                  ? index > 0 && <div className="mx-2 my-2 border-t border-white/10" />
+                  : !isToday && (
+                      <button
+                        type="button"
+                        data-testid={`nav-group-${group.key}`}
+                        aria-expanded={!collapsed}
+                        aria-controls={`nav-group-items-${group.key}`}
+                        onClick={() => toggleGroup(group.key as NavGroupKey)}
+                        className="group/header flex w-full items-center justify-between rounded-md px-3 py-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-sidebar-fg/40 transition-colors hover:text-sidebar-fg/70"
+                      >
+                        {group.label}
+                        <ChevronDown
+                          className={cn(
+                            'h-3 w-3 transition-transform duration-200 ease-smooth',
+                            collapsed && '-rotate-90'
+                          )}
+                        />
+                      </button>
+                    )}
+                <AnimatePresence initial={false}>
+                  {(!collapsed || sidebarCollapsed) && (
+                    <motion.div
+                      id={`nav-group-items-${group.key}`}
+                      key="items"
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2, ease: [0.2, 0.8, 0.2, 1] }}
+                      className="overflow-hidden"
+                    >
+                      <div className="space-y-0.5">
+                        {group.items.map((item) => (
+                          <SidebarNavItem key={item.href} item={item} badge={badgeFor(item.href)} />
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             )
           })}
         </nav>
+
+        {!sidebarCollapsed && (
+          <div className="border-t border-white/10 px-4 py-3 font-mono text-[10px] text-sidebar-fg/35">
+            <kbd className="rounded border border-white/15 px-1">⌘K</kbd> jump ·{' '}
+            <kbd className="rounded border border-white/15 px-1">C</kbd> capture ·{' '}
+            <kbd className="rounded border border-white/15 px-1">?</kbd> keys
+          </div>
+        )}
       </aside>
     </>
   )

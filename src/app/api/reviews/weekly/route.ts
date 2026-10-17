@@ -4,6 +4,7 @@ import { withAuth } from '@/lib/auth/middleware'
 import { weeklyQuerySchema } from '@/lib/validations/reviews'
 import { ZodError } from 'zod'
 import type { ApiResponse } from '@/lib/types/api'
+import { isoWeekOf, todayKey, userTimezone } from '@/lib/dates'
 
 interface WeeklySummaryResponse {
   week: string
@@ -48,19 +49,6 @@ function getWeekStartDate(weekStr: string): Date {
   return targetMonday
 }
 
-/**
- * Get the current ISO week string.
- */
-function getCurrentISOWeek(): string {
-  const now = new Date()
-  const d = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()))
-  const dayNum = d.getUTCDay() || 7
-  d.setUTCDate(d.getUTCDate() + 4 - dayNum)
-  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1))
-  const weekNum = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7)
-  return `${d.getUTCFullYear()}-W${String(weekNum).padStart(2, '0')}`
-}
-
 export const GET = withAuth(async (req: NextRequest, user) => {
   try {
     const { searchParams } = new URL(req.url)
@@ -70,7 +58,7 @@ export const GET = withAuth(async (req: NextRequest, user) => {
     })
 
     const query = weeklyQuerySchema.parse(queryObj)
-    const week = query.week ?? getCurrentISOWeek()
+    const week = query.week ?? isoWeekOf(todayKey(userTimezone(user)))
 
     const monday = getWeekStartDate(week)
     const sunday = new Date(monday)
@@ -99,9 +87,7 @@ export const GET = withAuth(async (req: NextRequest, user) => {
       const date = new Date(monday)
       date.setUTCDate(monday.getUTCDate() + i)
       const dateStr = date.toISOString().split('T')[0]
-      const review = reviews.find(
-        (r) => r.reviewDate.toISOString().split('T')[0] === dateStr
-      )
+      const review = reviews.find((r) => r.reviewDate.toISOString().split('T')[0] === dateStr)
 
       if (review) {
         totalTasksCompleted += review.tasksCompleted

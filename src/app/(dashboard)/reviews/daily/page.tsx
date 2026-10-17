@@ -1,291 +1,222 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { ArrowLeft, Save, Loader2, Sparkles } from 'lucide-react'
+import { Suspense, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { ArrowLeft, Loader2, Moon, Sparkles, Save } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { StatsGrid } from '@/components/reviews/stats-grid'
-import { MoodSelector } from '@/components/reviews/mood-selector'
-import { MarkdownEditor } from '@/components/editor/markdown-editor'
+import { Card } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
+import { CloseDayFlow, type CloseDayPayload } from '@/components/reviews/close-day-flow'
 import { MarkdownPreview } from '@/components/editor/markdown-preview'
-import { useDailyReview, useCreateReview, useUpdateReview } from '@/hooks/use-reviews'
+import { FadeIn } from '@/components/motion'
+import {
+  useDailyReview,
+  useCreateReview,
+  useUpdateReview,
+  useWeeklySummary,
+} from '@/hooks/use-reviews'
 import { useReviewAISummary } from '@/hooks/use-review-ai'
 import { useAI } from '@/hooks/use-ai'
+import { useUserToday } from '@/hooks/use-user-today'
+import { useFocusSessions } from '@/hooks/use-focus-sessions'
+import { useToast } from '@/hooks/use-toast'
+import { formatDateKey, isValidDateKey } from '@/lib/dates'
 
-export default function DailyReviewPage() {
+function DailyReviewContent() {
   const router = useRouter()
-  const today = new Date().toISOString().split('T')[0]
+  const params = useSearchParams()
+  const { today } = useUserToday()
+  const requested = params.get('date')
+  const date = requested && isValidDateKey(requested) ? requested : today
+  const isToday = date === today
 
-  const { data: existingReview, isLoading, isError } = useDailyReview(today)
+  const { data: existingReview, isLoading } = useDailyReview(date)
+  const { data: weekly } = useWeeklySummary()
+  const { data: focusDay } = useFocusSessions(date)
   const createReview = useCreateReview()
-  const updateReview = useUpdateReview(today)
-  const aiSummary = useReviewAISummary(today)
+  const updateReview = useUpdateReview(date)
+  const aiSummary = useReviewAISummary(date)
   const { isEnabled: aiEnabled } = useAI()
+  const toast = useToast()
 
-  const [reflection, setReflection] = useState('')
-  const [mood, setMood] = useState<string | null>(null)
-  const [hasCreated, setHasCreated] = useState(false)
+  const [started, setStarted] = useState(false)
+  const [finished, setFinished] = useState(false)
   const [aiSummaryMd, setAiSummaryMd] = useState<string | null>(null)
-  const [stats, setStats] = useState({
-    tasksCompleted: 0,
-    tasksMissed: 0,
-    notesCreated: 0,
-    cardsReviewed: 0,
-  })
 
-  // Populate form from existing review
-  useEffect(() => {
-    if (existingReview) {
-      setReflection(existingReview.reflectionMd)
-      setMood(existingReview.mood)
-      setAiSummaryMd(existingReview.aiSummaryMd)
-      setStats({
-        tasksCompleted: existingReview.tasksCompleted,
-        tasksMissed: existingReview.tasksMissed,
-        notesCreated: existingReview.notesCreated,
-        cardsReviewed: existingReview.cardsReviewed,
-      })
-      setHasCreated(true)
-    }
-  }, [existingReview])
+  const dateLabel = formatDateKey(date, { weekday: 'long', day: 'numeric', month: 'long' })
 
-  // Start review on user action
-  const handleStartReview = (): void => {
+  const handleStart = () => {
     createReview.mutate(
-      { reviewDate: today },
+      { reviewDate: date },
       {
-        onSuccess: (data) => {
-          setStats({
-            tasksCompleted: data.tasksCompleted,
-            tasksMissed: data.tasksMissed,
-            notesCreated: data.notesCreated,
-            cardsReviewed: data.cardsReviewed,
-          })
-          setHasCreated(true)
-        },
+        onSuccess: () => setStarted(true),
+        onError: () => toast.show('Could not start the review', 'error'),
       }
     )
   }
 
-  const handleGenerateSummary = () => {
-    aiSummary.mutate(undefined, {
-      onSuccess: (res) => {
-        setAiSummaryMd(res.data.summaryMd)
+  const handleFinish = (payload: CloseDayPayload) => {
+    updateReview.mutate(payload, {
+      onSuccess: () => {
+        setFinished(true)
+        toast.show(
+          isToday ? 'Day closed. Tomorrow already knows its intent.' : 'Review saved',
+          'success',
+          {
+            action: { label: 'See plan', onClick: () => router.push('/planner') },
+          }
+        )
       },
+      onError: () => toast.show('Could not save the review', 'error'),
     })
   }
 
-  const handleSaveSummary = () => {
-    updateReview.mutate({ aiSummaryMd })
+  const handleGenerateSummary = () => {
+    aiSummary.mutate(undefined, { onSuccess: (res) => setAiSummaryMd(res.data.summaryMd) })
   }
-
-  const handleSave = () => {
-    updateReview.mutate(
-      {
-        reflectionMd: reflection,
-        mood,
-      },
-      {
-        onSuccess: () => {
-          router.push('/reviews')
-        },
-      }
-    )
-  }
-
-  const isSaving = updateReview.isPending
-  const isReady = hasCreated || !!existingReview
 
   if (isLoading) {
     return (
-      <div className="mx-auto max-w-3xl p-4 md:p-6">
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-          <span className="ml-2 text-sm text-muted-foreground">
-            Loading...
-          </span>
-        </div>
+      <div className="mx-auto max-w-3xl space-y-4">
+        <Skeleton className="h-8 w-56" />
+        <Skeleton className="h-72 w-full rounded-2xl" />
       </div>
     )
   }
 
-  if (!isReady && !existingReview) {
-    return (
-      <div className="mx-auto max-w-3xl space-y-8 p-4 md:p-6">
-        <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => router.push('/reviews')}
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold">Daily Review</h1>
-            <p className="text-sm text-muted-foreground">
-              {new Date(today + 'T00:00:00').toLocaleDateString('en-US', {
-                weekday: 'long',
-                month: 'long',
-                day: 'numeric',
-                year: 'numeric',
-              })}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-retro-dark/20 py-16 text-center">
-          <p className="font-mono text-lg text-retro-dark">Ready to reflect on your day?</p>
-          <p className="mt-2 text-sm text-muted-foreground/70">
-            Your stats will be gathered once you begin.
-          </p>
-          <Button
-            className="mt-6"
-            onClick={handleStartReview}
-            disabled={createReview.isPending}
-          >
-            {createReview.isPending ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Starting...
-              </>
-            ) : (
-              "Start Tonight's Review"
-            )}
-          </Button>
-        </div>
-      </div>
-    )
-  }
+  const ready = started || !!existingReview
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8 p-4 md:p-6">
-      {/* Header */}
+    <div className="mx-auto max-w-3xl space-y-6">
       <div className="flex items-center gap-3">
         <Button
           variant="ghost"
           size="icon"
           onClick={() => router.push('/reviews')}
+          aria-label="Back to reviews"
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold">Daily Review</h1>
-          <p className="text-sm text-muted-foreground">
-            {new Date(today + 'T00:00:00').toLocaleDateString('en-US', {
-              weekday: 'long',
-              month: 'long',
-              day: 'numeric',
-              year: 'numeric',
-            })}
-          </p>
+          <h1 className="font-display text-2xl font-bold text-retro-dark">
+            {isToday ? 'Close the day' : 'Review'}
+          </h1>
+          <p className="font-mono text-sm text-retro-dark/60">{dateLabel}</p>
         </div>
       </div>
 
-      {isReady && (
-        <>
-          {/* Step 1: Stats */}
-          <section className="space-y-3">
-            <h2 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
-              Today&apos;s Stats
-            </h2>
-            <StatsGrid {...stats} />
-          </section>
-
-          {/* Step 2: Reflection */}
-          <section className="space-y-3">
-            <h2 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
-              Reflection
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              What did you accomplish today? What went well? What could be
-              improved?
+      {!ready ? (
+        <FadeIn>
+          <Card className="flex flex-col items-center py-14 text-center">
+            <span className="flex h-14 w-14 items-center justify-center rounded-full bg-retro-blue/10">
+              <Moon className="h-7 w-7 text-retro-blue" />
+            </span>
+            <p className="mt-4 font-display text-lg font-semibold text-retro-dark">
+              Ready to close {isToday ? 'the day' : dateLabel}?
             </p>
-            <MarkdownEditor
-              value={reflection}
-              onChange={setReflection}
-              placeholder="Write your reflection here..."
-              minHeight="200px"
-            />
-          </section>
-
-          {/* Step 3: Mood */}
-          <section className="space-y-3">
-            <h2 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
-              How are you feeling?
-            </h2>
-            <MoodSelector value={mood} onChange={setMood} />
-          </section>
-
-          {/* AI Summary */}
-          {aiEnabled && (
-            <section className="space-y-3">
-              <h2 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
-                AI Summary
-              </h2>
-              {aiSummaryMd ? (
-                <div className="rounded-lg border">
-                  <MarkdownPreview content={aiSummaryMd} />
-                  {aiSummaryMd !== existingReview?.aiSummaryMd && (
-                    <div className="flex items-center gap-2 border-t px-4 py-3">
-                      <Button
-                        size="sm"
-                        onClick={handleSaveSummary}
-                        disabled={updateReview.isPending}
-                      >
-                        <Save className="mr-2 h-3 w-3" />
-                        Save Summary
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={handleGenerateSummary}
-                        disabled={aiSummary.isPending}
-                      >
-                        Regenerate
-                      </Button>
-                    </div>
-                  )}
-                </div>
+            <p className="mt-1 max-w-sm text-sm text-muted-foreground">
+              Four short steps. Your stats are gathered automatically; you add the meaning.
+            </p>
+            <Button
+              className="mt-6"
+              size="lg"
+              onClick={handleStart}
+              disabled={createReview.isPending}
+              data-testid="close-day-start"
+            >
+              {createReview.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
-                <Button
-                  variant="outline"
-                  onClick={handleGenerateSummary}
-                  disabled={aiSummary.isPending}
-                >
-                  {aiSummary.isPending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Generating...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="mr-2 h-4 w-4" />
-                      Generate AI Summary
-                    </>
-                  )}
-                </Button>
+                <Moon className="mr-2 h-4 w-4" />
               )}
-            </section>
-          )}
+              Start
+            </Button>
+          </Card>
+        </FadeIn>
+      ) : finished ? (
+        <FadeIn>
+          <Card className="text-center">
+            <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-retro-mint/20">
+              <Sparkles className="h-7 w-7 text-retro-mint" />
+            </span>
+            <p className="mt-4 font-display text-xl font-bold text-retro-dark">Day closed.</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {existingReview?.tomorrowIntent
+                ? `Tomorrow starts with: “${existingReview.tomorrowIntent}”`
+                : 'Rest well.'}
+            </p>
+            <div className="mt-6 flex justify-center gap-2">
+              <Button onClick={() => router.push('/planner')}>See tomorrow&apos;s plan</Button>
+              <Button variant="outline" onClick={() => setFinished(false)}>
+                Edit review
+              </Button>
+            </div>
+          </Card>
+        </FadeIn>
+      ) : (
+        <FadeIn>
+          <CloseDayFlow
+            key={existingReview?.id ?? 'new'}
+            stats={{
+              tasksCompleted: existingReview?.tasksCompleted ?? 0,
+              tasksMissed: existingReview?.tasksMissed ?? 0,
+              notesCreated: existingReview?.notesCreated ?? 0,
+              cardsReviewed: existingReview?.cardsReviewed ?? 0,
+              focusMinutes: focusDay?.totalWorkMinutes ?? null,
+            }}
+            initial={{
+              reflectionMd: existingReview?.reflectionMd,
+              mood: existingReview?.mood,
+              tomorrowIntent: existingReview?.tomorrowIntent,
+            }}
+            streak={weekly?.streak}
+            isSaving={updateReview.isPending}
+            onFinish={handleFinish}
+          />
+        </FadeIn>
+      )}
 
-          {/* Save */}
-          <div className="flex justify-end pb-8">
-            <Button onClick={handleSave} disabled={isSaving} size="lg">
-              {isSaving ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Saving...
-                </>
+      {ready && aiEnabled && (
+        <Card>
+          <div className="flex items-center justify-between">
+            <h2 className="font-display text-base font-semibold text-retro-dark">AI recap</h2>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleGenerateSummary}
+              disabled={aiSummary.isPending}
+            >
+              {aiSummary.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
-                <>
-                  <Save className="mr-2 h-4 w-4" />
-                  Save Review
-                </>
+                <Sparkles className="mr-2 h-4 w-4" />
               )}
+              {aiSummaryMd || existingReview?.aiSummaryMd ? 'Regenerate' : 'Generate'}
             </Button>
           </div>
-        </>
+          {(aiSummaryMd ?? existingReview?.aiSummaryMd) && (
+            <div className="mt-3 rounded-xl border border-border/60 bg-background/60">
+              <MarkdownPreview content={aiSummaryMd ?? existingReview?.aiSummaryMd ?? ''} />
+              {aiSummaryMd && aiSummaryMd !== existingReview?.aiSummaryMd && (
+                <div className="border-t border-border/60 px-4 py-3">
+                  <Button size="sm" onClick={() => updateReview.mutate({ aiSummaryMd })}>
+                    <Save className="mr-2 h-3 w-3" />
+                    Save recap
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+        </Card>
       )}
     </div>
+  )
+}
+
+export default function DailyReviewPage() {
+  return (
+    <Suspense fallback={<Skeleton className="mx-auto h-72 max-w-3xl rounded-2xl" />}>
+      <DailyReviewContent />
+    </Suspense>
   )
 }

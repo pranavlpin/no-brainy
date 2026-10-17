@@ -28,10 +28,7 @@ export const GET = withAuth(async (_req: NextRequest, user) => {
       prisma.task.findMany({
         where: {
           userId: user.id,
-          OR: [
-            { createdAt: { gte: thirtyDaysAgo } },
-            { completedAt: { gte: thirtyDaysAgo } },
-          ],
+          OR: [{ createdAt: { gte: thirtyDaysAgo } }, { completedAt: { gte: thirtyDaysAgo } }],
         },
         select: {
           id: true,
@@ -125,12 +122,8 @@ export const GET = withAuth(async (_req: NextRequest, user) => {
 
     // --- Tasks by Priority ---
     const priorities = ['urgent', 'high', 'medium', 'low']
-    const completedMap = new Map(
-      completedByPriority.map((r) => [r.priority, r._count.id])
-    )
-    const totalMap = new Map(
-      tasksByPriorityRaw.map((r) => [r.priority, r._count.id])
-    )
+    const completedMap = new Map(completedByPriority.map((r) => [r.priority, r._count.id]))
+    const totalMap = new Map(tasksByPriorityRaw.map((r) => [r.priority, r._count.id]))
 
     const tasksByPriority = priorities.map((p) => ({
       priority: p,
@@ -161,17 +154,13 @@ export const GET = withAuth(async (_req: NextRequest, user) => {
       weekEnd.setDate(weekEnd.getDate() + 7)
 
       const weekLabel = `W${weekStart.toISOString().slice(5, 10)}`
-      const count = notes.filter(
-        (n) => n.createdAt >= weekStart && n.createdAt < weekEnd
-      ).length
+      const count = notes.filter((n) => n.createdAt >= weekStart && n.createdAt < weekEnd).length
 
       notesCreatedPerWeek.push({ week: weekLabel, count })
     }
 
     // --- Flashcard Stats ---
-    const stateMap = new Map(
-      flashcardStates.map((r) => [r.state, r._count.id])
-    )
+    const stateMap = new Map(flashcardStates.map((r) => [r.state, r._count.id]))
     const flashcardStats = {
       total:
         (stateMap.get('new') ?? 0) +
@@ -215,7 +204,6 @@ export const GET = withAuth(async (_req: NextRequest, user) => {
       }
     }
 
-    // --- Habit Completion Rate ---
     // --- Most Active Hours ---
     const hourBuckets: number[] = new Array(24).fill(0)
     allTasksLast30.forEach((t) => {
@@ -229,9 +217,7 @@ export const GET = withAuth(async (_req: NextRequest, user) => {
     }))
 
     // --- Totals ---
-    const totalTasksCompleted = allTasksLast30.filter(
-      (t) => t.status === 'completed'
-    ).length
+    const totalTasksCompleted = allTasksLast30.filter((t) => t.status === 'completed').length
 
     return NextResponse.json({
       success: true,

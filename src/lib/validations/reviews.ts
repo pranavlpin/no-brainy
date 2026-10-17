@@ -1,15 +1,19 @@
 import { z } from 'zod'
 
+const tomorrowIntentSchema = z.string().max(280, "Keep tomorrow's intent under 280 characters")
+
 export const createReviewSchema = z.object({
   reviewDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be YYYY-MM-DD format'),
   reflectionMd: z.string().default(''),
   mood: z.enum(['great', 'good', 'okay', 'bad']).optional(),
+  tomorrowIntent: tomorrowIntentSchema.optional(),
 })
 
 export const updateReviewSchema = z.object({
   reflectionMd: z.string().optional(),
   aiSummaryMd: z.string().nullable().optional(),
   mood: z.enum(['great', 'good', 'okay', 'bad']).nullable().optional(),
+  tomorrowIntent: tomorrowIntentSchema.nullable().optional(),
 })
 
 export const reviewQuerySchema = z.object({
@@ -18,7 +22,10 @@ export const reviewQuerySchema = z.object({
 })
 
 export const weeklyQuerySchema = z.object({
-  week: z.string().regex(/^\d{4}-W\d{2}$/, 'Must be ISO week format YYYY-Www').optional(),
+  week: z
+    .string()
+    .regex(/^\d{4}-W\d{2}$/, 'Must be ISO week format YYYY-Www')
+    .optional(),
 })
 
 export type CreateReviewInput = z.infer<typeof createReviewSchema>

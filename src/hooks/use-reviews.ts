@@ -19,9 +19,9 @@ export function useDailyReviews(page = 1, pageSize = 20) {
       const params = new URLSearchParams()
       params.set('page', String(page))
       params.set('pageSize', String(pageSize))
-      const res = await apiClient<
-        ApiResponse<PaginatedResponse<DailyReviewResponse>>
-      >(`/api/reviews/daily?${params.toString()}`)
+      const res = await apiClient<ApiResponse<PaginatedResponse<DailyReviewResponse>>>(
+        `/api/reviews/daily?${params.toString()}`
+      )
       return res.data.items
     },
   })
@@ -31,9 +31,7 @@ export function useDailyReview(date: string) {
   return useQuery({
     queryKey: [...REVIEWS_KEY, 'daily', 'detail', date],
     queryFn: async () => {
-      const res = await apiClient<ApiResponse<DailyReviewResponse>>(
-        `/api/reviews/daily/${date}`
-      )
+      const res = await apiClient<ApiResponse<DailyReviewResponse>>(`/api/reviews/daily/${date}`)
       return res.data
     },
     enabled: !!date,
@@ -45,22 +43,17 @@ export function useCreateReview() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (data: CreateReviewRequest) => {
-      const res = await apiClient<ApiResponse<DailyReviewResponse>>(
-        '/api/reviews/daily',
-        {
-          method: 'POST',
-          body: JSON.stringify(data),
-        }
-      )
+      const res = await apiClient<ApiResponse<DailyReviewResponse>>('/api/reviews/daily', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      })
       return res.data
     },
     onSuccess: (data) => {
-      queryClient.setQueryData(
-        [...REVIEWS_KEY, 'daily', 'detail', data.reviewDate],
-        data
-      )
+      queryClient.setQueryData([...REVIEWS_KEY, 'daily', 'detail', data.reviewDate], data)
       queryClient.invalidateQueries({ queryKey: [...REVIEWS_KEY, 'daily', 'list'] })
       queryClient.invalidateQueries({ queryKey: [...REVIEWS_KEY, 'weekly'] })
+      queryClient.invalidateQueries({ queryKey: ['home'] })
     },
   })
 }
@@ -69,22 +62,18 @@ export function useUpdateReview(date: string) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (data: UpdateReviewRequest) => {
-      const res = await apiClient<ApiResponse<DailyReviewResponse>>(
-        `/api/reviews/daily/${date}`,
-        {
-          method: 'PUT',
-          body: JSON.stringify(data),
-        }
-      )
+      const res = await apiClient<ApiResponse<DailyReviewResponse>>(`/api/reviews/daily/${date}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      })
       return res.data
     },
     onSuccess: (data) => {
-      queryClient.setQueryData(
-        [...REVIEWS_KEY, 'daily', 'detail', data.reviewDate],
-        data
-      )
+      queryClient.setQueryData([...REVIEWS_KEY, 'daily', 'detail', data.reviewDate], data)
       queryClient.invalidateQueries({ queryKey: [...REVIEWS_KEY, 'daily', 'list'] })
       queryClient.invalidateQueries({ queryKey: [...REVIEWS_KEY, 'weekly'] })
+      queryClient.invalidateQueries({ queryKey: ['home'] })
+      queryClient.invalidateQueries({ queryKey: ['planner'] })
     },
   })
 }
