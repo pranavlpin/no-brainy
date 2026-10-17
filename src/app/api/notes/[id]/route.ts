@@ -128,15 +128,23 @@ export async function GET(req: NextRequest) {
       },
       include: {
         noteLinks: true,
-        linkedFrom: true,
       },
     })
 
     if (!note) return notFoundResponse()
 
+    // Links are not a relation on the target side (targets can be tasks, books,
+
+    // or decks), so notes linking here are looked up explicitly.
+
+    const linkedFrom = await prisma.noteLink.findMany({
+      where: { targetType: 'note', targetId: noteId },
+    })
+
     const response: ApiResponse<NoteResponse> = {
       success: true,
-      data: formatNote(note),
+
+      data: formatNote({ ...note, linkedFrom }),
     }
 
     return NextResponse.json(response)

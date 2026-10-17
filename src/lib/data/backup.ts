@@ -71,7 +71,8 @@ export async function exportWorkspace(userId: string): Promise<CoreBackup> {
         db.growthEvidence.findMany({ where, orderBy: { id: 'asc' } }),
         db.taskLink.findMany({ where: { task: where } }),
         db.projectNote.findMany({ where: { project: where, note: where } }),
-        db.noteLink.findMany({ where: { sourceNote: where, targetNote: where } }),
+        // A link belongs to the user through its source note; targets may be notes, tasks, books, or decks.
+        db.noteLink.findMany({ where: { sourceNote: where } }),
       ])
       const owned = {
         tasks: new Set(tasks.map((t) => t.id)),
@@ -82,7 +83,10 @@ export async function exportWorkspace(userId: string): Promise<CoreBackup> {
       }
       let omittedLinks = goals.filter((g) => g.expenseCategoryId).length
       const has = (type: string | null, id: string | null) =>
-        !!type && !!id && type in LINK_TARGETS && owned[LINK_TARGETS[type as keyof typeof LINK_TARGETS]].has(id)
+        !!type &&
+        !!id &&
+        type in LINK_TARGETS &&
+        owned[LINK_TARGETS[type as keyof typeof LINK_TARGETS]].has(id)
       const keep = (type: string | null, id: string | null) => {
         if (!id) return true
         if (has(type, id)) return true
@@ -123,13 +127,19 @@ export async function exportWorkspace(userId: string): Promise<CoreBackup> {
           taskLinks: pick(
             coreSchemas.taskLinks,
             taskLinks.filter((l) => {
-              const ok = l.linkedType in LINK_TARGETS && l.linkedType !== 'session' && has(l.linkedType, l.linkedId)
+              const ok =
+                l.linkedType in LINK_TARGETS &&
+                l.linkedType !== 'session' &&
+                has(l.linkedType, l.linkedId)
               if (!ok) omittedLinks++
               return ok
             })
           ),
           projectNotes: pick(coreSchemas.projectNotes, projectNotes),
-          noteLinks: pick(coreSchemas.noteLinks, noteLinks.filter((l) => l.targetType === 'note')),
+          noteLinks: pick(
+            coreSchemas.noteLinks,
+            noteLinks.filter((l) => l.targetType === 'note')
+          ),
           dayPlans: pick(
             coreSchemas.dayPlans,
             dayPlans.map((p) => ({
@@ -149,7 +159,11 @@ export async function exportWorkspace(userId: string): Promise<CoreBackup> {
           ),
           weeklyReviews: pick(
             coreSchemas.weeklyReviews,
-            weeklyReviews.map((r) => ({ ...r, weekStart: key(r.weekStart), nextTaskId: safeTask(r.nextTaskId) }))
+            weeklyReviews.map((r) => ({
+              ...r,
+              weekStart: key(r.weekStart),
+              nextTaskId: safeTask(r.nextTaskId),
+            }))
           ),
           focusSessions: pick(
             coreSchemas.focusSessions,
@@ -191,7 +205,10 @@ export function remapBackup(backup: CoreBackup, makeId: () => string = randomUUI
       captures: data.captures.map((c) => ({
         ...c,
         id: must('captures', c.id),
-        destinationId: c.destinationType && c.destinationType !== 'bookmark' ? target(c.destinationType, c.destinationId) : null,
+        destinationId:
+          c.destinationType && c.destinationType !== 'bookmark'
+            ? target(c.destinationType, c.destinationId)
+            : null,
         destinationType: c.destinationType === 'bookmark' ? null : c.destinationType,
       })),
       goals: data.goals.map((g) => ({ ...g, id: must('goals', g.id) })),
@@ -267,9 +284,18 @@ async function inspect(db: Prisma.TransactionClient, userId: string, backup: Cor
   const dailyDates = keys(daily.map((r) => r.reviewDate))
   const weeklyDates = keys(weekly.map((r) => r.weekStart))
   const skipped = {
-    dayPlans: backup.data.dayPlans.map((p) => p.planDate).filter((d) => planDates.has(d)).sort(),
-    dailyReviews: backup.data.dailyReviews.map((r) => r.reviewDate).filter((d) => dailyDates.has(d)).sort(),
-    weeklyReviews: backup.data.weeklyReviews.map((r) => r.weekStart).filter((d) => weeklyDates.has(d)).sort(),
+    dayPlans: backup.data.dayPlans
+      .map((p) => p.planDate)
+      .filter((d) => planDates.has(d))
+      .sort(),
+    dailyReviews: backup.data.dailyReviews
+      .map((r) => r.reviewDate)
+      .filter((d) => dailyDates.has(d))
+      .sort(),
+    weeklyReviews: backup.data.weeklyReviews
+      .map((r) => r.weekStart)
+      .filter((d) => weeklyDates.has(d))
+      .sort(),
   }
   const counts = Object.fromEntries(
     Object.entries(backup.data).map(([table, rows]) => [table, rows.length])
@@ -323,8 +349,10 @@ export async function importWorkspace(
         throw new Error('This import request belongs to a different backup file.')
       }
       const existing =
-        byRequest ?? (await db.coreImportReceipt.findUnique({ where: { userId_digest: { userId, digest } } }))
-      if (existing) return { ...(existing.result as unknown as ImportResult), alreadyImported: true }
+        byRequest ??
+        (await db.coreImportReceipt.findUnique({ where: { userId_digest: { userId, digest } } }))
+      if (existing)
+        return { ...(existing.result as unknown as ImportResult), alreadyImported: true }
 
       const preview = await inspect(db, userId, original)
       if (preview.fingerprint !== fingerprint) {
@@ -358,12 +386,18 @@ export async function importWorkspace(
       }
       for (const t of data.tasks) {
         if (t.parentTaskId) {
-          await db.task.update({ where: { id: t.id }, data: { parentTaskId: t.parentTaskId, updatedAt: t.updatedAt } })
+          await db.task.update({
+            where: { id: t.id },
+            data: { parentTaskId: t.parentTaskId, updatedAt: t.updatedAt },
+          })
         }
       }
       for (const p of data.projects) {
         if (p.nextActionId) {
-          await db.project.update({ where: { id: p.id }, data: { nextActionId: p.nextActionId, updatedAt: p.updatedAt } })
+          await db.project.update({
+            where: { id: p.id },
+            data: { nextActionId: p.nextActionId, updatedAt: p.updatedAt },
+          })
         }
       }
       for (const l of data.taskLinks) await db.taskLink.create({ data: l })
@@ -390,7 +424,12 @@ export async function importWorkspace(
       for (const r of data.weeklyReviews) {
         if (preview.skipped.weeklyReviews.includes(r.weekStart)) continue
         await db.weeklyReview.create({
-          data: { ...r, userId, weekStart: day(r.weekStart)!, outcomes: r.outcomes as unknown as Prisma.InputJsonValue },
+          data: {
+            ...r,
+            userId,
+            weekStart: day(r.weekStart)!,
+            outcomes: r.outcomes as unknown as Prisma.InputJsonValue,
+          },
         })
       }
       for (const f of data.focusSessions) {
@@ -407,9 +446,18 @@ export async function importWorkspace(
         })
       }
 
-      const result: ImportResult = { imported: preview.imported, skipped: preview.skipped, alreadyImported: false }
+      const result: ImportResult = {
+        imported: preview.imported,
+        skipped: preview.skipped,
+        alreadyImported: false,
+      }
       await db.coreImportReceipt.create({
-        data: { userId, clientRequestId, digest, result: result as unknown as Prisma.InputJsonValue },
+        data: {
+          userId,
+          clientRequestId,
+          digest,
+          result: result as unknown as Prisma.InputJsonValue,
+        },
       })
       return result
     },

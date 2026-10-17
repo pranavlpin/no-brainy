@@ -193,7 +193,6 @@ model Note {
   updatedAt   DateTime  @updatedAt
   user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   noteLinks   NoteLink[] @relation("SourceNote")
-  linkedFrom  NoteLink[] @relation("TargetNote")
   projectNotes ProjectNote[]
   @@index([userId, isDeleted])
   @@index([userId, isPinned])
@@ -207,8 +206,7 @@ model NoteLink {
   targetType String
   targetId   String
   createdAt  DateTime @default(now())
-  sourceNote Note  @relation("SourceNote", fields: [sourceId], references: [id], onDelete: Cascade)
-  targetNote Note? @relation("TargetNote", fields: [targetId], references: [id], onDelete: Cascade)
+  sourceNote Note @relation("SourceNote", fields: [sourceId], references: [id], onDelete: Cascade)
   @@unique([sourceId, targetType, targetId])
   @@map("note_links")
 }
