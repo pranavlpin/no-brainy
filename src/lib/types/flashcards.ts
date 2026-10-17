@@ -71,6 +71,8 @@ export interface UpdateFlashcardRequest {
 
 export interface ReviewFlashcardRequest {
   rating: ReviewRating
+  /** The review session the rating belongs to; the API rejects ratings without one. */
+  sessionId: string
 }
 
 // Quiz types

@@ -5,3 +5,4 @@ Append-only ledger for the `flashcards` module (decks, cards, review, quiz). See
 | ID | Task | Date | Branch | Plan | Status |
 |---|---|---|---|---|---|
 | T26 | Bug fix: card creation endpoint and due-count consistency | 2026-10-17 | feature/product-adoption-wave-2 | [plan](../plans/flashcards/card-creation-and-due-count.md) | fixed — root cause: the hook posted to a non-existent /api/flashcards and the deck route measured due cards from server-local midnight. Cards post under their deck; due uses the user's day boundary like the badges; 91 files / 254 tests green |
+| T33 | Bug fix: rating a card in a review session is rejected | 2026-10-17 | feature/product-adoption-wave-2 | [plan](../plans/flashcards/review-rating-session.md) | fixed — root cause: the review page rated cards without the session id the API requires, so every rating was rejected with 400 and cards never progressed. Ratings now carry the session id; 92 files / 255 tests green |
